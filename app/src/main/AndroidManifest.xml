@@ -1,0 +1,7 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application
+        android:name=".QuranEasyApp"
+        android:label="QuranEasy"
+        android:theme="@android:style/Theme.Material.Light.NoActionBar" />
+</manifest>
+
