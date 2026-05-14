@@ -3,13 +3,17 @@ package com.zaidan.quraneasy
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.zaidan.quraneasy.feature_quran.presentation.QuranRoute
-import dagger.hilt.android.AndroidEntryPoint
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 
-@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { QuranRoute() }
+        setContent {
+            MaterialTheme {
+                Text(text = "QuranEasy")
+            }
+        }
     }
 }
+
