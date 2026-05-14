@@ -4,8 +4,8 @@ plugins {
 }
 
 android {
-    namespace = "com.zaidan.quraneasy.core"
-    compileSdk = 34
+    namespace = "com.zaidan.quraneasy.feature_tasbih"
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24
