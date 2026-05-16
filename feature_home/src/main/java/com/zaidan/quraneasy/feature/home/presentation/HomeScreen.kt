@@ -15,17 +15,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview(){
-    val navController = rememberNavController()
-    HomeScreen(navController)
+    HomeScreen(
+        onReadQuranClick = {},
+        onTasbihClick = {},
+        onDhikrClick = {}
+    )
 }
+
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun HomeScreen(
+    onReadQuranClick: () -> Unit,
+    onTasbihClick: () -> Unit,
+    onDhikrClick: () -> Unit
+) {
     Scaffold(
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
@@ -43,7 +49,9 @@ fun HomeScreen(navController: NavHostController) {
             Spacer(modifier = Modifier.height(34.dp))
             FeatureCardsSection(
                 modifier = Modifier.fillMaxWidth(),
-                navController = navController
+                onReadQuranClick = onReadQuranClick,
+                onTasbihClick = onTasbihClick,
+                onDhikrClick = onDhikrClick
             )
             Spacer(modifier = Modifier.height(20.dp))
             PrayerTrackerCard()

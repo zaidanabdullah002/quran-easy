@@ -28,13 +28,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
-import com.zaidan.quraneasy.core.navigation.Screen
 
 @Composable
 fun FeatureCardsSection(
-    navController: NavHostController,
+    onReadQuranClick: () -> Unit,
+    onTasbihClick: () -> Unit,
+    onDhikrClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -43,9 +42,7 @@ fun FeatureCardsSection(
             subtitle = "Browse by Surah, Juz or Bookmarks",
             icon = Icons.Outlined.AutoStories,
             backgroundBrush = Brush.verticalGradient(listOf(CardDarkTop, CardDarkBottom)),
-            onClick = {
-                navController.navigate(Screen.Quran.route)
-            }
+            onClick = onReadQuranClick
         )
         Spacer(modifier = Modifier.height(18.dp))
         FeatureCard(
@@ -53,9 +50,7 @@ fun FeatureCardsSection(
             subtitle = "Digital counter for dhikr",
             icon = Icons.Outlined.Gesture,
             backgroundBrush = Brush.verticalGradient(listOf(CardDarkTop, Color(0xFF1B2744))),
-            onClick = {
-                navController.navigate(Screen.Tasbih.route)
-            }
+            onClick = onTasbihClick
         )
         Spacer(modifier = Modifier.height(18.dp))
         FeatureCard(
@@ -63,9 +58,7 @@ fun FeatureCardsSection(
             subtitle = "Morning & evening remembrance",
             icon = Icons.Outlined.StarOutline,
             backgroundBrush = Brush.verticalGradient(listOf(CardCharcoalTop, CardCharcoalBottom)),
-            onClick = {
-                navController.navigate(Screen.Dhikr.route)
-            }
+            onClick = onDhikrClick
         )
     }
 }
@@ -73,8 +66,11 @@ fun FeatureCardsSection(
 @Preview(showBackground = true)
 @Composable
 fun FeatureCardsSectionPreview() {
-    val navController = rememberNavController()
-    FeatureCardsSection(navController = navController)
+    FeatureCardsSection(
+        onReadQuranClick = {},
+        onTasbihClick = {},
+        onDhikrClick = {}
+    )
 }
 
 @Composable

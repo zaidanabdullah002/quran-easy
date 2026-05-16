@@ -22,17 +22,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.zaidan.quraneasy.feature.quran.data.model.SurahUiModel
 
-data class SurahUiModel(
-    val number: Int,
-    val englishName: String,
-    val translation: String,
-    val verses: Int,
-    val arabicName: String
-)
 @Preview(showBackground = true)
 @Composable
-fun QuranScreen() {
+fun QuranScreenPreview(){
+    QuranScreen(
+        onBackClick = {}
+    )
+}
+
+@Composable
+fun QuranScreen(
+    onBackClick: () -> Unit
+) {
 
     val surahs = listOf(
         SurahUiModel(1, "Al-Fatihah", "The Opening", 7, "الفاتحة"),
@@ -59,9 +62,10 @@ fun QuranScreen() {
             .background(Color(0xFFF3F3F3))
     ) {
 
-        TopSection(selectedTab) {
-            selectedTab = it
-        }
+        TopSection(
+            selectedTab = selectedTab,
+            onTabSelected = {selectedTab = it},
+            onBackClick = onBackClick)
 
         LazyColumn(
             contentPadding = PaddingValues(
@@ -81,7 +85,8 @@ fun QuranScreen() {
 @Composable
 fun TopSection(
     selectedTab: Int,
-    onTabSelected: (Int) -> Unit
+    onTabSelected: (Int) -> Unit,
+    onBackClick: () -> Unit
 ) {
 
     Column(
@@ -98,7 +103,7 @@ fun TopSection(
                 .padding(horizontal = 14.dp)
         ) {
 
-            IconButton(onClick = {}) {
+            IconButton(onClick = onBackClick) {
                 Icon(
                     imageVector = Icons.Outlined.KeyboardArrowLeft,
                     contentDescription = null,

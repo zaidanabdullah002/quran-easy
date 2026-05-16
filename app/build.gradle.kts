@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.zaidan.quraneasy"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.zaidan.quraneasy"
