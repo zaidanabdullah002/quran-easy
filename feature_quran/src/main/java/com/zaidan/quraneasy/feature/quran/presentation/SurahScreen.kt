@@ -28,13 +28,15 @@ import com.zaidan.quraneasy.feature.quran.data.model.SurahUiModel
 @Composable
 fun QuranScreenPreview(){
     QuranScreen(
-        onBackClick = {}
+        onBackClick = {},
+        onSurahClick = {}
     )
 }
 
 @Composable
 fun QuranScreen(
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onSurahClick: (Int) -> Unit
 ) {
 
     val surahs = listOf(
@@ -75,8 +77,11 @@ fun QuranScreen(
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
 
-            items(surahs) { surah ->
-                SurahCard(surah)
+        items(surahs) { surah ->
+                SurahCard(
+                    surah = surah,
+                    onClick = { onSurahClick(surah.number) }
+                )
             }
         }
     }
@@ -229,10 +234,12 @@ fun QuranTab(
 
 @Composable
 fun SurahCard(
-    surah: SurahUiModel
+    surah: SurahUiModel,
+    onClick: () -> Unit = {}
 ) {
 
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = Color.White

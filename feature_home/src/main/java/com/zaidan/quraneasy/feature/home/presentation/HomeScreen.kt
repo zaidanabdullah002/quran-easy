@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.zaidan.quraneasy.core.theme.AppDimens
 
 @Preview(showBackground = true)
 @Composable
@@ -40,22 +41,22 @@ fun HomeScreen(
                 .fillMaxSize()
                 .background(PageBackground)
                 .padding(innerPadding)
-                .padding(horizontal = 14.dp)
+                .padding(horizontal = AppDimens.ScreenPaddingSmall.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Top
         ) {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(AppDimens.ItemSpacing.dp))
             HomeHeader()
-            Spacer(modifier = Modifier.height(34.dp))
+            Spacer(modifier = Modifier.height(AppDimens.ExtraLargeSpacing.dp))
             FeatureCardsSection(
                 modifier = Modifier.fillMaxWidth(),
                 onReadQuranClick = onReadQuranClick,
                 onTasbihClick = onTasbihClick,
                 onDhikrClick = onDhikrClick
             )
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(AppDimens.LargeSectionSpacing.dp))
             PrayerTrackerCard()
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(AppDimens.ScreenPaddingLarge.dp))
         }
     }
 }

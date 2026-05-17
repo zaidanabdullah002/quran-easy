@@ -12,10 +12,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,8 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
@@ -36,18 +35,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.zaidan.quraneasy.core.theme.AppDimens
+import com.zaidan.quraneasy.core.R
 import kotlin.math.roundToInt
 
 
 @Composable
 fun TasbihTargetChip(target: Int) {
     Card(
-        shape = RoundedCornerShape(28.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
+        shape = RoundedCornerShape(AppDimens.CardRadius.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         RowCentered(
-            modifier = Modifier.padding(horizontal = 22.dp, vertical = 16.dp)
+            modifier = Modifier.padding(horizontal = AppDimens.ScreenPaddingLarge.dp, vertical = AppDimens.ScreenPadding.dp)
         ) {
             Text(
                 text = "☝",
@@ -74,7 +77,7 @@ fun TasbihCounterRingPreview(){
 @Composable
 fun TasbihCounterRing(count: Int) {
     Box(
-        modifier = Modifier.height(420.dp),
+        modifier = Modifier.height(380.dp),
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -120,12 +123,13 @@ fun TasbihSwipeArea(
     val maxOffset = 220f
     val releaseThreshold = -180f
     val slowdownZone = 120f
+    val beadSize = 92.dp
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(340.dp)
-            .clip(RoundedCornerShape(28.dp))
+            .height(320.dp)
+            .clip(RoundedCornerShape(AppDimens.CardRadius.dp))
             .background(Color(0xFFF7F7F7)),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
@@ -134,7 +138,7 @@ fun TasbihSwipeArea(
             text = "Swipe here",
             color = Color(0xFF777777),
             fontSize = 24.sp,
-            modifier = Modifier.padding(top = 40.dp)
+            modifier = Modifier.padding(top = AppDimens.ScreenPaddingLarge.dp)
         )
 
         Text(
@@ -147,17 +151,22 @@ fun TasbihSwipeArea(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(130.dp),
+                .height(220.dp)
+                .navigationBarsPadding()
+                .padding(bottom = 24.dp),
             contentAlignment = Alignment.BottomCenter
         ) {
-            Surface(
+            Box(
                 modifier = Modifier
+                    .height(beadSize)
+                    .width(beadSize)
                     .offset { IntOffset(0, beadOffsetY.roundToInt()) }
                     .shadow(
-                        elevation = 10.dp,
-                        shape = RoundedCornerShape(999.dp),
+                        elevation = 20.dp,
+                        shape = RoundedCornerShape(50),
                         clip = false
                     )
+                    .padding(bottom = 8.dp)
                     .pointerInput(Unit) {
                         detectVerticalDragGestures(
                             onVerticalDrag = { _, dragAmount ->
@@ -180,22 +189,19 @@ fun TasbihSwipeArea(
                                 hasReachedReleaseZone = false
                             }
                         )
-                    }
-                    .clip(RoundedCornerShape(999.dp)),
-                color = Color(0xFF3A3A3A),
-                contentColor = Color.White
+                    },
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "Bead",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
-                    ,
-                    modifier = Modifier.padding(horizontal = 32.dp, vertical = 18.dp)
+                Image(
+                    painter = painterResource(id = R.drawable.bead_png),
+                    contentDescription = "Tasbih bead",
+                    modifier = Modifier.fillMaxSize()
                 )
-            }
+                }
         }
     }
 }
+
 
 @Composable
 fun RowCentered(

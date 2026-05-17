@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.zaidan.quraneasy.core.theme.AppDimens
 
 @Preview(showBackground = true)
 @Composable
@@ -40,12 +41,12 @@ fun TasbihContent(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 20.dp),
+                .padding(horizontal = AppDimens.ScreenPaddingLarge.dp, vertical = AppDimens.ScreenPadding.dp),
             contentAlignment = Alignment.Center
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(28.dp)
+                verticalArrangement = Arrangement.spacedBy(AppDimens.ExtraLargeSpacing.dp)
             ) {
                 TasbihTargetChip(target = uiState.target)
                 TasbihCounterRing(count = uiState.count)
