@@ -9,12 +9,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.zaidan.quraneasy.feature.home.presentation.HomeScreen
-import com.zaidan.quraneasy.feature.quran.presentation.QuranScreen
-import com.zaidan.quraneasy.feature.tasbih.presentation.TasbihScreen
 import com.zaidan.quraneasy.core.navigation.Screen
+import com.zaidan.quraneasy.feature.home.presentation.homeGraph
+import com.zaidan.quraneasy.feature.dhikr.presentation.dhikrGraph
+import com.zaidan.quraneasy.feature.quran.presentation.quranGraph
+import com.zaidan.quraneasy.feature.tasbih.presentation.tasbihGraph
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,23 +29,10 @@ class MainActivity : ComponentActivity() {
                         startDestination = Screen.Home.route,
                         modifier = Modifier.padding(innerPadding)
                     ) {
-                        composable(Screen.Home.route) {
-                            HomeScreen(
-                                onReadQuranClick = { navController.navigate(Screen.Quran.route) },
-                                onTasbihClick = { navController.navigate(Screen.Tasbih.route) },
-                                onDhikrClick = { navController.navigate(Screen.Dhikr.route) }
-                            )
-                        }
-                        composable(Screen.Quran.route) {
-                            QuranScreen(
-                                onBackClick = { navController.popBackStack() }
-                            )
-                        }
-                        composable(Screen.Tasbih.route) {
-                            TasbihScreen(
-                                onBackClick = { navController.popBackStack() }
-                            )
-                        }
+                        homeGraph(navController)
+                        quranGraph(navController)
+                        tasbihGraph(navController)
+                        dhikrGraph(navController)
                     }
                 }
             }

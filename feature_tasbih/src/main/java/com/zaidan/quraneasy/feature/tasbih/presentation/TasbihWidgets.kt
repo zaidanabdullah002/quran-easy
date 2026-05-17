@@ -7,32 +7,37 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
+
 
 @Composable
 fun TasbihTargetChip(target: Int) {
@@ -60,35 +65,26 @@ fun TasbihTargetChip(target: Int) {
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+fun TasbihCounterRingPreview(){
+    TasbihCounterRing(count = 1)
+}
+
 @Composable
 fun TasbihCounterRing(count: Int) {
     Box(
         modifier = Modifier.height(420.dp),
         contentAlignment = Alignment.Center
     ) {
-        Canvas(modifier = Modifier.matchParentSize()) {
-            val stroke = 18f
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val stroke = 12f
             val radius = (size.minDimension - stroke) / 2f
             drawCircle(
-                color = Color(0xFFF0F0F0),
+                color = Color(0xFFF3F3F3),
                 radius = radius,
                 center = center,
                 style = androidx.compose.ui.graphics.drawscope.Stroke(width = stroke)
-            )
-
-            val arcStart = -10f
-            val arcSweep = 36f
-            drawArc(
-                color = Color(0xFF2E2E2E),
-                startAngle = arcStart,
-                sweepAngle = arcSweep,
-                useCenter = false,
-                topLeft = Offset(stroke / 2f, stroke / 2f),
-                size = Size(size.width - stroke, size.height - stroke),
-                style = androidx.compose.ui.graphics.drawscope.Stroke(
-                    width = stroke,
-                    cap = androidx.compose.ui.graphics.StrokeCap.Round
-                )
             )
         }
 
@@ -109,14 +105,21 @@ fun TasbihCounterRing(count: Int) {
     }
 }
 
+
+@Preview(showBackground = true)
+@Composable
+fun TasbihSwipeAreaPreview() {
+    TasbihSwipeArea(onSwipeUp = {})
+}
 @Composable
 fun TasbihSwipeArea(
     onSwipeUp: () -> Unit
 ) {
     var beadOffsetY by remember { mutableFloatStateOf(0f) }
-    var dragAccumulator by remember { mutableFloatStateOf(0f) }
+    var hasReachedReleaseZone by remember { mutableStateOf(false) }
     val maxOffset = 220f
-    val threshold = -90f
+    val releaseThreshold = -180f
+    val slowdownZone = 120f
 
     Column(
         modifier = Modifier
@@ -147,37 +150,47 @@ fun TasbihSwipeArea(
                 .height(130.dp),
             contentAlignment = Alignment.BottomCenter
         ) {
-            Box(
+            Surface(
                 modifier = Modifier
                     .offset { IntOffset(0, beadOffsetY.roundToInt()) }
+                    .shadow(
+                        elevation = 10.dp,
+                        shape = RoundedCornerShape(999.dp),
+                        clip = false
+                    )
                     .pointerInput(Unit) {
                         detectVerticalDragGestures(
                             onVerticalDrag = { _, dragAmount ->
                                 val next = beadOffsetY + dragAmount
-                                beadOffsetY = next.coerceIn(-maxOffset, 0f)
-                                dragAccumulator += dragAmount
-                                if (dragAccumulator <= threshold) {
-                                    onSwipeUp()
-                                    dragAccumulator = 0f
-                                    beadOffsetY = 0f
-                                }
+                                val limited = next.coerceIn(-maxOffset, 0f)
+                                beadOffsetY = if (limited <= -slowdownZone) {
+                                    val resistance = 0.35f
+                                    beadOffsetY + (dragAmount * resistance)
+                                } else {
+                                    limited
+                                }.coerceIn(-maxOffset, 0f)
+
+                                hasReachedReleaseZone = beadOffsetY <= releaseThreshold
                             },
                             onDragEnd = {
+                                if (hasReachedReleaseZone) {
+                                    onSwipeUp()
+                                }
                                 beadOffsetY = 0f
-                                dragAccumulator = 0f
+                                hasReachedReleaseZone = false
                             }
                         )
                     }
-                    .clip(CircleShape)
-                    .background(Color(0xFF3A3A3A))
-                    .padding(horizontal = 34.dp, vertical = 18.dp),
-                contentAlignment = Alignment.Center
+                    .clip(RoundedCornerShape(999.dp)),
+                color = Color(0xFF3A3A3A),
+                contentColor = Color.White
             ) {
                 Text(
                     text = "Bead",
-                    color = Color.White,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold
+                    ,
+                    modifier = Modifier.padding(horizontal = 32.dp, vertical = 18.dp)
                 )
             }
         }
