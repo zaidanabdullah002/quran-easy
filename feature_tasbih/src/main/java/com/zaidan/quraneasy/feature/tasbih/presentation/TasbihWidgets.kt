@@ -27,7 +27,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
@@ -123,7 +122,7 @@ fun TasbihSwipeArea(
     val maxOffset = 220f
     val releaseThreshold = -180f
     val slowdownZone = 120f
-    val beadSize = 92.dp
+    val beadSize = 120.dp
 
     Column(
         modifier = Modifier
@@ -134,13 +133,6 @@ fun TasbihSwipeArea(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text = "Swipe here",
-            color = Color(0xFF777777),
-            fontSize = 24.sp,
-            modifier = Modifier.padding(top = AppDimens.ScreenPaddingLarge.dp)
-        )
-
         Text(
             text = "Swipe bead up to count",
             color = Color(0xFF70798A),
@@ -161,11 +153,6 @@ fun TasbihSwipeArea(
                     .height(beadSize)
                     .width(beadSize)
                     .offset { IntOffset(0, beadOffsetY.roundToInt()) }
-                    .shadow(
-                        elevation = 20.dp,
-                        shape = RoundedCornerShape(50),
-                        clip = false
-                    )
                     .padding(bottom = 8.dp)
                     .pointerInput(Unit) {
                         detectVerticalDragGestures(
@@ -189,15 +176,17 @@ fun TasbihSwipeArea(
                                 hasReachedReleaseZone = false
                             }
                         )
-                    },
-                contentAlignment = Alignment.Center
+                },
+                contentAlignment = Alignment.TopCenter
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.bead_png),
                     contentDescription = "Tasbih bead",
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .height(beadSize)
+                        .width(beadSize)
                 )
-                }
+            }
         }
     }
 }

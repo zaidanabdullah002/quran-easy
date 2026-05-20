@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.zaidan.quraneasy.core.theme.AppDimens
+import com.zaidan.quraneasy.feature.prayer.presentation.PrayerTrackerCard
 
 @Preview(showBackground = true)
 @Composable
