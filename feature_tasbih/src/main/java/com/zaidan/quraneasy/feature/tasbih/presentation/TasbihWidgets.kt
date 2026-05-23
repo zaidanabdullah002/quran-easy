@@ -1,52 +1,42 @@
 package com.zaidan.quraneasy.feature.tasbih.presentation
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import com.zaidan.quraneasy.core.theme.AppDimens
 import com.zaidan.quraneasy.core.R
 import kotlin.math.roundToInt
 
 
 @Composable
-fun TasbihTargetChip(target: Int) {
+fun TasbihTargetChip(target: Int,
+                     onClick: () -> Unit
+) {
     Card(
         shape = RoundedCornerShape(AppDimens.CardRadius.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        onClick = onClick
     ) {
         RowCentered(
             modifier = Modifier.padding(horizontal = AppDimens.ScreenPaddingLarge.dp, vertical = AppDimens.ScreenPadding.dp)
@@ -69,39 +59,78 @@ fun TasbihTargetChip(target: Int) {
 
 @Preview(showBackground = true)
 @Composable
-fun TasbihCounterRingPreview(){
-    TasbihCounterRing(count = 1)
+fun TasbihTextChipPreview(){
+    TasbihTextChip(tasbihText = "subhan allah")
 }
 
 @Composable
-fun TasbihCounterRing(count: Int) {
+fun TasbihTextChip(tasbihText: String){
+    Card(
+        shape = RoundedCornerShape(AppDimens.CardRadius.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFE8E8E8)),
+        ) {
+        Text(
+            text = tasbihText,
+            color = Color(0xFF70798A),
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.padding(10.dp)
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TasbihCounterRingPreview(){
+    TasbihCounterRing(count = 1, target = 33)
+}
+
+@Composable
+fun TasbihCounterRing(count: Int, target: Int, modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier.height(380.dp),
+        modifier = modifier.size(340.dp),
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val stroke = 12f
-            val radius = (size.minDimension - stroke) / 2f
+            val strokeWidth = 14.dp.toPx()
+            val radius = (size.minDimension - strokeWidth) / 2f
+
+            // Background Circle (Placeholder)
             drawCircle(
                 color = Color(0xFFF3F3F3),
                 radius = radius,
-                center = center,
-                style = androidx.compose.ui.graphics.drawscope.Stroke(width = stroke)
+                style = Stroke(width = strokeWidth)
+            )
+
+            // Progress Arc
+            val progress = (count.toFloat() / target.coerceAtLeast(1).toFloat()).coerceIn(0f, 1f)
+            drawArc(
+                color = Color.DarkGray,
+                startAngle = -90f,
+                sweepAngle = progress * 360f,
+                useCenter = false,
+                topLeft = Offset(center.x - radius, center.y - radius),
+                size = Size(radius * 2f, radius * 2f),
+                style = Stroke(
+                    width = strokeWidth,
+                    cap = StrokeCap.Round
+                )
             )
         }
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "Count",
-                color = Color(0xFF70798A),
-                fontSize = 30.sp,
-                fontWeight = FontWeight.Medium
-            )
-            Text(
                 text = count.toString(),
                 color = Color(0xFF232323),
                 fontSize = 92.sp,
                 fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = "Count",
+                color = Color(0xFF70798A),
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Medium
             )
         }
     }
@@ -111,82 +140,80 @@ fun TasbihCounterRing(count: Int) {
 @Preview(showBackground = true)
 @Composable
 fun TasbihSwipeAreaPreview() {
-    TasbihSwipeArea(onSwipeUp = {})
+    TasbihSwipeArea(onSwipeUp = {}) {
+        Text("Swipe anywhere")
+    }
 }
+
 @Composable
 fun TasbihSwipeArea(
-    onSwipeUp: () -> Unit
+    onSwipeUp: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
 ) {
     var beadOffsetY by remember { mutableFloatStateOf(0f) }
     var hasReachedReleaseZone by remember { mutableStateOf(false) }
-    val maxOffset = 220f
-    val releaseThreshold = -180f
-    val slowdownZone = 120f
-    val beadSize = 120.dp
+    val maxOffset = 300f
+    val releaseThreshold = -220f
+    val slowdownZone = 170f
+    val beadSize = 96.dp
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(320.dp)
-            .clip(RoundedCornerShape(AppDimens.CardRadius.dp))
-            .background(Color(0xFFF7F7F7)),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
+    Box(
+        modifier = modifier
+            .pointerInput(Unit) {
+                detectVerticalDragGestures(
+                    onVerticalDrag = { change, dragAmount ->
+                        val next = beadOffsetY + dragAmount
+                        val limited = next.coerceIn(-maxOffset, 0f)
+                        beadOffsetY = if (limited <= -slowdownZone) {
+                            val resistance = 0.4f
+                            beadOffsetY + (dragAmount * resistance)
+                        } else {
+                            limited
+                        }.coerceIn(-maxOffset, 0f)
+
+                        hasReachedReleaseZone = beadOffsetY <= releaseThreshold
+                        if (beadOffsetY != 0f) change.consume()
+                    },
+                    onDragEnd = {
+                        if (hasReachedReleaseZone) {
+                            onSwipeUp()
+                        }
+                        beadOffsetY = 0f
+                        hasReachedReleaseZone = false
+                    }
+                )
+            }
     ) {
+        content()
+
         Text(
-            text = "Swipe bead up to count",
-            color = Color(0xFF70798A),
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Medium
+            text = "Swipe Bead up to count",
+            color = Color(0xFF70798A).copy(alpha = if (beadOffsetY == 0f) 0.6f else 0.2f),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(bottom = beadSize + 20.dp)
         )
 
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(220.dp)
+                .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
-                .padding(bottom = 24.dp),
+                .padding(bottom = 20.dp)
+                .height(340.dp)
+                .width(beadSize),
             contentAlignment = Alignment.BottomCenter
         ) {
-            Box(
+            Image(
+                painter = painterResource(id = R.drawable.button_bead),
+                contentDescription = "Tasbih bead",
                 modifier = Modifier
-                    .height(beadSize)
-                    .width(beadSize)
                     .offset { IntOffset(0, beadOffsetY.roundToInt()) }
-                    .padding(bottom = 8.dp)
-                    .pointerInput(Unit) {
-                        detectVerticalDragGestures(
-                            onVerticalDrag = { _, dragAmount ->
-                                val next = beadOffsetY + dragAmount
-                                val limited = next.coerceIn(-maxOffset, 0f)
-                                beadOffsetY = if (limited <= -slowdownZone) {
-                                    val resistance = 0.35f
-                                    beadOffsetY + (dragAmount * resistance)
-                                } else {
-                                    limited
-                                }.coerceIn(-maxOffset, 0f)
-
-                                hasReachedReleaseZone = beadOffsetY <= releaseThreshold
-                            },
-                            onDragEnd = {
-                                if (hasReachedReleaseZone) {
-                                    onSwipeUp()
-                                }
-                                beadOffsetY = 0f
-                                hasReachedReleaseZone = false
-                            }
-                        )
-                },
-                contentAlignment = Alignment.TopCenter
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.bead_png),
-                    contentDescription = "Tasbih bead",
-                    modifier = Modifier
-                        .height(beadSize)
-                        .width(beadSize)
-                )
-            }
+                    .size(beadSize)
+            )
         }
     }
 }

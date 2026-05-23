@@ -17,13 +17,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableIntState
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,11 +39,22 @@ private val PrimaryText = Color(0xFF20242C)
 private val SecondaryText = Color(0xFF6C7382)
 private val SoftRow = Color(0xFFF6F6F8)
 
+
 @Preview(showBackground = true)
 @Composable
 fun PrayerTrackerCard() {
-    val prayerCompleted = remember { mutableStateListOf(false,false,false,false,false) }
-    val totalPrayerCount = remember { mutableIntStateOf(0) }
+    val prayers = remember {
+        mutableStateListOf(
+            PrayerUiState("Fajr", "05:30"),
+            PrayerUiState("Dhuhr", "12:45"),
+            PrayerUiState("Asr", "16:15"),
+            PrayerUiState("Maghrib", "18:56"),
+            PrayerUiState("Isha", "20:10")
+        )
+    }
+    val totalPrayerCount = prayers.count { it.completed }
+    val progress = totalPrayerCount / 5f
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
@@ -69,7 +78,7 @@ fun PrayerTrackerCard() {
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "${totalPrayerCount.intValue} of 5 completed",
+                        text = "${totalPrayerCount} of 5 completed",
                         color = SecondaryText,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold
@@ -79,12 +88,18 @@ fun PrayerTrackerCard() {
                 Box(
                     modifier = Modifier
                         .size(104.dp)
-                        .clip(CircleShape)
-                        .border(8.dp, Color(0xFFF2F2F4), CircleShape),
+                        .clip(CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
+                    CircularProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier.size(104.dp),
+                        strokeWidth = 8.dp,
+                        color = Color(0xFF20242C),
+                        trackColor = Color(0xFFF2F2F4)
+                    )
                     Text(
-                        text = "${totalPrayerCount.intValue}/5",
+                        text = "${totalPrayerCount}/5",
                         color = PrimaryText,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold
@@ -93,40 +108,30 @@ fun PrayerTrackerCard() {
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-            PrayerRow("Fajr", "05:30",prayerCompleted[0],0,
-                onClick = {index -> handlePrayerClick(index,prayerCompleted,totalPrayerCount)})
-            Spacer(modifier = Modifier.height(14.dp))
-            PrayerRow("Dhuhr", "12:45",prayerCompleted[1],1,
-                onClick = {index -> handlePrayerClick(index,prayerCompleted,totalPrayerCount)})
-            Spacer(modifier = Modifier.height(14.dp))
-            PrayerRow("Asr", "16:15",prayerCompleted[2],2,
-                onClick = {index -> handlePrayerClick(index,prayerCompleted,totalPrayerCount)})
-            Spacer(modifier = Modifier.height(14.dp))
-            PrayerRow("Maghrib", "18:56",prayerCompleted[3],3,
-                onClick = {index -> handlePrayerClick(index,prayerCompleted,totalPrayerCount)})
-            Spacer(modifier = Modifier.height(14.dp))
-            PrayerRow("Isha", "20:10",prayerCompleted[4],4,
-                onClick = {index -> handlePrayerClick(index,prayerCompleted,totalPrayerCount)})
+            prayers.forEachIndexed { index, prayer ->
+                PrayerRow(
+                    name = prayer.name,
+                    time = prayer.time,
+                    completed = prayer.completed,
+                    onClick = {
+                        prayers[index] = prayer.copy(completed = !prayer.completed)
+                    }
+                )
+                if (index != prayers.lastIndex) {
+                    Spacer(modifier = Modifier.height(14.dp))
+                }
+            }
         }
     }
-
-
-}
-
-private fun handlePrayerClick(
-    index: Int,
-    prayerCompleted: SnapshotStateList<Boolean>,
-    totalPrayerCount: MutableIntState
-){
-    prayerCompleted[index] = !prayerCompleted[index]
-    totalPrayerCount.intValue = prayerCompleted.count { it }
-
-    println("Prayer clicked $index")
-
 }
 
 @Composable
-private fun PrayerRow(name: String, time: String,completed: Boolean,pos: Int,onClick: (Int) -> Unit) {
+private fun PrayerRow(
+    name: String,
+    time: String,
+    completed: Boolean,
+    onClick: () -> Unit
+) {
 
     Row(
         modifier = Modifier
@@ -138,17 +143,7 @@ private fun PrayerRow(name: String, time: String,completed: Boolean,pos: Int,onC
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if(!completed){
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .border(3.dp, Color(0xFFC9CDD6), CircleShape)
-                        .clickable(
-                            onClick = { onClick(pos) }
-                        )
-                )
-            }else{
+            if (completed) {
                 Image(
                     painter = painterResource(id = R.drawable.check_tick),
                     contentDescription = "Tick",
@@ -156,9 +151,15 @@ private fun PrayerRow(name: String, time: String,completed: Boolean,pos: Int,onC
                         .size(40.dp)
                         .clip(CircleShape)
                         .border(3.dp, Color(0xFFC9CDD6), CircleShape)
-                        .clickable(
-                            onClick = { onClick(pos) }
-                        )
+                        .clickable(onClick = onClick)
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .border(3.dp, Color(0xFFC9CDD6), CircleShape)
+                        .clickable(onClick = onClick)
                 )
             }
 
