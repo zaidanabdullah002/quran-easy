@@ -15,7 +15,9 @@ import com.zaidan.quraneasy.feature.home.presentation.homeGraph
 import com.zaidan.quraneasy.feature.dhikr.presentation.dhikrGraph
 import com.zaidan.quraneasy.feature.quran.presentation.quranGraph
 import com.zaidan.quraneasy.feature.tasbih.presentation.tasbihGraph
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -1,32 +1,33 @@
 package com.zaidan.quraneasy.feature.tasbih.presentation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.zaidan.quraneasy.feature.tasbih.presentation.viewmodel.TasbihViewModel
 
 @Preview(showBackground = true)
 @Composable
 fun TasbihScreenPreview() {
-    TasbihScreen(onBackClick = {})
+    TasbihScreen(onBackClick = {},viewModel = viewModel())
 }
 
 @Composable
 fun TasbihScreen(
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    viewModel: TasbihViewModel
 ) {
 
-    var uiState by remember { mutableStateOf(TasbihUiState()) }
+    val uiState by viewModel.uiStateFlow.collectAsState()
 
     TasbihContent(
         uiState = uiState,
         onBackClick = onBackClick,
-        onResetClick = { uiState = uiState.copy(count = 0) },
-        onSwipeUp = { uiState = uiState.copy(count = uiState.count + 1) },
+        onResetClick = { viewModel.resetCount() },
+        onSwipeUp = { viewModel.incrementCount() },
         onTargetChange = {
-            uiState = uiState.copy(target = it)
+            viewModel.setTarget(it)
         }
     )
 }
