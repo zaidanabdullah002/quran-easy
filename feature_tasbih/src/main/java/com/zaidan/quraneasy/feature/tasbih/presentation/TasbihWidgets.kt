@@ -87,9 +87,15 @@ fun TasbihCounterRingPreview(){
 }
 
 @Composable
-fun TasbihCounterRing(count: Int, target: Int, modifier: Modifier = Modifier) {
+fun TasbihCounterRing(
+    count: Int,
+    target: Int,
+    modifier: Modifier = Modifier,
+    countTextSize: androidx.compose.ui.unit.TextUnit = 92.sp,
+    labelTextSize: androidx.compose.ui.unit.TextUnit = 24.sp
+) {
     Box(
-        modifier = modifier.size(340.dp),
+        modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -114,7 +120,7 @@ fun TasbihCounterRing(count: Int, target: Int, modifier: Modifier = Modifier) {
                 size = Size(radius * 2f, radius * 2f),
                 style = Stroke(
                     width = strokeWidth,
-                    cap = StrokeCap.Round
+                    cap = StrokeCap.Butt
                 )
             )
         }
@@ -123,13 +129,13 @@ fun TasbihCounterRing(count: Int, target: Int, modifier: Modifier = Modifier) {
             Text(
                 text = count.toString(),
                 color = Color(0xFF232323),
-                fontSize = 92.sp,
+                fontSize = countTextSize,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
                 text = "Count",
                 color = Color(0xFF70798A),
-                fontSize = 24.sp,
+                fontSize = labelTextSize,
                 fontWeight = FontWeight.Medium
             )
         }
