@@ -3,8 +3,8 @@ package com.zaidan.quraneasy.feature.prayer.data.repository
 import com.zaidan.quraneasy.feature.prayer.data.local.PrayerDao
 import com.zaidan.quraneasy.feature.prayer.data.local.PrayerEntity
 import com.zaidan.quraneasy.feature.prayer.domain.Prayer
+import com.zaidan.quraneasy.feature.prayer.domain.PrayerState
 import com.zaidan.quraneasy.feature.prayer.domain.repository.PrayerRepository
-import com.zaidan.quraneasy.feature.prayer.presentation.PrayerUiState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -14,9 +14,9 @@ import javax.inject.Singleton
 class PrayerRepositoryImpl @Inject constructor(
     private val prayerDao : PrayerDao
 )  : PrayerRepository {
-    override fun observePrayerStatus(): Flow<PrayerUiState> {
+    override fun observePrayerStatus(): Flow<PrayerState> {
         return  prayerDao.observePrayers().map { entities ->
-            PrayerUiState(
+            PrayerState(
                 prayers = entities.map {
                     it.toDomain()
                 }

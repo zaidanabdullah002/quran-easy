@@ -2,8 +2,8 @@ package com.zaidan.quraneasy.feature.tasbih.data.repository
 
 import com.zaidan.quraneasy.feature.tasbih.data.local.TasbihDao
 import com.zaidan.quraneasy.feature.tasbih.data.local.TasbihEntity
+import com.zaidan.quraneasy.feature.tasbih.domain.TasbihState
 import com.zaidan.quraneasy.feature.tasbih.domain.repository.TasbihRepository
-import com.zaidan.quraneasy.feature.tasbih.presentation.TasbihUiState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -15,9 +15,9 @@ class TasbihRepositoryImpl @Inject constructor(
     private val tasbihDao: TasbihDao
 ) : TasbihRepository {
 
-    override fun observeTasbihState(): Flow<TasbihUiState> {
+    override fun observeTasbihState(): Flow<TasbihState> {
         return tasbihDao.getTasbihState().map { entity ->
-            entity?.toUiState() ?: TasbihUiState()
+            entity?.toDomainState() ?: TasbihState()
         }
     }
 
@@ -50,8 +50,8 @@ class TasbihRepositoryImpl @Inject constructor(
         )
     }
 
-    private fun TasbihEntity.toUiState(): TasbihUiState {
-        return TasbihUiState(
+    private fun TasbihEntity.toDomainState(): TasbihState {
+        return TasbihState(
             count = count,
             target = target,
             tasbihText = tasbihText

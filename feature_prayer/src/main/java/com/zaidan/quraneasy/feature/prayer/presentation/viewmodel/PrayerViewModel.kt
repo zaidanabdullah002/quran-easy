@@ -2,13 +2,16 @@ package com.zaidan.quraneasy.feature.prayer.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zaidan.quraneasy.feature.prayer.domain.PrayerState
 import com.zaidan.quraneasy.feature.prayer.domain.usercase.InitPrayerDataUseCase
 import com.zaidan.quraneasy.feature.prayer.domain.usercase.ObservePrayerStateUseCase
 import com.zaidan.quraneasy.feature.prayer.domain.usercase.TogglePrayerStatusUseCase
 import com.zaidan.quraneasy.feature.prayer.presentation.PrayerUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -20,30 +23,21 @@ class PrayerViewModel @Inject constructor(
     private val initPrayerDataUseCase: InitPrayerDataUseCase
 )  : ViewModel(){
 
-    init {
-        viewModelScope.launch {
-            initPrayerData()
-        }
-
-    }
-
-    suspend fun initPrayerData(){
-        viewModelScope.launch {
-            observePrayerStateUseCase().collect {
-                if(it.prayers.isEmpty()){
-                    initPrayerDataUseCase()
-                }
-            }
-        }
-    }
-
     val uiStateFlow: StateFlow<PrayerUiState> = observePrayerStateUseCase()
-
+        .map { state -> state.toUiState() }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = PrayerUiState()
         )
+
+    init {
+        viewModelScope.launch {
+            if (observePrayerStateUseCase().first().prayers.isEmpty()) {
+                initPrayerDataUseCase()
+            }
+        }
+    }
 
 
 
@@ -56,7 +50,7 @@ class PrayerViewModel @Inject constructor(
         }
     }
 
-
-
-
+    private fun PrayerState.toUiState(): PrayerUiState {
+        return PrayerUiState(prayers = prayers)
+    }
 }
