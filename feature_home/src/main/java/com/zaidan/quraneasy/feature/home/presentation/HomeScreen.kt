@@ -15,8 +15,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zaidan.quraneasy.core.theme.AppDimens
 import com.zaidan.quraneasy.feature.prayer.presentation.PrayerTrackerCard
+import com.zaidan.quraneasy.feature.prayer.presentation.viewmodel.PrayerViewModel
 
 @Preview(showBackground = true)
 @Composable
@@ -24,7 +26,8 @@ fun HomeScreenPreview(){
     HomeScreen(
         onReadQuranClick = {},
         onTasbihClick = {},
-        onDhikrClick = {}
+        onDhikrClick = {},
+        prayerViewModel = viewModel()
     )
 }
 
@@ -32,7 +35,8 @@ fun HomeScreenPreview(){
 fun HomeScreen(
     onReadQuranClick: () -> Unit,
     onTasbihClick: () -> Unit,
-    onDhikrClick: () -> Unit
+    onDhikrClick: () -> Unit,
+    prayerViewModel: PrayerViewModel
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize()
@@ -56,7 +60,7 @@ fun HomeScreen(
                 onDhikrClick = onDhikrClick
             )
             Spacer(modifier = Modifier.height(AppDimens.LargeSectionSpacing.dp))
-            PrayerTrackerCard()
+            PrayerTrackerCard(prayerViewModel)
             Spacer(modifier = Modifier.height(AppDimens.ScreenPaddingLarge.dp))
         }
     }

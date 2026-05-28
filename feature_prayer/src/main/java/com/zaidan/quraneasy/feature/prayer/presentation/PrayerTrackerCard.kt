@@ -20,6 +20,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,7 +32,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zaidan.quraneasy.core.R
+import com.zaidan.quraneasy.feature.prayer.presentation.viewmodel.PrayerViewModel
 
 
 private val SurfaceWhite = Color(0xFFFFFFFF)
@@ -42,16 +45,15 @@ private val SoftRow = Color(0xFFF6F6F8)
 
 @Preview(showBackground = true)
 @Composable
-fun PrayerTrackerCard() {
-    val prayers = remember {
-        mutableStateListOf(
-            PrayerUiState("Fajr", "05:30"),
-            PrayerUiState("Dhuhr", "12:45"),
-            PrayerUiState("Asr", "16:15"),
-            PrayerUiState("Maghrib", "18:56"),
-            PrayerUiState("Isha", "20:10")
-        )
-    }
+fun PrayerTrackerCardPreview() {
+    PrayerTrackerCard(prayerViewModel = viewModel())
+}
+
+@Composable
+fun PrayerTrackerCard(prayerViewModel: PrayerViewModel) {
+
+    val uiState = prayerViewModel.uiStateFlow.collectAsState()
+    val prayers = uiState.value.prayers
     val totalPrayerCount = prayers.count { it.completed }
     val progress = totalPrayerCount / 5f
 
@@ -114,7 +116,7 @@ fun PrayerTrackerCard() {
                     time = prayer.time,
                     completed = prayer.completed,
                     onClick = {
-                        prayers[index] = prayer.copy(completed = !prayer.completed)
+                        prayerViewModel.togglePrayer(index)
                     }
                 )
                 if (index != prayers.lastIndex) {

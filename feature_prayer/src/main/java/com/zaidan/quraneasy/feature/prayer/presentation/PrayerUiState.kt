@@ -1,7 +1,7 @@
 package com.zaidan.quraneasy.feature.prayer.presentation
 
+import com.zaidan.quraneasy.feature.prayer.domain.Prayer
+
 data class PrayerUiState(
-    val name: String,
-    val time: String,
-    val completed: Boolean = false
+    val prayers : List<Prayer> = emptyList()
 )
