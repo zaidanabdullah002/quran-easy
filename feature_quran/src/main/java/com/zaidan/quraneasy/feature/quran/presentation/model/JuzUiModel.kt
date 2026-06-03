@@ -1,7 +1,7 @@
-package com.zaidan.quraneasy.feature.quran.data.model
+package com.zaidan.quraneasy.feature.quran.presentation.model
 
-data class SurahUiModel(
-    val number: Int,
+data class JuzUiModel(
+    val juzNum: Int,
     val englishName: String,
     val translation: String,
     val verses: Int,

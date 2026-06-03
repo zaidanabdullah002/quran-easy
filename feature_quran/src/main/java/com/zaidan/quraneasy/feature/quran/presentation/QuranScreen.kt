@@ -22,21 +22,26 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.zaidan.quraneasy.feature.quran.data.model.SurahUiModel
+import com.zaidan.quraneasy.feature.quran.presentation.model.JuzUiModel
+import com.zaidan.quraneasy.feature.quran.presentation.model.SurahUiModel
 
 @Preview(showBackground = true)
 @Composable
 fun QuranScreenPreview(){
     QuranScreen(
         onBackClick = {},
-        onSurahClick = {}
+        onSurahClick = {},
+        onJuzClick = {},
+        onBookmarkClick = {}
     )
 }
 
 @Composable
 fun QuranScreen(
     onBackClick: () -> Unit,
-    onSurahClick: (Int) -> Unit
+    onSurahClick: (Int) -> Unit,
+    onJuzClick: (Int) -> Unit,
+    onBookmarkClick: () -> Unit
 ) {
 
     val surahs = listOf(
@@ -55,6 +60,25 @@ fun QuranScreen(
         SurahUiModel(114, "An-Nas", "Mankind", 6, "الناس"),
         SurahUiModel(114, "An-Nas", "Mankind", 6, "الناس"),
     )
+
+    val juz = listOf(
+        JuzUiModel(1, "Al-Fatihah", "The Opening", 7, "الفاتحة"),
+        JuzUiModel(2, "Al-Baqarah", "The Cow", 286, "البقرة"),
+        JuzUiModel(112, "Al-Ikhlas", "The Sincerity", 4, "الإخلاص"),
+        JuzUiModel(113, "Al-Falaq", "The Daybreak", 5, "الفلق"),
+        JuzUiModel(114, "An-Nas", "Mankind", 6, "الناس"),
+        JuzUiModel(114, "An-Nas", "Mankind", 6, "الناس"),
+        JuzUiModel(114, "An-Nas", "Mankind", 6, "الناس"),
+        JuzUiModel(1, "Al-Fatihah", "The Opening", 7, "الفاتحة"),
+        JuzUiModel(2, "Al-Baqarah", "The Cow", 286, "البقرة"),
+        JuzUiModel(112, "Al-Ikhlas", "The Sincerity", 4, "الإخلاص"),
+        JuzUiModel(113, "Al-Falaq", "The Daybreak", 5, "الفلق"),
+        JuzUiModel(114, "An-Nas", "Mankind", 6, "الناس"),
+        JuzUiModel(114, "An-Nas", "Mankind", 6, "الناس"),
+        JuzUiModel(114, "An-Nas", "Mankind", 6, "الناس"),
+    ).sortedBy {
+        it.juzNum
+    }
 
     var selectedTab by remember { mutableStateOf(0) }
 
@@ -76,12 +100,21 @@ fun QuranScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-
-        items(surahs) { surah ->
-                SurahCard(
-                    surah = surah,
-                    onClick = { onSurahClick(surah.number) }
-                )
+            if(selectedTab == ReaderType.SURAH.ordinal) {
+                items(surahs) { surah ->
+                    SurahCard(
+                        surah = surah,
+                        onClick = { onSurahClick(surah.number) }
+                    )
+                }
+            }
+            else{
+                items(juz) { juz ->
+                    JuzCard(
+                        juz = juz,
+                        onClick = { onJuzClick(juz.juzNum) }
+                    )
+                }
             }
         }
     }
@@ -98,14 +131,14 @@ fun TopSection(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color(0xFF252525))
-            .padding(top = 14.dp)
+            .statusBarsPadding()
     ) {
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp)
+                .padding(horizontal = 14.dp, vertical = 8.dp)
         ) {
 
             IconButton(onClick = onBackClick) {
@@ -125,7 +158,7 @@ fun TopSection(
             )
         }
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         Row(
             modifier = Modifier
@@ -148,7 +181,7 @@ fun TopSection(
                 },
                 title = "Surah",
                 onClick = {
-                    onTabSelected(0)
+                    onTabSelected(ReaderType.SURAH.ordinal)
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -163,7 +196,7 @@ fun TopSection(
                 },
                 title = "Juz",
                 onClick = {
-                    onTabSelected(1)
+                    onTabSelected(ReaderType.JUZ.ordinal)
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -303,6 +336,86 @@ fun SurahCard(
 
             Text(
                 text = surah.arabicName,
+                fontSize = 36.sp,
+                color = Color.Black,
+                textAlign = TextAlign.End,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+@Composable
+fun JuzCard(
+    juz: JuzUiModel,
+    onClick: () -> Unit = {}
+) {
+
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        shape = RoundedCornerShape(28.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 3.dp
+        )
+    ) {
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = 18.dp,
+                    vertical = 22.dp
+                ),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Box(
+                modifier = Modifier
+                    .size(96.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(Color(0xFF232323)),
+                contentAlignment = Alignment.Center
+            ) {
+
+                Text(
+                    text = juz.juzNum.toString(),
+                    color = Color.White,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.width(18.dp))
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+
+                Text(
+                    text = juz.englishName,
+                    fontSize = 23.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF151515)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "${juz.translation} • ${juz.verses} verses",
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF73798B)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Text(
+                text = juz.arabicName,
                 fontSize = 36.sp,
                 color = Color.Black,
                 textAlign = TextAlign.End,

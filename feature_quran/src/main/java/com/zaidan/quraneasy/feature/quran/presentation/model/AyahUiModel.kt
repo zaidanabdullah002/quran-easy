@@ -1,4 +1,4 @@
-package com.zaidan.quraneasy.feature.quran.data.model
+package com.zaidan.quraneasy.feature.quran.presentation.model
 
 data class AyahUiModel(
     val ayahNumber: Int,

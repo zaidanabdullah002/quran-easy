@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,7 +30,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.zaidan.quraneasy.feature.quran.data.model.AyahUiModel
+import com.zaidan.quraneasy.feature.quran.presentation.model.AyahUiModel
+import com.zaidan.quraneasy.feature.quran.presentation.model.TitleUiModel
 
 private val ReaderBackground = Color(0xFFF3F3F3)
 private val ReaderTopBar = Color(0xFF2B2B2B)
@@ -41,22 +42,28 @@ private val FooterBorder = Color(0xFFD8D8D8)
 private fun QuranReaderScreenPreview() {
     QuranReaderScreen(
         onBackClick = {},
-        surahNumber = 1
+        readerType = ReaderType.SURAH.ordinal
     )
 }
 
 @Composable
 fun QuranReaderScreen(
     onBackClick: () -> Unit,
-    surahNumber: Int
+    readerType: Int,
+    itemNumber: Int = 1
+
 ) {
-    val surah = if (surahNumber == 1) {
-        readerSampleSurah()
-    } else {
-        readerSampleSurah().copy(
-            surahNameEnglish = "Al-Baqarah",
-            surahNameArabic = "البقرة",
-            versesLabel = "286 verses"
+    val title = if(readerType == ReaderType.SURAH.ordinal){
+        TitleUiModel(
+            title = "Al-Fatihah",
+            subtitle = "7 verses",
+            arabicName = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"
+        )
+    }else{
+        TitleUiModel(
+            title = "Juz-1",
+            subtitle = "7 verses",
+            arabicName = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"
         )
     }
 
@@ -67,8 +74,8 @@ fun QuranReaderScreen(
             .fillMaxSize()
             .background(ReaderBackground)
     ) {
-        QuranReaderTopBar(
-            surah = surah,
+         QuranReaderTopBar(
+            title = title,
             onBackClick = onBackClick
         )
 
@@ -76,6 +83,7 @@ fun QuranReaderScreen(
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 20.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp),
             modifier = Modifier.fillMaxWidth()
+                .weight(1f)
         ) {
             items(ayahs) { ayah ->
                 QuranAyahCard(ayah = ayah)
@@ -83,25 +91,26 @@ fun QuranReaderScreen(
         }
 
         QuranReaderFooter(
-            footerText = "Surah ${surahNumber} • Meccan"
+            footerText = "Surah ${itemNumber} • Meccan"
         )
     }
 }
 
 @Composable
 private fun QuranReaderTopBar(
-    surah: AyahUiModel,
+    title: TitleUiModel,
     onBackClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(ReaderTopBar)
+            .statusBarsPadding()
             .padding(horizontal = 14.dp, vertical = 16.dp)
     ) {
         RowCenteredTopBar(
             onBackClick = onBackClick,
-            surah = surah
+            title = title
         )
     }
 }
@@ -109,7 +118,7 @@ private fun QuranReaderTopBar(
 @Composable
 private fun RowCenteredTopBar(
     onBackClick: () -> Unit,
-    surah: AyahUiModel
+    title: TitleUiModel
 ) {
     androidx.compose.foundation.layout.Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -135,20 +144,20 @@ private fun RowCenteredTopBar(
 
         Column(modifier = Modifier.fillMaxWidth(0.62f)) {
             Text(
-                text = surah.surahNameEnglish,
+                text = title.title,
                 color = Color.White,
                 fontSize = 23.sp,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = "${surah.surahNameArabic} • ${surah.versesLabel}",
+                text = "${title.subtitle}",
                 color = Color.White.copy(alpha = 0.78f),
                 fontSize = 16.sp
             )
         }
 
         Text(
-            text = surah.surahNameArabic,
+            text = title.arabicName,
             modifier = Modifier.fillMaxWidth(),
             color = Color.White,
             fontSize = 30.sp,

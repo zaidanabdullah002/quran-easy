@@ -13,17 +13,23 @@ fun NavGraphBuilder.quranGraph(
     composable(Screen.Quran.route) {
         QuranScreen(
             onBackClick = { navController.popBackStack() },
-            onSurahClick = { surahNumber -> navController.navigate(QuranRoutes.reader(surahNumber)) }
+            onSurahClick = { surahNumber -> navController.navigate(QuranRoutes.reader(ReaderType.SURAH.ordinal,surahNumber)) },
+            onJuzClick = { juzNumber -> navController.navigate(QuranRoutes.reader(ReaderType.JUZ.ordinal,juzNumber)) },
+            onBookmarkClick = {}
         )
     }
 
     composable(
-        route = QuranRoutes.reader,
-        arguments = listOf(navArgument("surahNumber") { type = NavType.IntType })
+        route = QuranRoutes.reader ,
+        arguments = listOf(
+            navArgument("readerType") { type = NavType.IntType },
+            navArgument("itemNumber") { type = NavType.IntType }
+            )
     ) { backStackEntry ->
         QuranReaderScreen(
             onBackClick = { navController.popBackStack() },
-            surahNumber = backStackEntry.arguments?.getInt("surahNumber") ?: 1
+            readerType = backStackEntry.arguments?.getInt("readerType") ?: 0,
+            itemNumber = backStackEntry.arguments?.getInt("surahNumber") ?: 1
         )
     }
 }
