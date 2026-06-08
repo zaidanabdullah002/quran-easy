@@ -29,4 +29,5 @@ android {
 dependencies {
     implementation("androidx.compose.ui:ui:1.7.6")
     implementation("androidx.compose.ui:ui-unit:1.7.6")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
 }

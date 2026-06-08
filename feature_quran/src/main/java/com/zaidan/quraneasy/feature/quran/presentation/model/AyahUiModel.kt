@@ -1,10 +1,8 @@
 package com.zaidan.quraneasy.feature.quran.presentation.model
 
 data class AyahUiModel(
-    val ayahNumber: Int,
+    val surahNumber: Int,
+    val numberInSurah: Int,
     val arabicText: String,
-    val translation: String,
-    val surahNameEnglish: String,
-    val surahNameArabic: String,
-    val versesLabel: String
+    val translation: String? = null,
 )

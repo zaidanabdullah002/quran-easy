@@ -1,6 +1,6 @@
 package com.zaidan.quraneasy.feature.quran.presentation.model
 
-data class TitleUiModel(
+data class ReaderHeaderUiModel(
     val title: String,
     val subtitle: String,
     val arabicName: String

@@ -1,16 +1,17 @@
 package com.zaidan.quraneasy.feature.quran.presentation
 
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.KeyboardArrowLeft
-import androidx.compose.material.icons.outlined.MenuBook
-import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,17 +23,33 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zaidan.quraneasy.feature.quran.presentation.model.JuzUiModel
+import com.zaidan.quraneasy.feature.quran.presentation.model.QuranUiState
 import com.zaidan.quraneasy.feature.quran.presentation.model.SurahUiModel
+import com.zaidan.quraneasy.feature.quran.presentation.viewmodel.QuranViewModel
 
 @Preview(showBackground = true)
 @Composable
 fun QuranScreenPreview(){
-    QuranScreen(
+    QuranScreenContent(
+        QuranUiState(
+            isLoading = false,
+            isReady = true,
+            surahs = listOf(
+                SurahUiModel(1, "Al-Fatihah", "The Opening", 7, "الفاتحة"),
+                SurahUiModel(2, "Al-Baqarah", "The Cow", 286, "البقرة")
+            ),
+            juzs = listOf(
+                JuzUiModel(1, "Juz 1", 7),
+                JuzUiModel(2, "Juz 2", 286)
+            )
+        ),
         onBackClick = {},
         onSurahClick = {},
         onJuzClick = {},
-        onBookmarkClick = {}
+        onBookmarkClick = {},
+        selectTab = {}
     )
 }
 
@@ -41,47 +58,34 @@ fun QuranScreen(
     onBackClick: () -> Unit,
     onSurahClick: (Int) -> Unit,
     onJuzClick: (Int) -> Unit,
-    onBookmarkClick: () -> Unit
+    onBookmarkClick: () -> Unit,
+    quranViewModel: QuranViewModel
 ) {
-
-    val surahs = listOf(
-        SurahUiModel(1, "Al-Fatihah", "The Opening", 7, "الفاتحة"),
-        SurahUiModel(2, "Al-Baqarah", "The Cow", 286, "البقرة"),
-        SurahUiModel(112, "Al-Ikhlas", "The Sincerity", 4, "الإخلاص"),
-        SurahUiModel(113, "Al-Falaq", "The Daybreak", 5, "الفلق"),
-        SurahUiModel(114, "An-Nas", "Mankind", 6, "الناس"),
-        SurahUiModel(114, "An-Nas", "Mankind", 6, "الناس"),
-        SurahUiModel(114, "An-Nas", "Mankind", 6, "الناس"),
-        SurahUiModel(1, "Al-Fatihah", "The Opening", 7, "الفاتحة"),
-        SurahUiModel(2, "Al-Baqarah", "The Cow", 286, "البقرة"),
-        SurahUiModel(112, "Al-Ikhlas", "The Sincerity", 4, "الإخلاص"),
-        SurahUiModel(113, "Al-Falaq", "The Daybreak", 5, "الفلق"),
-        SurahUiModel(114, "An-Nas", "Mankind", 6, "الناس"),
-        SurahUiModel(114, "An-Nas", "Mankind", 6, "الناس"),
-        SurahUiModel(114, "An-Nas", "Mankind", 6, "الناس"),
+    val uiState = quranViewModel.uiState.collectAsStateWithLifecycle().value
+    QuranScreenContent(
+        uiState = uiState,
+        selectTab = quranViewModel::selectTab,
+        onBackClick = onBackClick,
+        onSurahClick = onSurahClick,
+        onJuzClick = onJuzClick,
+        onBookmarkClick = onBookmarkClick
     )
+}
 
-    val juz = listOf(
-        JuzUiModel(1, "Al-Fatihah", "The Opening", 7, "الفاتحة"),
-        JuzUiModel(2, "Al-Baqarah", "The Cow", 286, "البقرة"),
-        JuzUiModel(112, "Al-Ikhlas", "The Sincerity", 4, "الإخلاص"),
-        JuzUiModel(113, "Al-Falaq", "The Daybreak", 5, "الفلق"),
-        JuzUiModel(114, "An-Nas", "Mankind", 6, "الناس"),
-        JuzUiModel(114, "An-Nas", "Mankind", 6, "الناس"),
-        JuzUiModel(114, "An-Nas", "Mankind", 6, "الناس"),
-        JuzUiModel(1, "Al-Fatihah", "The Opening", 7, "الفاتحة"),
-        JuzUiModel(2, "Al-Baqarah", "The Cow", 286, "البقرة"),
-        JuzUiModel(112, "Al-Ikhlas", "The Sincerity", 4, "الإخلاص"),
-        JuzUiModel(113, "Al-Falaq", "The Daybreak", 5, "الفلق"),
-        JuzUiModel(114, "An-Nas", "Mankind", 6, "الناس"),
-        JuzUiModel(114, "An-Nas", "Mankind", 6, "الناس"),
-        JuzUiModel(114, "An-Nas", "Mankind", 6, "الناس"),
-    ).sortedBy {
-        it.juzNum
-    }
-
-    var selectedTab by remember { mutableStateOf(0) }
-
+@Composable
+private fun QuranScreenContent(
+    uiState: QuranUiState,
+    onBackClick: () -> Unit,
+    onSurahClick: (Int) -> Unit,
+    onJuzClick: (Int) -> Unit,
+    onBookmarkClick: () -> Unit,
+    selectTab: (Int) -> Unit
+) {
+    val TAG = "QuranScreenContent"
+    Log.i(TAG,"uiState : $uiState")
+    val surahs = uiState.surahs
+    val juz = uiState.juzs
+    val selectedTab = uiState.selectedTab
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -90,30 +94,46 @@ fun QuranScreen(
 
         TopSection(
             selectedTab = selectedTab,
-            onTabSelected = {selectedTab = it},
+            onTabSelected = {selectTab(it) },
             onBackClick = onBackClick)
 
-        LazyColumn(
-            contentPadding = PaddingValues(
-                horizontal = 12.dp,
-                vertical = 18.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(18.dp)
-        ) {
-            if(selectedTab == ReaderType.SURAH.ordinal) {
-                items(surahs) { surah ->
-                    SurahCard(
-                        surah = surah,
-                        onClick = { onSurahClick(surah.number) }
-                    )
-                }
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
-            else{
-                items(juz) { juz ->
-                    JuzCard(
-                        juz = juz,
-                        onClick = { onJuzClick(juz.juzNum) }
-                    )
+        } else if (uiState.message.isNotEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = uiState.message)
+            }
+        } else {
+            LazyColumn(
+                contentPadding = PaddingValues(
+                    horizontal = 12.dp,
+                    vertical = 18.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(18.dp)
+            ) {
+                if(selectedTab == ReaderType.SURAH.ordinal) {
+                    items(surahs) { surah ->
+                        SurahCard(
+                            surah = surah,
+                            onClick = { onSurahClick(surah.number) }
+                        )
+                    }
+                }
+                else{
+                    items(juz) { juz ->
+                        JuzCard(
+                            juz = juz,
+                            onClick = { onJuzClick(juz.juzNum) }
+                        )
+                    }
                 }
             }
         }
@@ -175,7 +195,7 @@ fun TopSection(
                 selected = selectedTab == 0,
                 icon = {
                     Icon(
-                        Icons.Outlined.MenuBook,
+                        Icons.Filled.Menu,
                         contentDescription = null
                     )
                 },
@@ -190,7 +210,7 @@ fun TopSection(
                 selected = selectedTab == 1,
                 icon = {
                     Icon(
-                        Icons.Outlined.Layers,
+                        Icons.Outlined.DateRange,
                         contentDescription = null
                     )
                 },
@@ -205,7 +225,7 @@ fun TopSection(
                 selected = selectedTab == 2,
                 icon = {
                     Icon(
-                        Icons.Outlined.BookmarkBorder,
+                        Icons.Outlined.FavoriteBorder,
                         contentDescription = null
                     )
                 },
@@ -401,26 +421,7 @@ fun JuzCard(
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF151515)
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "${juz.translation} • ${juz.verses} verses",
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF73798B)
-                )
             }
-
-            Spacer(modifier = Modifier.width(10.dp))
-
-            Text(
-                text = juz.arabicName,
-                fontSize = 36.sp,
-                color = Color.Black,
-                textAlign = TextAlign.End,
-                fontWeight = FontWeight.SemiBold
-            )
         }
     }
 }

@@ -14,8 +14,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Book
-import androidx.compose.material.icons.outlined.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -31,7 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zaidan.quraneasy.feature.quran.presentation.model.AyahUiModel
-import com.zaidan.quraneasy.feature.quran.presentation.model.TitleUiModel
+import com.zaidan.quraneasy.feature.quran.presentation.model.ReaderHeaderUiModel
 
 private val ReaderBackground = Color(0xFFF3F3F3)
 private val ReaderTopBar = Color(0xFF2B2B2B)
@@ -42,7 +42,8 @@ private val FooterBorder = Color(0xFFD8D8D8)
 private fun QuranReaderScreenPreview() {
     QuranReaderScreen(
         onBackClick = {},
-        readerType = ReaderType.SURAH.ordinal
+        readerType = ReaderType.SURAH.ordinal,
+        itemNumber = 0
     )
 }
 
@@ -54,20 +55,18 @@ fun QuranReaderScreen(
 
 ) {
     val title = if(readerType == ReaderType.SURAH.ordinal){
-        TitleUiModel(
+        ReaderHeaderUiModel(
             title = "Al-Fatihah",
             subtitle = "7 verses",
             arabicName = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"
         )
     }else{
-        TitleUiModel(
+        ReaderHeaderUiModel(
             title = "Juz-1",
             subtitle = "7 verses",
             arabicName = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"
         )
     }
-
-    val ayahs = readerSampleAyahs()
 
     Column(
         modifier = Modifier
@@ -78,11 +77,15 @@ fun QuranReaderScreen(
             title = title,
             onBackClick = onBackClick
         )
-
+        val ayahs = listOf(
+            AyahUiModel(0,0,"s"),
+            AyahUiModel(1,1,"s")
+        )
         LazyColumn(
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 20.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .weight(1f)
         ) {
             items(ayahs) { ayah ->
@@ -91,14 +94,14 @@ fun QuranReaderScreen(
         }
 
         QuranReaderFooter(
-            footerText = "Surah ${itemNumber} • Meccan"
+            footerText = "Surah ${itemNumber}"
         )
     }
 }
 
 @Composable
 private fun QuranReaderTopBar(
-    title: TitleUiModel,
+    title: ReaderHeaderUiModel,
     onBackClick: () -> Unit
 ) {
     Column(
@@ -118,7 +121,7 @@ private fun QuranReaderTopBar(
 @Composable
 private fun RowCenteredTopBar(
     onBackClick: () -> Unit,
-    title: TitleUiModel
+    title: ReaderHeaderUiModel
 ) {
     androidx.compose.foundation.layout.Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -126,7 +129,7 @@ private fun RowCenteredTopBar(
     ) {
         IconButton(onClick = onBackClick) {
             Icon(
-                imageVector = Icons.Outlined.KeyboardArrowLeft,
+                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
                 contentDescription = "Back",
                 tint = Color.White
             )
@@ -135,7 +138,7 @@ private fun RowCenteredTopBar(
         Spacer(modifier = Modifier.padding(start = 4.dp))
 
         Icon(
-            imageVector = Icons.Outlined.Book,
+            imageVector = Icons.Outlined.FavoriteBorder,
             contentDescription = null,
             tint = Color.White
         )
@@ -171,38 +174,42 @@ private fun RowCenteredTopBar(
 private fun QuranAyahCard(
     ayah: AyahUiModel
 ) {
-    Column(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 3.dp,
+            pressedElevation = 6.dp
+        )
     ) {
-        Card(
-            shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+
             Text(
-                text = "Ayah ${ayah.ayahNumber}",
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                color = Color(0xFF747C8C),
-                fontSize = 18.sp
+                text = ayah.arabicText,
+                modifier = Modifier.fillMaxWidth(),
+                color = Color(0xFF202020),
+                fontSize = 32.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.End,
+                lineHeight = 48.sp
             )
+            ayah.translation?.let {
+                Text(
+                    text = ayah.translation,
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color(0xFF4E4E4E),
+                    fontSize = 18.sp,
+                    lineHeight = 28.sp
+                )
+            }
+
         }
-
-        Text(
-            text = ayah.arabicText,
-            modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFF202020),
-            fontSize = 38.sp,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.End
-        )
-
-        Text(
-            text = ayah.translation,
-            modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFF4E4E4E),
-            fontSize = 23.sp,
-            lineHeight = 32.sp
-        )
     }
 }
 
@@ -226,38 +233,3 @@ private fun QuranReaderFooter(
     }
 }
 
-private fun readerSampleSurah() = AyahUiModel(
-    ayahNumber = 1,
-    arabicText = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
-    translation = "In the name of Allah, the Entirely Merciful, the Especially Merciful.",
-    surahNameEnglish = "Al-Fatihah",
-    surahNameArabic = "الفاتحة",
-    versesLabel = "7 verses"
-)
-
-private fun readerSampleAyahs() = listOf(
-    AyahUiModel(
-        ayahNumber = 1,
-        arabicText = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
-        translation = "In the name of Allah, the Entirely Merciful, the Especially Merciful.",
-        surahNameEnglish = "Al-Fatihah",
-        surahNameArabic = "الفاتحة",
-        versesLabel = "7 verses"
-    ),
-    AyahUiModel(
-        ayahNumber = 2,
-        arabicText = "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",
-        translation = "All praise is due to Allah, Lord of the worlds.",
-        surahNameEnglish = "Al-Fatihah",
-        surahNameArabic = "الفاتحة",
-        versesLabel = "7 verses"
-    ),
-    AyahUiModel(
-        ayahNumber = 3,
-        arabicText = "الرَّحْمَٰنِ الرَّحِيمِ",
-        translation = "The Entirely Merciful, the Especially Merciful.",
-        surahNameEnglish = "Al-Fatihah",
-        surahNameArabic = "الفاتحة",
-        versesLabel = "7 verses"
-    )
-)
