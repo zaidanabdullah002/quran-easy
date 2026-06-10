@@ -2,8 +2,23 @@ package com.zaidan.quraneasy.feature.quran.presentation
 
 
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,38 +27,43 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.KeyboardArrowLeft
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zaidan.quraneasy.core.ui.AppErrorView
+import com.zaidan.quraneasy.core.ui.AppLoadingView
 import com.zaidan.quraneasy.feature.quran.presentation.model.JuzUiModel
 import com.zaidan.quraneasy.feature.quran.presentation.model.QuranUiState
 import com.zaidan.quraneasy.feature.quran.presentation.model.SurahUiModel
+import com.zaidan.quraneasy.feature.quran.presentation.model.dummyData.juzList
+import com.zaidan.quraneasy.feature.quran.presentation.model.dummyData.surahList
 import com.zaidan.quraneasy.feature.quran.presentation.viewmodel.QuranViewModel
 
 @Preview(showBackground = true)
 @Composable
-fun QuranScreenPreview(){
+fun QuranScreenPreview() {
     QuranScreenContent(
         QuranUiState(
             isLoading = false,
             isReady = true,
-            surahs = listOf(
-                SurahUiModel(1, "Al-Fatihah", "The Opening", 7, "الفاتحة"),
-                SurahUiModel(2, "Al-Baqarah", "The Cow", 286, "البقرة")
-            ),
-            juzs = listOf(
-                JuzUiModel(1, "Juz 1", 7),
-                JuzUiModel(2, "Juz 2", 286)
-            )
+            surahs = surahList,
+            juzs = juzList
         ),
         onBackClick = {},
         onSurahClick = {},
@@ -82,7 +102,7 @@ private fun QuranScreenContent(
     selectTab: (Int) -> Unit
 ) {
     val TAG = "QuranScreenContent"
-    Log.i(TAG,"uiState : $uiState")
+    Log.i(TAG, "uiState : $uiState")
     val surahs = uiState.surahs
     val juz = uiState.juzs
     val selectedTab = uiState.selectedTab
@@ -91,25 +111,28 @@ private fun QuranScreenContent(
             .fillMaxSize()
             .background(Color(0xFFF3F3F3))
     ) {
-
         TopSection(
             selectedTab = selectedTab,
-            onTabSelected = {selectTab(it) },
-            onBackClick = onBackClick)
+            onTabSelected = { selectTab(it) },
+            onBackClick = onBackClick
+        )
 
         if (uiState.isLoading) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                AppLoadingView(
+                    title = "Downloading surah list",
+                    subtitle = "Preparing the Quran index for offline browsing"
+                )
             }
         } else if (uiState.message.isNotEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = uiState.message)
+                AppErrorView(message = uiState.message)
             }
         } else {
             LazyColumn(
@@ -119,15 +142,14 @@ private fun QuranScreenContent(
                 ),
                 verticalArrangement = Arrangement.spacedBy(18.dp)
             ) {
-                if(selectedTab == ReaderType.SURAH.ordinal) {
+                if (selectedTab == ReaderType.SURAH.ordinal) {
                     items(surahs) { surah ->
                         SurahCard(
                             surah = surah,
                             onClick = { onSurahClick(surah.number) }
                         )
                     }
-                }
-                else{
+                } else {
                     items(juz) { juz ->
                         JuzCard(
                             juz = juz,
@@ -146,21 +168,18 @@ fun TopSection(
     onTabSelected: (Int) -> Unit,
     onBackClick: () -> Unit
 ) {
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color(0xFF252525))
             .statusBarsPadding()
     ) {
-
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 14.dp, vertical = 8.dp)
         ) {
-
             IconButton(onClick = onBackClick) {
                 Icon(
                     imageVector = Icons.Outlined.KeyboardArrowLeft,
@@ -190,7 +209,6 @@ fun TopSection(
                 .padding(8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-
             QuranTab(
                 selected = selectedTab == 0,
                 icon = {
@@ -249,7 +267,6 @@ fun QuranTab(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-
     Surface(
         onClick = onClick,
         modifier = modifier.fillMaxHeight(),
@@ -259,18 +276,15 @@ fun QuranTab(
         else
             Color.Transparent
     ) {
-
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-
             CompositionLocalProvider(
                 LocalContentColor provides
                         if (selected) Color(0xFF202020)
                         else Color.White.copy(alpha = 0.85f)
             ) {
-
                 icon()
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -290,77 +304,92 @@ fun SurahCard(
     surah: SurahUiModel,
     onClick: () -> Unit = {}
 ) {
-
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(26.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
-        shape = RoundedCornerShape(28.dp),
+        border = BorderStroke(1.dp, Color(0xFFE8E2D8)),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 3.dp
+            defaultElevation = 2.dp,
+            pressedElevation = 5.dp
         )
     ) {
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(
-                    horizontal = 18.dp,
-                    vertical = 22.dp
-                ),
+                .heightIn(min = 124.dp)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             Box(
                 modifier = Modifier
-                    .size(96.dp)
+                    .size(74.dp)
                     .clip(RoundedCornerShape(24.dp))
-                    .background(Color(0xFF232323)),
+                    .background(Color(0xFF1F1F1F)),
                 contentAlignment = Alignment.Center
             ) {
-
                 Text(
                     text = surah.number.toString(),
                     color = Color.White,
-                    fontSize = 22.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
 
-            Spacer(modifier = Modifier.width(18.dp))
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Box(
+                modifier = Modifier
+                    .width(1.dp)
+                    .height(82.dp)
+                    .background(Color(0xFFE9E2D7))
+            )
+
+            Spacer(modifier = Modifier.width(14.dp))
 
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-
                 Text(
                     text = surah.englishName,
-                    fontSize = 23.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF151515)
+                    color = Color(0xFF1A1A1A),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "${surah.translation} • ${surah.verses} verses",
-                    fontSize = 17.sp,
+                    text = surah.arabicName,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFF73798B)
+                    color = Color(0xFF444444),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Text(
+                    text = surah.translation,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF6F7681),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Text(
+                    text = "${surah.verses} verses",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF8B6F47),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
-
-            Spacer(modifier = Modifier.width(10.dp))
-
-            Text(
-                text = surah.arabicName,
-                fontSize = 36.sp,
-                color = Color.Black,
-                textAlign = TextAlign.End,
-                fontWeight = FontWeight.SemiBold
-            )
         }
     }
 }
@@ -370,56 +399,81 @@ fun JuzCard(
     juz: JuzUiModel,
     onClick: () -> Unit = {}
 ) {
-
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(26.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
-        shape = RoundedCornerShape(28.dp),
+        border = BorderStroke(1.dp, Color(0xFFE8E2D8)),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 3.dp
+            defaultElevation = 2.dp,
+            pressedElevation = 5.dp
         )
     ) {
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(
-                    horizontal = 18.dp,
-                    vertical = 22.dp
-                ),
+                .heightIn(min = 104.dp)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             Box(
                 modifier = Modifier
-                    .size(96.dp)
+                    .size(74.dp)
                     .clip(RoundedCornerShape(24.dp))
-                    .background(Color(0xFF232323)),
+                    .background(Color(0xFF1F1F1F)),
                 contentAlignment = Alignment.Center
             ) {
-
                 Text(
                     text = juz.juzNum.toString(),
                     color = Color.White,
-                    fontSize = 22.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
 
-            Spacer(modifier = Modifier.width(18.dp))
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Box(
+                modifier = Modifier
+                    .width(1.dp)
+                    .height(58.dp)
+                    .background(Color(0xFFE9E2D7))
+            )
+
+            Spacer(modifier = Modifier.width(14.dp))
 
             Column(
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-
                 Text(
                     text = juz.englishName,
-                    fontSize = 23.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF151515)
+                    color = Color(0xFF1A1A1A),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Text(
+                    text = "Juz ${juz.juzNum}",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF6F7681),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Text(
+                    text = "${juz.verses} verses",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF8B6F47),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

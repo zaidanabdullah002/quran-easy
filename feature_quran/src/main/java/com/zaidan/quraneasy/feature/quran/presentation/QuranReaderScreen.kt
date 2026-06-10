@@ -23,7 +23,6 @@ import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -39,6 +38,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.zaidan.quraneasy.core.ui.AppErrorView
+import com.zaidan.quraneasy.core.ui.AppLoadingView
 import com.zaidan.quraneasy.feature.quran.presentation.model.AyahUiModel
 import com.zaidan.quraneasy.feature.quran.presentation.model.AyahUiState
 import com.zaidan.quraneasy.feature.quran.presentation.model.ReaderHeaderUiModel
@@ -126,7 +127,18 @@ private fun QuranReaderContent(
                     .fillMaxHeight(0.84f),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                AppLoadingView(
+                    title = if (title.title.startsWith("Juz")) {
+                        "Downloading juz content"
+                    } else {
+                        "Downloading surah content"
+                    },
+                    subtitle = if (title.title.startsWith("Juz")) {
+                        "Preparing this juz for smooth offline reading"
+                    } else {
+                        "Preparing this surah for smooth offline reading"
+                    }
+                )
             }
         } else if (ayahUiState.message.isNullOrBlank().not()) {
             Box(
@@ -135,7 +147,7 @@ private fun QuranReaderContent(
                     .weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = ayahUiState.message)
+                AppErrorView(message = ayahUiState.message)
             }
         } else {
             LazyColumn(

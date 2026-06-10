@@ -28,6 +28,13 @@ android {
 
 dependencies {
     implementation("androidx.compose.ui:ui:1.7.6")
-    implementation("androidx.compose.ui:ui-unit:1.7.6")
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.7.6")
+    implementation("androidx.compose.material3:material3:1.3.1")
+    implementation("androidx.navigation:navigation-compose:2.8.5")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    implementation("com.squareup.moshi:moshi-kotlin:1.15.2")
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-moshi:2.11.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    debugImplementation("androidx.compose.ui:ui-tooling:1.7.6")
 }
