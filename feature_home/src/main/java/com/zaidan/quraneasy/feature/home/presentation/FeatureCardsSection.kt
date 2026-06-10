@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoStories
@@ -28,7 +29,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.zaidan.quraneasy.core.theme.AppIconTile
+import com.zaidan.quraneasy.core.theme.AppPrimaryGradientBottom
+import com.zaidan.quraneasy.core.theme.AppPrimaryGradientTop
+import com.zaidan.quraneasy.core.theme.AppSecondaryGradientBottom
+import com.zaidan.quraneasy.core.theme.AppSecondaryGradientTop
 
+private val featureCardBetweenGap = 8.dp
+private val titleFontSize = 20.sp
+private val subtitleFontSize = 12.sp
+private val iconSize = 40.dp
+
+private val cardPadding = 18.dp
 @Composable
 fun FeatureCardsSection(
     onReadQuranClick: () -> Unit,
@@ -39,25 +51,25 @@ fun FeatureCardsSection(
     Column(modifier = modifier) {
         FeatureCard(
             title = "Read Quran",
-            subtitle = "Browse by Surah, Juz or Bookmarks",
+            subtitle = "Browse by Surah, Juz",
             icon = Icons.Outlined.AutoStories,
-            backgroundBrush = Brush.verticalGradient(listOf(CardDarkTop, CardDarkBottom)),
+            backgroundBrush = Brush.verticalGradient(listOf(AppPrimaryGradientTop, AppPrimaryGradientBottom)),
             onClick = onReadQuranClick
         )
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(featureCardBetweenGap))
         FeatureCard(
             title = "Tasbih",
             subtitle = "Digital counter for dhikr",
             icon = Icons.Outlined.Gesture,
-            backgroundBrush = Brush.verticalGradient(listOf(CardDarkTop, Color(0xFF1B2744))),
+            backgroundBrush = Brush.verticalGradient(listOf(AppPrimaryGradientTop, Color(0xFF1B2744))),
             onClick = onTasbihClick
         )
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(featureCardBetweenGap))
         FeatureCard(
             title = "Daily Dhikr",
             subtitle = "Morning & evening remembrance",
             icon = Icons.Outlined.StarOutline,
-            backgroundBrush = Brush.verticalGradient(listOf(CardCharcoalTop, CardCharcoalBottom)),
+            backgroundBrush = Brush.verticalGradient(listOf(AppSecondaryGradientTop, AppSecondaryGradientBottom)),
             onClick = onDhikrClick
         )
     }
@@ -85,14 +97,15 @@ private fun FeatureCard(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(110.dp),
+            .wrapContentHeight(),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Row(
             modifier = Modifier
                 .background(backgroundBrush)
-                .padding(horizontal = 22.dp, vertical = 26.dp)
+                .wrapContentHeight()
+                .padding(cardPadding)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -102,14 +115,14 @@ private fun FeatureCard(
                 Text(
                     text = title,
                     color = Color.White,
-                    fontSize = 22.sp,
+                    fontSize = titleFontSize,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
                     text = subtitle,
                     color = Color.White.copy(alpha = 0.92f),
-                    fontSize = 16.sp,
+                    fontSize = subtitleFontSize,
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -121,9 +134,9 @@ private fun FeatureCard(
 private fun BoxIcon(icon: androidx.compose.ui.graphics.vector.ImageVector) {
     Box(
         modifier = Modifier
-            .size(50.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(IconTile),
+            .size(iconSize)
+        .clip(RoundedCornerShape(20.dp))
+            .background(AppIconTile),
         contentAlignment = Alignment.Center
     ) {
         Icon(

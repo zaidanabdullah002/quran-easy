@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -60,6 +61,7 @@ import com.zaidan.quraneasy.feature.quran.presentation.viewmodel.QuranViewModel
 fun QuranScreenPreview() {
     QuranScreenContent(
         QuranUiState(
+            selectedTab = 1,
             isLoading = false,
             isReady = true,
             surahs = surahList,
@@ -135,21 +137,29 @@ private fun QuranScreenContent(
                 AppErrorView(message = uiState.message)
             }
         } else {
-            LazyColumn(
-                contentPadding = PaddingValues(
-                    horizontal = 12.dp,
-                    vertical = 18.dp
-                ),
-                verticalArrangement = Arrangement.spacedBy(18.dp)
-            ) {
-                if (selectedTab == ReaderType.SURAH.ordinal) {
+            when (selectedTab) {
+                ReaderType.SURAH.ordinal -> LazyColumn(
+                    contentPadding = PaddingValues(
+                        horizontal = 12.dp,
+                        vertical = 18.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     items(surahs) { surah ->
                         SurahCard(
                             surah = surah,
                             onClick = { onSurahClick(surah.number) }
                         )
                     }
-                } else {
+                }
+
+                ReaderType.JUZ.ordinal -> LazyColumn(
+                    contentPadding = PaddingValues(
+                        horizontal = 12.dp,
+                        vertical = 18.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     items(juz) { juz ->
                         JuzCard(
                             juz = juz,
@@ -157,8 +167,54 @@ private fun QuranScreenContent(
                         )
                     }
                 }
+
+                else -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    BookmarkEmptyState()
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun BookmarkEmptyState() {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.padding(horizontal = 28.dp)
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(104.dp)
+                .clip(RoundedCornerShape(34.dp))
+                .background(Color(0xFF1F1F1F))
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.FavoriteBorder,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(42.dp)
+            )
+        }
+
+        Text(
+            text = "No bookmarks yet",
+            color = Color(0xFF1A1A1A),
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold
+        )
+
+        Text(
+            text = "Save verses here to revisit your favorite ayahs anytime.",
+            color = Color(0xFF6F7681),
+            fontSize = 14.sp,
+            textAlign = TextAlign.Center,
+            lineHeight = 20.sp
+        )
     }
 }
 
@@ -203,10 +259,10 @@ fun TopSection(
             modifier = Modifier
                 .padding(horizontal = 14.dp)
                 .fillMaxWidth()
-                .height(82.dp)
+                .height(78.dp)
                 .clip(RoundedCornerShape(24.dp))
-                .background(Color(0xFF3B3B3B))
-                .padding(8.dp),
+                .background(Color(0xFF363636))
+                .padding(6.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             QuranTab(
@@ -270,13 +326,16 @@ fun QuranTab(
     Surface(
         onClick = onClick,
         modifier = modifier.fillMaxHeight(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(18.dp),
         color = if (selected)
             Color.White
         else
             Color.Transparent
     ) {
         Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
@@ -287,12 +346,14 @@ fun QuranTab(
             ) {
                 icon()
 
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(6.dp))
 
                 Text(
                     text = title,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.SemiBold
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

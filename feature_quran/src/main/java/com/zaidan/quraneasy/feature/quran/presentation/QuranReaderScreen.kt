@@ -12,9 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -211,26 +209,30 @@ private fun RowCenteredTopBar(
 
         Spacer(modifier = Modifier.padding(start = 8.dp))
 
-        Column(modifier = Modifier.fillMaxWidth(0.62f)) {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title.title,
                 color = Color.White,
-                fontSize = 23.sp,
-                fontWeight = FontWeight.SemiBold
+                fontSize = 21.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = title.subtitle,
                 color = Color.White.copy(alpha = 0.78f),
-                fontSize = 16.sp
+                fontSize = 14.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
         Text(
             text = title.arabicName,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.padding(start = 12.dp),
             color = Color.White,
-            fontSize = 30.sp,
-            fontWeight = FontWeight.SemiBold,
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
             textAlign = TextAlign.End
         )
     }
@@ -242,41 +244,43 @@ private fun QuranAyahCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 3.dp,
-            pressedElevation = 6.dp
+            defaultElevation = 2.dp,
+            pressedElevation = 5.dp
         )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
+                    .padding(bottom = 10.dp),
                 horizontalArrangement = Arrangement.End
             ) {
                 Text(
                     text = ayah.numberInSurah.toString(),
-                    modifier = Modifier.wrapContentWidth(),
-                )
-                Spacer(modifier = Modifier.width(2.dp))
-
-                Text(
-                    text = ayah.arabicText,
                     modifier = Modifier
-                        .wrapContentWidth()
-                        .wrapContentHeight(),
-                    color = Color(0xFF202020),
-                    fontSize = ayahFontSize,
-                    fontWeight = FontWeight.SemiBold,
-                    textAlign = TextAlign.End,
-                    lineHeight = ayahLineGap
+                        .padding(top = 4.dp, end = 4.dp),
+                    fontSize = 13.sp,
+                    color = Color(0xFF8B6F47),
+                    fontWeight = FontWeight.SemiBold
                 )
             }
+
+            Text(
+                text = ayah.arabicText,
+                modifier = Modifier.fillMaxWidth(),
+                color = Color(0xFF202020),
+                fontSize = ayahFontSize,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.End,
+                lineHeight = ayahLineGap
+            )
         }
     }
 }

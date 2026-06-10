@@ -18,6 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.zaidan.quraneasy.core.theme.AppPrimaryGradientBottom
+import com.zaidan.quraneasy.core.theme.AppPrimaryGradientTop
 
 @Preview(showBackground = true)
 @Composable
@@ -27,35 +29,55 @@ fun HomeHeader() {
             .fillMaxWidth()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(CardDarkTop,CardDarkTop)
+                    colors = listOf(AppPrimaryGradientTop, AppPrimaryGradientBottom)
                 ),
-                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+                shape = RoundedCornerShape(bottomStart = 0.dp, bottomEnd = 0.dp)
             )
-            .padding(top = 16.dp, bottom = 32.dp)
+            .statusBarsPadding()
     ) {
-        // Top App Bar Style Row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp),
+                .padding(start = 24.dp, end = 16.dp, top = 16.dp, bottom = 32.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Al Quran - القرآن الكريم",
-                color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.5.sp
-            )
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.Stars,
-                    contentDescription = "Premium",
-                    tint = Color(0xFFFFD700),
-                    modifier = Modifier.size(24.dp)
+            // 2. Stacked Typography: Creates better visual hierarchy
+            Column {
+                Text(
+                    text = "Al Quran",
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 1.sp
                 )
+                Text(
+                    text = "القرآن الكريم",
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+
+            // 3. Modern Icon Buttons: Uses subtle backgrounds for depth
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                IconButton(
+                    onClick = { /* TODO */ },
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(Color.White.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Stars,
+                        contentDescription = "Premium",
+                        tint = Color(0xFFFFD700),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
                 IconButton(onClick = { /* TODO */ }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,

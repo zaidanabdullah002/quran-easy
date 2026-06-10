@@ -2,7 +2,7 @@ package com.zaidan.quraneasy.core.theme
 
 object AppDimens {
     const val ScreenPadding = 16
-    const val ScreenPaddingSmall = 12
+    const val ScreenPaddingSmall = 8
     const val ScreenPaddingLarge = 24
 
     const val ItemSpacing = 12
