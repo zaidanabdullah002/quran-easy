@@ -5,11 +5,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,10 +23,14 @@ import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,19 +40,31 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zaidan.quraneasy.feature.quran.presentation.model.AyahUiModel
+import com.zaidan.quraneasy.feature.quran.presentation.model.AyahUiState
 import com.zaidan.quraneasy.feature.quran.presentation.model.ReaderHeaderUiModel
+import com.zaidan.quraneasy.feature.quran.presentation.model.dummyData.ayahList
+import com.zaidan.quraneasy.feature.quran.presentation.viewmodel.QuranReaderViewModel
 
 private val ReaderBackground = Color(0xFFF3F3F3)
 private val ReaderTopBar = Color(0xFF2B2B2B)
-private val FooterBorder = Color(0xFFD8D8D8)
+private val ayahLineGap = 40.sp
+private val ayahFontSize = 32.sp
 
 @Preview(showBackground = true)
 @Composable
 private fun QuranReaderScreenPreview() {
-    QuranReaderScreen(
-        onBackClick = {},
-        readerType = ReaderType.SURAH.ordinal,
-        itemNumber = 0
+    QuranReaderContent(
+        ayahUiState = AyahUiState(
+            isLoading = false,
+            isReady = true,
+            ayahs = ayahList
+        ),
+        title = ReaderHeaderUiModel(
+            title = "Surah 1",
+            subtitle = "2 verses",
+            arabicName = "الفاتحة"
+        ),
+        onBackClick = {}
     )
 }
 
@@ -51,51 +72,84 @@ private fun QuranReaderScreenPreview() {
 fun QuranReaderScreen(
     onBackClick: () -> Unit,
     readerType: Int,
-    itemNumber: Int = 1
-
+    itemNumber: Int = 1,
+    quranReaderViewModel: QuranReaderViewModel
 ) {
-    val title = if(readerType == ReaderType.SURAH.ordinal){
+    val ayahUiState by quranReaderViewModel.ayahUiState.collectAsState()
+
+    LaunchedEffect(readerType, itemNumber) {
+        when(readerType){
+            ReaderType.SURAH.ordinal -> quranReaderViewModel.loadAyahWithSurahNumber(itemNumber)
+            ReaderType.JUZ.ordinal -> quranReaderViewModel.loadAyahWithJuzNumber(itemNumber)
+        }
+    }
+    val title = if (readerType == ReaderType.SURAH.ordinal) {
         ReaderHeaderUiModel(
-            title = "Al-Fatihah",
-            subtitle = "7 verses",
-            arabicName = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"
+            title = "Surah $itemNumber",
+            subtitle = "${ayahUiState.ayahs.size} verses",
+            arabicName = " "
         )
-    }else{
+    } else {
         ReaderHeaderUiModel(
-            title = "Juz-1",
-            subtitle = "7 verses",
-            arabicName = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"
+            title = "Juz-$itemNumber",
+            subtitle = "${ayahUiState.ayahs.size} verses",
+            arabicName = " "
         )
     }
+    QuranReaderContent(
+        ayahUiState = ayahUiState,
+        title = title,
+        onBackClick = onBackClick
+    )
+}
 
+@Composable
+private fun QuranReaderContent(
+    ayahUiState: AyahUiState,
+    title: ReaderHeaderUiModel,
+    onBackClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(ReaderBackground)
     ) {
-         QuranReaderTopBar(
+        QuranReaderTopBar(
             title = title,
             onBackClick = onBackClick
         )
-        val ayahs = listOf(
-            AyahUiModel(0,0,"s"),
-            AyahUiModel(1,1,"s")
-        )
-        LazyColumn(
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-        ) {
-            items(ayahs) { ayah ->
-                QuranAyahCard(ayah = ayah)
+
+        if (ayahUiState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.84f),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else if (ayahUiState.message.isNullOrBlank().not()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = ayahUiState.message)
+            }
+        } else {
+            LazyColumn(
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
+                items(ayahUiState.ayahs) { ayah ->
+                    QuranAyahCard(ayah = ayah)
+                }
             }
         }
-
-        QuranReaderFooter(
-            footerText = "Surah ${itemNumber}"
-        )
     }
 }
 
@@ -123,7 +177,7 @@ private fun RowCenteredTopBar(
     onBackClick: () -> Unit,
     title: ReaderHeaderUiModel
 ) {
-    androidx.compose.foundation.layout.Row(
+    Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -153,7 +207,7 @@ private fun RowCenteredTopBar(
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = "${title.subtitle}",
+                text = title.subtitle,
                 color = Color.White.copy(alpha = 0.78f),
                 fontSize = 16.sp
             )
@@ -186,50 +240,31 @@ private fun QuranAyahCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-
-            Text(
-                text = ayah.arabicText,
-                modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFF202020),
-                fontSize = 32.sp,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.End,
-                lineHeight = 48.sp
-            )
-            ayah.translation?.let {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
                 Text(
-                    text = ayah.translation,
-                    modifier = Modifier.fillMaxWidth(),
-                    color = Color(0xFF4E4E4E),
-                    fontSize = 18.sp,
-                    lineHeight = 28.sp
+                    text = ayah.numberInSurah.toString(),
+                    modifier = Modifier.wrapContentWidth(),
+                )
+                Spacer(modifier = Modifier.width(2.dp))
+
+                Text(
+                    text = ayah.arabicText,
+                    modifier = Modifier
+                        .wrapContentWidth()
+                        .wrapContentHeight(),
+                    color = Color(0xFF202020),
+                    fontSize = ayahFontSize,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.End,
+                    lineHeight = ayahLineGap
                 )
             }
-
         }
     }
 }
-
-@Composable
-private fun QuranReaderFooter(
-    footerText: String
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-            .padding(vertical = 14.dp)
-    ) {
-        Text(
-            text = footerText,
-            modifier = Modifier.fillMaxWidth(),
-            color = Color(0xFF6E7482),
-            fontSize = 18.sp,
-            textAlign = TextAlign.Center
-        )
-    }
-}
-

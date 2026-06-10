@@ -8,6 +8,7 @@ import com.zaidan.quraneasy.core.navigation.Screen
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.zaidan.quraneasy.feature.quran.presentation.viewmodel.QuranViewModel
+import com.zaidan.quraneasy.feature.quran.presentation.viewmodel.QuranReaderViewModel
 
 fun NavGraphBuilder.quranGraph(
     navController: NavHostController
@@ -31,7 +32,9 @@ fun NavGraphBuilder.quranGraph(
             navArgument("itemNumber") { type = NavType.IntType }
             )
     ) { backStackEntry ->
+        val quranReaderViewModel: QuranReaderViewModel = hiltViewModel()
         QuranReaderScreen(
+            quranReaderViewModel = quranReaderViewModel,
             onBackClick = { navController.popBackStack() },
             readerType = backStackEntry.arguments?.getInt("readerType") ?: 0,
             itemNumber = backStackEntry.arguments?.getInt("itemNumber") ?: 1

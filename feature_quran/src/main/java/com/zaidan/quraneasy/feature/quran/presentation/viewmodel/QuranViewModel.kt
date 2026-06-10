@@ -32,9 +32,9 @@ class QuranViewModel @Inject constructor(
             isLoading = true
         )
     )
-    private val surahs = quranUseCases.observeSurahs()
+    private val _surahs = quranUseCases.observeSurahs()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-    private val juzs = MutableStateFlow(
+    private val _juzs = MutableStateFlow(
         (1..30).map { juzNumber ->
             JuzUiModel(
                 juzNum = juzNumber,
@@ -45,8 +45,8 @@ class QuranViewModel @Inject constructor(
     )
     val uiState: StateFlow<QuranUiState> = combine(
         _uiState,
-        surahs,
-        juzs
+        _surahs,
+        _juzs
     ) { baseState, surahList, juzList ->
         baseState.copy(
             surahs = surahList,
