@@ -25,5 +25,11 @@ data class SurahAyahDto(
     val page: Int,
     val ruku: Int,
     val hizbQuarter: Int,
-    val sajda: Boolean
+    val sajda: SajdaDto? //(critical) false or object
+)
+
+data class SajdaDto(
+    val id: Int = 0,
+    val recommended: Boolean = false,
+    val obligatory: Boolean = false
 )

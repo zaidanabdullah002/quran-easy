@@ -94,7 +94,8 @@ fun HomeScreen(
                 uiState = prayerUiState,
                 onTogglePrayer = onTogglePrayer
             )
-            Spacer(modifier = Modifier.height(AppDimens.ScreenPaddingLarge.dp))
+            HomeFooter()
+
         }
     }
 }

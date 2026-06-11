@@ -61,7 +61,7 @@ import com.zaidan.quraneasy.feature.quran.presentation.viewmodel.QuranViewModel
 fun QuranScreenPreview() {
     QuranScreenContent(
         QuranUiState(
-            selectedTab = 1,
+            selectedTab = 0,
             isLoading = false,
             isReady = true,
             surahs = surahList,

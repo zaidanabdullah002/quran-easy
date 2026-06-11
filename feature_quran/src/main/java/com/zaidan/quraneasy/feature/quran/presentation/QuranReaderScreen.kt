@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.zaidan.quraneasy.core.theme.QuranFont
 import com.zaidan.quraneasy.core.ui.AppErrorView
 import com.zaidan.quraneasy.core.ui.AppLoadingView
 import com.zaidan.quraneasy.feature.quran.presentation.model.AyahUiModel
@@ -46,7 +47,7 @@ import com.zaidan.quraneasy.feature.quran.presentation.viewmodel.QuranReaderView
 
 private val ReaderBackground = Color(0xFFF3F3F3)
 private val ReaderTopBar = Color(0xFF2B2B2B)
-private val ayahLineGap = 40.sp
+private val ayahLineGap = 48.sp
 private val ayahFontSize = 32.sp
 
 @Preview(showBackground = true)
@@ -77,7 +78,7 @@ fun QuranReaderScreen(
     val ayahUiState by quranReaderViewModel.ayahUiState.collectAsState()
 
     LaunchedEffect(readerType, itemNumber) {
-        when(readerType){
+        when (readerType) {
             ReaderType.SURAH.ordinal -> quranReaderViewModel.loadAyahWithSurahNumber(itemNumber)
             ReaderType.JUZ.ordinal -> quranReaderViewModel.loadAyahWithJuzNumber(itemNumber)
         }
@@ -149,7 +150,7 @@ private fun QuranReaderContent(
             }
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -244,7 +245,7 @@ private fun QuranAyahCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp,
@@ -254,30 +255,15 @@ private fun QuranAyahCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp)
+                .padding(horizontal = 12.dp)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 10.dp),
-                horizontalArrangement = Arrangement.End
-            ) {
-                Text(
-                    text = ayah.numberInSurah.toString(),
-                    modifier = Modifier
-                        .padding(top = 4.dp, end = 4.dp),
-                    fontSize = 13.sp,
-                    color = Color(0xFF8B6F47),
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
             Text(
-                text = ayah.arabicText,
+                text = ayah.arabicText.trim(),
                 modifier = Modifier.fillMaxWidth(),
                 color = Color(0xFF202020),
                 fontSize = ayahFontSize,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Medium,
+                fontFamily = QuranFont,
                 textAlign = TextAlign.End,
                 lineHeight = ayahLineGap
             )
