@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -29,6 +30,7 @@ import com.zaidan.quraneasy.core.theme.AppPrimaryText
 import com.zaidan.quraneasy.core.theme.AppSecondaryText
 import com.zaidan.quraneasy.core.theme.AppSoftSurface
 import com.zaidan.quraneasy.core.theme.AppSurface
+import com.zaidan.quraneasy.core.theme.QuranFont
 import com.zaidan.quraneasy.feature.feeling.presentation.topbar.FeelingTopBar
 
 @Composable
@@ -57,6 +59,9 @@ fun FeelingDetailScreen(
     ) {
         FeelingTopBar(
             title = feeling?.title ?: "Feeling",
+            subtitle = feeling?.subtitle ?: "A calm space for the heart",
+            rightLabel = feeling?.emoji ?: "❤️",
+            accent = feeling?.accent.toColorOrNull() ?: Color(0xFF667084),
             onBackClick = onBackClick
         )
 
@@ -89,11 +94,12 @@ fun FeelingDetailScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(Modifier.padding(20.dp)) {
+                                val accent = feeling?.accent.toColorOrNull() ?: Color(0xFF667084)
                                 Text(
                                     text = feeling?.emoji.orEmpty(),
                                     style = MaterialTheme.typography.displaySmall
                                 )
-                                Spacer(Modifier.height(8.dp))
+                                Spacer(Modifier.height(12.dp))
                                 Text(
                                     text = feeling?.title.orEmpty(),
                                     style = MaterialTheme.typography.titleLarge,
@@ -106,6 +112,18 @@ fun FeelingDetailScreen(
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = AppSecondaryText
                                 )
+                                Spacer(Modifier.height(14.dp))
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = accent.copy(alpha = 0.12f)),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = feeling?.artworkKey?.replaceFirstChar { it.uppercase() } ?: "Curated Quran reflections",
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+                                        color = accent,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
                             }
                         }
                     }
@@ -133,7 +151,8 @@ private fun VerseCard(
             Text(
                 text = verse.arabicText,
                 style = MaterialTheme.typography.headlineSmall,
-                color = AppPrimaryText
+                color = AppPrimaryText,
+                fontFamily = QuranFont
             )
             Spacer(Modifier.height(10.dp))
             Text(
@@ -164,7 +183,9 @@ private fun FeelingDetailScreenPreview() {
                 emoji = "❤️",
                 title = "Need Hope",
                 subtitle = "Allah's mercy never ends",
-                verses = emptyList()
+                verses = emptyList(),
+                accent = "#E45B5B",
+                artworkKey = "Mercy"
             ),
             verses = listOf(
                 FeelingVerseUiModel(

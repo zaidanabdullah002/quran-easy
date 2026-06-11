@@ -56,6 +56,12 @@ import com.zaidan.quraneasy.feature.quran.presentation.model.dummyData.juzList
 import com.zaidan.quraneasy.feature.quran.presentation.model.dummyData.surahList
 import com.zaidan.quraneasy.feature.quran.presentation.viewmodel.QuranViewModel
 
+private val toggleHeight = 60.dp
+private val iconSize = 20.dp
+private val titleFontSize = 18.sp
+
+private val topSectionPadding = 2.dp
+
 @Preview(showBackground = true)
 @Composable
 fun QuranScreenPreview() {
@@ -234,32 +240,31 @@ fun TopSection(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 8.dp)
         ) {
             IconButton(onClick = onBackClick) {
                 Icon(
                     imageVector = Icons.Outlined.KeyboardArrowLeft,
                     contentDescription = null,
                     tint = Color.White,
-                    modifier = Modifier.size(34.dp)
+                    modifier = Modifier.size(iconSize)
                 )
             }
 
             Text(
                 text = "Read Quran",
                 color = Color.White,
-                fontSize = 25.sp,
+                fontSize = titleFontSize,
                 fontWeight = FontWeight.SemiBold
             )
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(topSectionPadding))
 
         Row(
             modifier = Modifier
                 .padding(horizontal = 14.dp)
                 .fillMaxWidth()
-                .height(78.dp)
+                .height(toggleHeight)
                 .clip(RoundedCornerShape(24.dp))
                 .background(Color(0xFF363636))
                 .padding(6.dp),
@@ -335,7 +340,7 @@ fun QuranTab(
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 10.dp),
+                .padding(horizontal = topSectionPadding),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {

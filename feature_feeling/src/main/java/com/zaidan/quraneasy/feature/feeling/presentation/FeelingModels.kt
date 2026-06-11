@@ -1,6 +1,7 @@
 package com.zaidan.quraneasy.feature.feeling.presentation
 
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.Color
 
 @Immutable
 data class Feeling(
@@ -9,6 +10,8 @@ data class Feeling(
     val title: String,
     val subtitle: String,
     val verses: List<VerseRef>,
+    val accent: String? = null,
+    val artworkKey: String? = null,
     val category: FeelingCategory = FeelingCategory.Feeling
 )
 
@@ -35,3 +38,7 @@ data class FeelingVerseUiModel(
     val arabicText: String,
     val translation: String? = null
 )
+
+fun String?.toColorOrNull(): Color? = runCatching {
+    if (isNullOrBlank()) null else Color(android.graphics.Color.parseColor(this))
+}.getOrNull()

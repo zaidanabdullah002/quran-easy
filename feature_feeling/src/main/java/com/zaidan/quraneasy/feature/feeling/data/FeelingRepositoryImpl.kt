@@ -54,7 +54,8 @@ private fun FeelingEntry.toFeeling(): Feeling {
         title = title,
         subtitle = subtitle,
         verses = verses,
+        accent = accent,
+        artworkKey = artworkKey,
         category = category
     )
 }
-

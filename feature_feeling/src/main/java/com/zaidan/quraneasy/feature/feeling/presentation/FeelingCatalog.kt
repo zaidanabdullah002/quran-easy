@@ -9,6 +9,8 @@ data class FeelingEntry(
     val emoji: String,
     val title: String,
     val subtitle: String,
+    val accent: String?,
+    val artworkKey: String?,
     val verses: List<VerseRef>
 )
 
@@ -44,6 +46,8 @@ object FeelingCatalog {
             emoji = getString("emoji"),
             title = getString("title"),
             subtitle = getString("subtitle"),
+            accent = optString("accent", ""),
+            artworkKey = optString("artworkKey", ""),
             verses = verses
         )
     }

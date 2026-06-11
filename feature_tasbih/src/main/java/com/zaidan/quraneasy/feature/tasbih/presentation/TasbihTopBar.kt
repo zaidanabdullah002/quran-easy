@@ -2,8 +2,8 @@ package com.zaidan.quraneasy.feature.tasbih.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -20,8 +20,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+@Preview(showBackground = true)
+@Composable
+fun TasbihTopBarPreview() {
+    TasbihTopBar(onBackClick = {}, onResetClick = {})
+}
+
 
 @Composable
 fun TasbihTopBar(
@@ -33,6 +42,7 @@ fun TasbihTopBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color(0xFF2E2E2E))
+                .height(90.dp)
                 .statusBarsPadding(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
@@ -45,12 +55,27 @@ fun TasbihTopBar(
                 )
             }
 
-            Text(
-                text = "Tasbih Counter",
-                color = Color.White,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.SemiBold
-            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 4.dp)
+            ) {
+                Text(
+                    text = "Tasbih Counter",
+                    color = Color.White,
+                    fontSize = 21.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "Keep your remembrance easy",
+                    color = Color.White.copy(alpha = 0.78f),
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
 
             IconButton(onClick = onResetClick) {
                 Icon(
@@ -61,5 +86,4 @@ fun TasbihTopBar(
             }
         }
     }
-    Spacer(modifier = Modifier.height(8.dp))
 }

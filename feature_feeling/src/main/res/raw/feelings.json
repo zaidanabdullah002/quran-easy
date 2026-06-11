@@ -5,11 +5,14 @@
     "emoji": "❤️",
     "title": "Need Hope",
     "subtitle": "Allah's mercy never ends",
+    "accent": "#E45B5B",
+    "artworkKey": "Mercy",
     "verses": [
       { "surah": 39, "ayah": 53 },
       { "surah": 65, "ayah": 3 },
       { "surah": 94, "ayah": 5 },
-      { "surah": 94, "ayah": 6 }
+      { "surah": 94, "ayah": 6 },
+      { "surah": 12, "ayah": 87 }
     ]
   },
   {
@@ -18,9 +21,13 @@
     "emoji": "🌿",
     "title": "Need Peace",
     "subtitle": "Find tranquility",
+    "accent": "#5FAE7A",
+    "artworkKey": "Stillness",
     "verses": [
       { "surah": 13, "ayah": 28 },
-      { "surah": 20, "ayah": 14 }
+      { "surah": 20, "ayah": 14 },
+      { "surah": 2, "ayah": 286 },
+      { "surah": 48, "ayah": 4 }
     ]
   },
   {
@@ -29,10 +36,103 @@
     "emoji": "😔",
     "title": "Feeling Sad",
     "subtitle": "Allah is with you",
+    "accent": "#7483C9",
+    "artworkKey": "Comfort",
     "verses": [
       { "surah": 94, "ayah": 5 },
       { "surah": 94, "ayah": 6 },
-      { "surah": 2, "ayah": 286 }
+      { "surah": 2, "ayah": 286 },
+      { "surah": 12, "ayah": 86 }
+    ]
+  },
+  {
+    "category": "Feeling",
+    "id": "patience",
+    "emoji": "🕊️",
+    "title": "Need Patience",
+    "subtitle": "Stay steady through the trial",
+    "accent": "#7A8D61",
+    "artworkKey": "Steadfastness",
+    "verses": [
+      { "surah": 2, "ayah": 153 },
+      { "surah": 3, "ayah": 200 },
+      { "surah": 94, "ayah": 5 },
+      { "surah": 103, "ayah": 3 }
+    ]
+  },
+  {
+    "category": "Feeling",
+    "id": "forgiveness",
+    "emoji": "🤍",
+    "title": "Need Forgiveness",
+    "subtitle": "Return to Allah with a soft heart",
+    "accent": "#B68B5E",
+    "artworkKey": "Repentance",
+    "verses": [
+      { "surah": 3, "ayah": 133 },
+      { "surah": 39, "ayah": 53 },
+      { "surah": 25, "ayah": 70 },
+      { "surah": 4, "ayah": 110 }
+    ]
+  },
+  {
+    "category": "Feeling",
+    "id": "guidance",
+    "emoji": "🧭",
+    "title": "Need Guidance",
+    "subtitle": "Ask for the straight path",
+    "accent": "#5484A3",
+    "artworkKey": "Direction",
+    "verses": [
+      { "surah": 1, "ayah": 6 },
+      { "surah": 18, "ayah": 10 },
+      { "surah": 20, "ayah": 114 },
+      { "surah": 2, "ayah": 2 }
+    ]
+  },
+  {
+    "category": "Feeling",
+    "id": "gratitude",
+    "emoji": "✨",
+    "title": "Need Gratitude",
+    "subtitle": "Notice the blessings around you",
+    "accent": "#D6A24E",
+    "artworkKey": "Blessings",
+    "verses": [
+      { "surah": 14, "ayah": 7 },
+      { "surah": 2, "ayah": 152 },
+      { "surah": 93, "ayah": 11 },
+      { "surah": 31, "ayah": 20 }
+    ]
+  },
+  {
+    "category": "Feeling",
+    "id": "strength",
+    "emoji": "💪",
+    "title": "Need Strength",
+    "subtitle": "Stand firm with Allah's help",
+    "accent": "#6270AE",
+    "artworkKey": "Resolve",
+    "verses": [
+      { "surah": 2, "ayah": 286 },
+      { "surah": 3, "ayah": 173 },
+      { "surah": 9, "ayah": 40 },
+      { "surah": 94, "ayah": 7 }
+    ]
+  },
+  {
+    "category": "Feeling",
+    "id": "mercy",
+    "emoji": "🌧️",
+    "title": "Need Mercy",
+    "subtitle": "Open your heart to Allah's compassion",
+    "accent": "#4DA7A7",
+    "artworkKey": "Compassion",
+    "verses": [
+      { "surah": 39, "ayah": 53 },
+      { "surah": 7, "ayah": 156 },
+      { "surah": 21, "ayah": 107 },
+      { "surah": 30, "ayah": 21 }
     ]
   },
   {
@@ -41,10 +141,48 @@
     "emoji": "🤲",
     "title": "Quran Dua",
     "subtitle": "Beautiful duas from the Quran",
+    "accent": "#8B6DD1",
+    "artworkKey": "Supplication",
     "verses": [
       { "surah": 2, "ayah": 201 },
       { "surah": 3, "ayah": 8 },
-      { "surah": 20, "ayah": 114 }
+      { "surah": 20, "ayah": 114 },
+      { "surah": 21, "ayah": 87 },
+      { "surah": 28, "ayah": 24 },
+      { "surah": 25, "ayah": 74 }
+    ]
+  },
+  {
+    "category": "QuranDua",
+    "id": "tawakkul",
+    "emoji": "🌙",
+    "title": "Trust Allah",
+    "subtitle": "Peace through reliance",
+    "accent": "#5F7BAE",
+    "artworkKey": "Reliance",
+    "verses": [
+      { "surah": 3, "ayah": 173 },
+      { "surah": 9, "ayah": 51 },
+      { "surah": 65, "ayah": 3 },
+      { "surah": 4, "ayah": 81 }
+    ]
+  },
+  {
+    "category": "QuranDua",
+    "id": "heart",
+    "emoji": "💫",
+    "title": "Heart's Du'a",
+    "subtitle": "A calm, honest conversation",
+    "accent": "#D18D78",
+    "artworkKey": "Inner Peace",
+    "verses": [
+      { "surah": 25, "ayah": 74 },
+      { "surah": 23, "ayah": 118 },
+      { "surah": 20, "ayah": 25 },
+      { "surah": 20, "ayah": 26 },
+      { "surah": 20, "ayah": 27 },
+      { "surah": 20, "ayah": 28 },
+      { "surah": 7, "ayah": 23 }
     ]
   }
 ]

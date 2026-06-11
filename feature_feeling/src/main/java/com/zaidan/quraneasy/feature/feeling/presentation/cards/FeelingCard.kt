@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -25,6 +26,7 @@ import com.zaidan.quraneasy.core.theme.AppSurface
 import com.zaidan.quraneasy.feature.feeling.presentation.Feeling
 import com.zaidan.quraneasy.feature.feeling.presentation.FeelingCategory
 import com.zaidan.quraneasy.feature.feeling.presentation.VerseRef
+import com.zaidan.quraneasy.feature.feeling.presentation.toColorOrNull
 
 @Preview(showBackground = true)
 @Composable
@@ -36,6 +38,8 @@ private fun FeelingCardPreview() {
             title = "Need Hope",
             subtitle = "Allah's mercy never ends",
             verses = listOf(VerseRef(39, 53)),
+            accent = "#E45B5B",
+            artworkKey = "Mercy",
             category = FeelingCategory.Feeling
         ),
         onClick = {}
@@ -47,6 +51,7 @@ fun FeelingCard(
     feeling: Feeling,
     onClick: () -> Unit
 ) {
+    val accent = feeling.accent.toColorOrNull() ?: Color(0xFF667084)
     Card(
         onClick = onClick,
         modifier = Modifier
@@ -62,10 +67,16 @@ fun FeelingCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                feeling.emoji,
-                style = MaterialTheme.typography.headlineMedium
-            )
+            Card(
+                colors = CardDefaults.cardColors(containerColor = accent.copy(alpha = 0.14f)),
+                shape = RoundedCornerShape(18.dp)
+            ) {
+                Text(
+                    feeling.emoji,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                    style = MaterialTheme.typography.headlineSmall
+                )
+            }
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -84,11 +95,17 @@ fun FeelingCard(
                 )
             }
 
-            Text(
-                if (feeling.category == FeelingCategory.QuranDua) "Open" else "Explore",
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.labelLarge
-            )
+            Card(
+                colors = CardDefaults.cardColors(containerColor = accent.copy(alpha = 0.14f)),
+                shape = RoundedCornerShape(999.dp)
+            ) {
+                Text(
+                    text = if (feeling.category == FeelingCategory.QuranDua) "Open" else "Explore",
+                    color = accent,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
         }
     }
 }
