@@ -22,5 +22,4 @@ include(":feature_home")
 include(":feature_quran")
 include(":feature_tasbih")
 include(":feature_prayer")
-include(":feature_dhikr")
-
+include(":feature_feeling")

@@ -31,6 +31,7 @@ android {
 dependencies {
     implementation(project(":core"))
     implementation(project(":feature_prayer"))
+    implementation(project(":feature_feeling"))
     
     implementation("androidx.compose.ui:ui:1.7.6")
     implementation("androidx.compose.ui:ui-tooling-preview:1.7.6")

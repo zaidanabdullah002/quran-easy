@@ -13,8 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.zaidan.quraneasy.core.navigation.Screen
+import com.zaidan.quraneasy.feature.feeling.presentation.feelingGraph
 import com.zaidan.quraneasy.feature.home.presentation.homeGraph
-import com.zaidan.quraneasy.feature.dhikr.presentation.dhikrGraph
 import com.zaidan.quraneasy.feature.quran.presentation.quranGraph
 import com.zaidan.quraneasy.feature.tasbih.presentation.tasbihGraph
 import dagger.hilt.android.AndroidEntryPoint
@@ -39,7 +39,7 @@ class MainActivity : ComponentActivity() {
                         homeGraph(navController)
                         quranGraph(navController)
                         tasbihGraph(navController)
-                        dhikrGraph(navController)
+                        feelingGraph(navController)
                     }
                 }
             }

@@ -5,6 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.zaidan.quraneasy.core.navigation.Screen
+import com.zaidan.quraneasy.feature.feeling.presentation.FEELING_ROUTE_BASE
 import com.zaidan.quraneasy.feature.prayer.presentation.viewmodel.PrayerViewModel
 
 fun NavGraphBuilder.homeGraph(
@@ -15,7 +16,9 @@ fun NavGraphBuilder.homeGraph(
         HomeScreen(
             onReadQuranClick = { navController.navigate(Screen.Quran.route) },
             onTasbihClick = { navController.navigate(Screen.Tasbih.route) },
-            onDhikrClick = { navController.navigate(Screen.Dhikr.route) },
+            onFeelingClick = { feeling ->
+                navController.navigate("$FEELING_ROUTE_BASE/${feeling.id}")
+            },
             prayerViewModel = prayerViewModel
         )
     }

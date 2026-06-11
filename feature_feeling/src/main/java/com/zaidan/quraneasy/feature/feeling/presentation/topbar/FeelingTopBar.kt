@@ -1,4 +1,4 @@
-package com.zaidan.quraneasy.feature.dhikr.presentation.topbar
+package com.zaidan.quraneasy.feature.feeling.presentation.topbar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -20,12 +20,12 @@ import androidx.compose.ui.unit.sp
 
 @Preview(showBackground = true)
 @Composable
-private fun DhikrTopBarPreview() {
-    DhikrTopBar(title = "Daily Dhikr", onBackClick = {})
+private fun FeelingTopBarPreview() {
+    FeelingTopBar(title = "Need Hope", onBackClick = {})
 }
 
 @Composable
-fun DhikrTopBar(
+fun FeelingTopBar(
     title: String,
     onBackClick: () -> Unit
 ) {
@@ -55,3 +55,4 @@ fun DhikrTopBar(
         }
     }
 }
+

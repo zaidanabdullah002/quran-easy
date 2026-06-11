@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.material.icons.outlined.Gesture
-import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -32,20 +31,17 @@ import androidx.compose.ui.unit.sp
 import com.zaidan.quraneasy.core.theme.AppIconTile
 import com.zaidan.quraneasy.core.theme.AppPrimaryGradientBottom
 import com.zaidan.quraneasy.core.theme.AppPrimaryGradientTop
-import com.zaidan.quraneasy.core.theme.AppSecondaryGradientBottom
-import com.zaidan.quraneasy.core.theme.AppSecondaryGradientTop
 
 private val featureCardBetweenGap = 8.dp
 private val titleFontSize = 20.sp
 private val subtitleFontSize = 12.sp
 private val iconSize = 40.dp
-
 private val cardPadding = 18.dp
+
 @Composable
 fun FeatureCardsSection(
     onReadQuranClick: () -> Unit,
     onTasbihClick: () -> Unit,
-    onDhikrClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -53,24 +49,26 @@ fun FeatureCardsSection(
             title = "Read Quran",
             subtitle = "Browse by Surah, Juz",
             icon = Icons.Outlined.AutoStories,
-            backgroundBrush = Brush.verticalGradient(listOf(AppPrimaryGradientTop, AppPrimaryGradientBottom)),
+            backgroundBrush = Brush.verticalGradient(
+                listOf(
+                    AppPrimaryGradientTop,
+                    AppPrimaryGradientBottom
+                )
+            ),
             onClick = onReadQuranClick
         )
         Spacer(modifier = Modifier.height(featureCardBetweenGap))
         FeatureCard(
             title = "Tasbih",
-            subtitle = "Digital counter for dhikr",
+            subtitle = "Digital counter for remembrance",
             icon = Icons.Outlined.Gesture,
-            backgroundBrush = Brush.verticalGradient(listOf(AppPrimaryGradientTop, Color(0xFF1B2744))),
+            backgroundBrush = Brush.verticalGradient(
+                listOf(
+                    AppPrimaryGradientTop,
+                    Color(0xFF1B2744)
+                )
+            ),
             onClick = onTasbihClick
-        )
-        Spacer(modifier = Modifier.height(featureCardBetweenGap))
-        FeatureCard(
-            title = "Daily Dhikr",
-            subtitle = "Morning & evening remembrance",
-            icon = Icons.Outlined.StarOutline,
-            backgroundBrush = Brush.verticalGradient(listOf(AppSecondaryGradientTop, AppSecondaryGradientBottom)),
-            onClick = onDhikrClick
         )
     }
 }
@@ -80,8 +78,7 @@ fun FeatureCardsSection(
 fun FeatureCardsSectionPreview() {
     FeatureCardsSection(
         onReadQuranClick = {},
-        onTasbihClick = {},
-        onDhikrClick = {}
+        onTasbihClick = {}
     )
 }
 
@@ -135,7 +132,7 @@ private fun BoxIcon(icon: androidx.compose.ui.graphics.vector.ImageVector) {
     Box(
         modifier = Modifier
             .size(iconSize)
-        .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(20.dp))
             .background(AppIconTile),
         contentAlignment = Alignment.Center
     ) {

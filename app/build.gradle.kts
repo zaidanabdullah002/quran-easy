@@ -39,7 +39,7 @@ dependencies {
     implementation(project(":feature_quran"))
     implementation(project(":feature_tasbih"))
     implementation(project(":feature_prayer"))
-    implementation(project(":feature_dhikr"))
+    implementation(project(":feature_feeling"))
 
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.compose.ui:ui:1.7.6")
