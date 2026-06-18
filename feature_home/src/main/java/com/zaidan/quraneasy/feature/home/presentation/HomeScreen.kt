@@ -19,14 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zaidan.quraneasy.core.theme.AppBackground
 import com.zaidan.quraneasy.core.theme.AppDimens
 import com.zaidan.quraneasy.feature.feeling.presentation.Feeling
 import com.zaidan.quraneasy.feature.feeling.presentation.FeelingViewModel
 import com.zaidan.quraneasy.feature.feeling.presentation.carousel.FeelingCarousel
-import com.zaidan.quraneasy.feature.prayer.domain.Prayer
-import com.zaidan.quraneasy.feature.prayer.presentation.PrayerTrackerCard
-import com.zaidan.quraneasy.feature.prayer.presentation.PrayerUiState
+import com.zaidan.quraneasy.feature.prayer.presentation.PrayerTrackerCardFeature
 import com.zaidan.quraneasy.feature.prayer.presentation.viewmodel.PrayerViewModel
 
 @Preview(showBackground = true)
@@ -36,17 +35,8 @@ fun HomeScreenPreview() {
         onReadQuranClick = {},
         onTasbihClick = {},
         onFeelingClick = {},
-        prayerUiState = PrayerUiState(
-            prayers = listOf(
-                Prayer("Fajr", "05:00 AM", true),
-                Prayer("Dhuhr", "12:00 PM", false),
-                Prayer("Asr", "03:30 PM", false),
-                Prayer("Maghrib", "06:00 PM", false),
-                Prayer("Isha", "07:30 PM", false)
-            )
-        ),
         feelings = emptyList(),
-        onTogglePrayer = {}
+        prayerViewModel = viewModel()
     )
 }
 
@@ -58,15 +48,13 @@ fun HomeScreen(
     prayerViewModel: PrayerViewModel,
     feelingViewModel: FeelingViewModel = hiltViewModel()
 ) {
-    val prayerUiState by prayerViewModel.uiStateFlow.collectAsState()
     val feelings by feelingViewModel.homeFeelings.collectAsState()
     HomeScreen(
         onReadQuranClick = onReadQuranClick,
         onTasbihClick = onTasbihClick,
         onFeelingClick = onFeelingClick,
-        prayerUiState = prayerUiState,
         feelings = feelings,
-        onTogglePrayer = { index -> prayerViewModel.togglePrayer(index) }
+        prayerViewModel = prayerViewModel
     )
 }
 
@@ -75,9 +63,8 @@ fun HomeScreen(
     onReadQuranClick: () -> Unit,
     onTasbihClick: () -> Unit,
     onFeelingClick: (Feeling) -> Unit,
-    prayerUiState: PrayerUiState,
     feelings: List<Feeling>,
-    onTogglePrayer: (Int) -> Unit
+    prayerViewModel: PrayerViewModel
 ) {
     Column(
         modifier = Modifier
@@ -115,9 +102,8 @@ fun HomeScreen(
             )
 
             Spacer(Modifier.height(24.dp))
-            PrayerTrackerCard(
-                uiState = prayerUiState,
-                onTogglePrayer = onTogglePrayer
+            PrayerTrackerCardFeature(
+                prayerViewModel = prayerViewModel
             )
             HomeFooter()
         }

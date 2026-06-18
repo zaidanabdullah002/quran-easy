@@ -6,7 +6,7 @@ import javax.inject.Inject
 class TogglePrayerStatusUseCase @Inject constructor(
     private val repository: PrayerRepository
 ) {
-    suspend operator fun invoke(prayerName: String) {
-        repository.updatePrayerCompletion(prayerName)
+    suspend operator fun invoke(date: String, prayerName: String) {
+        repository.togglePrayerCompletion(date, prayerName)
     }
 }

@@ -8,5 +8,7 @@ import javax.inject.Inject
 class ObservePrayerStateUseCase @Inject constructor(
     private val repository: PrayerRepository
 ) {
-    operator fun invoke(): Flow<PrayerState> = repository.observePrayerStatus()
+    operator fun invoke(date: String, locationKey: String): Flow<PrayerState> {
+        return repository.observePrayerState(date, locationKey)
+    }
 }
