@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -57,6 +58,7 @@ import com.zaidan.quraneasy.feature.quran.presentation.model.SurahUiModel
 import com.zaidan.quraneasy.feature.quran.presentation.model.dummyData.juzList
 import com.zaidan.quraneasy.feature.quran.presentation.model.dummyData.surahList
 import com.zaidan.quraneasy.feature.quran.presentation.viewmodel.QuranViewModel
+import my.nanihadesuka.compose.LazyColumnScrollbar
 
 private val toggleHeight = 60.dp
 private val iconSize = 20.dp
@@ -116,6 +118,8 @@ private fun QuranScreenContent(
     val surahs = uiState.surahs
     val juz = uiState.juzs
     val selectedTab = uiState.selectedTab
+    val surahListState = rememberLazyListState()
+    val juzListState = rememberLazyListState()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -146,33 +150,45 @@ private fun QuranScreenContent(
             }
         } else {
             when (selectedTab) {
-                ReaderType.SURAH.ordinal -> LazyColumn(
-                    contentPadding = PaddingValues(
-                        horizontal = 12.dp,
-                        vertical = 18.dp
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ReaderType.SURAH.ordinal -> LazyColumnScrollbar(
+                    state = surahListState,
+                    settings = quranScrollbarSettings()
                 ) {
-                    items(surahs) { surah ->
-                        SurahCard(
-                            surah = surah,
-                            onClick = { onSurahClick(surah.number) }
-                        )
+                    LazyColumn(
+                        state = surahListState,
+                        contentPadding = PaddingValues(
+                            horizontal = 12.dp,
+                            vertical = 18.dp
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(surahs) { surah ->
+                            SurahCard(
+                                surah = surah,
+                                onClick = { onSurahClick(surah.number) }
+                            )
+                        }
                     }
                 }
 
-                ReaderType.JUZ.ordinal -> LazyColumn(
-                    contentPadding = PaddingValues(
-                        horizontal = 12.dp,
-                        vertical = 18.dp
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ReaderType.JUZ.ordinal -> LazyColumnScrollbar(
+                    state = juzListState,
+                    settings = quranScrollbarSettings()
                 ) {
-                    items(juz) { juz ->
-                        JuzCard(
-                            juz = juz,
-                            onClick = { onJuzClick(juz.juzNum) }
-                        )
+                    LazyColumn(
+                        state = juzListState,
+                        contentPadding = PaddingValues(
+                            horizontal = 12.dp,
+                            vertical = 18.dp
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(juz) { juz ->
+                            JuzCard(
+                                juz = juz,
+                                onClick = { onJuzClick(juz.juzNum) }
+                            )
+                        }
                     }
                 }
 

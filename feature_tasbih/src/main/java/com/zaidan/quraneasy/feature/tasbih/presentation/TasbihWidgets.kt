@@ -176,9 +176,7 @@ fun TasbihSwipeArea(
         modifier = modifier
             .pointerInput(Unit) {
                 detectVerticalDragGestures(
-                    onVerticalDrag = @androidx.annotation.RequiresPermission(android.Manifest.permission.VIBRATE) @androidx.annotation.RequiresPermission(
-                        android.Manifest.permission.VIBRATE
-                    ) { change, dragAmount ->
+                    onVerticalDrag = { change, dragAmount ->
                         val next = beadOffsetY + dragAmount
                         val limited = next.coerceIn(-maxOffset, 0f)
                         beadOffsetY = if (limited <= -slowdownZone) {
@@ -209,9 +207,7 @@ fun TasbihSwipeArea(
                         hasReachedReleaseZone = beadOffsetY <= releaseThreshold
                         if (beadOffsetY != 0f) change.consume()
                     },
-                    onDragEnd = @androidx.annotation.RequiresPermission(android.Manifest.permission.VIBRATE) @androidx.annotation.RequiresPermission(
-                        android.Manifest.permission.VIBRATE
-                    ) {
+                    onDragEnd = {
                         if (hasReachedReleaseZone) {
                             beadHaptics.playRelease()
                             onSwipeUp()
