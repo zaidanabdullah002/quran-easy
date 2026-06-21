@@ -34,19 +34,27 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -58,24 +66,19 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.zaidan.quraneasy.core.R
+import com.zaidan.quraneasy.core.feedbacks.rememberPrayerTickFeedbackController
 import com.zaidan.quraneasy.core.theme.AppPrimaryGradientBottom
-import com.zaidan.quraneasy.core.theme.AppPrimaryGradientTop
 import com.zaidan.quraneasy.core.theme.AppPrimaryText
 import com.zaidan.quraneasy.core.theme.AppSecondaryText
 import com.zaidan.quraneasy.core.theme.AppSoftSurface
 import com.zaidan.quraneasy.core.theme.AppSurface
-import com.zaidan.quraneasy.core.theme.AppSurfaceBorder
 import com.zaidan.quraneasy.feature.prayer.presentation.viewmodel.PrayerViewModel
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 
 private val prayerCardHorizontalPadding = 12.dp
 private val prayerCardVerticalPadding = 8.dp
 private val titleFontSize = 20.sp
 private val subtitleFontSize = 14.sp
 private const val TAG = "PrayerTrackerCard"
-private val PrayerAccent = AppPrimaryGradientTop
 private val PrayerAccentDeep = AppPrimaryGradientBottom
 private val PrayerAccentSoft = Color(0xFFE7ECF8)
 private val PrayerSuccessTint = Color(0xFF1B8F6A)
@@ -98,8 +101,9 @@ fun PrayerTrackerCardPreview() {
                 PrayerRowUi("Isha", "20:38", false, true)
             )
         ),
-        onTogglePrayer = {},
+        onTogglePrayer = { _, _ -> },
         onCardClick = null,
+        onAllPrayersCompleted = {}
     )
 }
 
@@ -108,6 +112,7 @@ fun PrayerTrackerCardFeature(prayerViewModel: PrayerViewModel) {
     val uiState by prayerViewModel.uiStateFlow.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
     val activity = LocalContext.current.findActivity()
+    val feedbackController = rememberPrayerTickFeedbackController()
     var hasRequestedLocationPermission by rememberSaveable { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -137,7 +142,14 @@ fun PrayerTrackerCardFeature(prayerViewModel: PrayerViewModel) {
 
     PrayerTrackerCard(
         uiState = uiState,
-        onTogglePrayer = prayerViewModel::togglePrayer,
+        onTogglePrayer = { index, isCompleted ->
+            if (isCompleted) {
+                feedbackController.playUncheckFeedback()
+            } else {
+                feedbackController.playCheckFeedback()
+            }
+            prayerViewModel.togglePrayer(index)
+        },
         onCardClick = {
             Log.i(TAG, "onCardClick(): cardMode=${uiState.cardMode}")
             if (uiState.cardMode == PrayerCardMode.NoPermission) {
@@ -165,14 +177,15 @@ fun PrayerTrackerCardFeature(prayerViewModel: PrayerViewModel) {
 
                 if (permanentlyDenied) {
                     Log.i(TAG, "onCardClick(): permission permanently denied, opening app settings")
-                    activity?.openAppSettings()
+                    activity.openAppSettings()
                 } else {
                     Log.i(TAG, "onCardClick(): launching permission popup")
                     hasRequestedLocationPermission = true
                     permissionLauncher.launch(permissions)
                 }
             }
-        }
+        },
+        onAllPrayersCompleted = feedbackController::playAllPrayersCompletedFeedback
     )
 }
 
@@ -180,7 +193,8 @@ fun PrayerTrackerCardFeature(prayerViewModel: PrayerViewModel) {
 fun PrayerTrackerCard(
     uiState: PrayerCardUiState,
     onCardClick: (() -> Unit)? = null,
-    onTogglePrayer: (Int) -> Unit
+    onTogglePrayer: (Int, Boolean) -> Unit,
+    onAllPrayersCompleted: () -> Unit = {}
 ) {
     val canTogglePrayers = uiState.cardMode == PrayerCardMode.Ready ||
         uiState.cardMode == PrayerCardMode.ReadyOfflineCache
@@ -193,8 +207,6 @@ fun PrayerTrackerCard(
         PrayerCardMode.Loading,
         PrayerCardMode.Unavailable -> PrayerRowUi.placeholderList()
     }
-    val isContentReady = canTogglePrayers
-
     val statusText = when (uiState.cardMode) {
         PrayerCardMode.Ready,
         PrayerCardMode.ReadyOfflineCache -> {
@@ -212,10 +224,14 @@ fun PrayerTrackerCard(
     }
     val locationLabel = uiState.locationLabel
     val totalPrayerCount = prayers.count { it.completed }
-    val totalPrayerSlots = prayers.size
     val progress = if (prayers.isNotEmpty()) totalPrayerCount / prayers.size.toFloat() else 0f
-    val cardAlpha = if (isContentReady) 1f else 0.55f
-    val nextPrayerProgress = rememberNextPrayerProgress(prayers)
+    val cardAlpha = if (canTogglePrayers) 1f else 0.55f
+    val currentPrayerProgress = remember(prayers) { calculateCurrentPrayerProgress(prayers) }
+    val isAllCompleted = prayers.size == 5 && prayers.all { it.completed }
+    val celebrationState = rememberPrayerCompletionCelebrationState(
+        isAllCompleted = isAllCompleted,
+        onCelebrationTriggered = onAllPrayersCompleted
+    )
 
     Log.i(
         TAG,
@@ -226,10 +242,14 @@ fun PrayerTrackerCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .graphicsLayer(
+                scaleX = celebrationState.scale,
+                scaleY = celebrationState.scale
+            )
             .clickable(enabled = canRequestPermission) { onCardClick?.invoke() },
         shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = AppSurface),
-        border = BorderStroke(1.dp, AppSurfaceBorder),
+        colors = CardDefaults.cardColors(containerColor = celebrationState.backgroundColor),
+        border = BorderStroke(1.dp, celebrationState.borderColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Box(
@@ -298,7 +318,7 @@ fun PrayerTrackerCard(
                             fontSize = 15.sp,
                             fontWeight = FontWeight.SemiBold
                         )
-                        if (nextPrayerProgress != null) {
+                        if (currentPrayerProgress != null) {
                             Spacer(modifier = Modifier.height(12.dp))
                             LinearProgressIndicator(
                                 progress = { progress.coerceIn(0f, 1f) },
@@ -311,11 +331,13 @@ fun PrayerTrackerCard(
                     }
                     Spacer(modifier = Modifier.size(16.dp))
                     PrayerSummaryIndicator(
-                        progress = nextPrayerProgress?.progress ?: progress,
-                        primaryText = nextPrayerProgress?.timeLeftLabel ?: "--",
-                        secondaryText = nextPrayerProgress?.name ?: "Next prayer"
+                        progress = currentPrayerProgress?.progress ?: progress,
+                        durationTimeText = currentPrayerProgress?.timeLeftLabel ?: "--",
+                        timeLeftLabel = "Left for",
+                        prayerNameLabel = currentPrayerProgress?.name
                     )
                 }
+                Spacer(modifier = Modifier.height(14.dp))
                 prayers.forEachIndexed { index, prayer ->
                     PrayerRow(
                         name = prayer.name,
@@ -324,7 +346,7 @@ fun PrayerTrackerCard(
                         enabled = prayer.enabled && canTogglePrayers,
                         onClick = {
                             if (prayer.enabled && canTogglePrayers) {
-                                onTogglePrayer(index)
+                                onTogglePrayer(index, prayer.completed)
                             }
                         }
                     )
@@ -332,6 +354,12 @@ fun PrayerTrackerCard(
                         Spacer(modifier = Modifier.height(14.dp))
                     }
                 }
+            }
+            if (celebrationState.confettiVisible) {
+                PrayerCompletionConfettiOverlay(
+                    alpha = celebrationState.confettiAlpha,
+                    modifier = Modifier.matchParentSize()
+                )
             }
         }
     }
@@ -345,10 +373,39 @@ private fun PrayerRow(
     enabled: Boolean,
     onClick: (() -> Unit)? = null
 ) {
+    var tickTrigger by remember(name, time) { mutableIntStateOf(0) }
+    var rowShakeTrigger by remember(name, time) { mutableIntStateOf(0) }
+    val tickScale = remember { Animatable(1f) }
+    val rowOffsetX = remember { Animatable(0f) }
+
+    LaunchedEffect(tickTrigger) {
+        if (tickTrigger == 0) return@LaunchedEffect
+        tickScale.snapTo(0.84f)
+        tickScale.animateTo(
+            targetValue = 1.12f,
+            animationSpec = tween(durationMillis = 110, easing = FastOutSlowInEasing)
+        )
+        tickScale.animateTo(
+            targetValue = 1f,
+            animationSpec = tween(durationMillis = 140, easing = FastOutSlowInEasing)
+        )
+    }
+
+    LaunchedEffect(rowShakeTrigger) {
+        if (rowShakeTrigger == 0) return@LaunchedEffect
+        rowOffsetX.snapTo(0f)
+        rowOffsetX.animateTo(-18f, tween(durationMillis = 45))
+        rowOffsetX.animateTo(14f, tween(durationMillis = 70))
+        rowOffsetX.animateTo(-10f, tween(durationMillis = 65))
+        rowOffsetX.animateTo(6f, tween(durationMillis = 55))
+        rowOffsetX.animateTo(0f, tween(durationMillis = 50))
+    }
+
     Log.d(TAG, "PrayerRow(): name=$name time=$time completed=$completed enabled=$enabled")
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .graphicsLayer { translationX = rowOffsetX.value }
             .clip(RoundedCornerShape(16.dp))
             .background(AppSoftSurface)
             .border(1.dp, PrayerRowBorder, RoundedCornerShape(16.dp))
@@ -363,17 +420,32 @@ private fun PrayerRow(
                     contentDescription = "Tick",
                     modifier = Modifier
                         .size(40.dp)
+                        .scale(tickScale.value)
                         .clip(CircleShape)
                         .border(2.dp, PrayerAccentSoft, CircleShape)
-                        .clickable(enabled = enabled, onClick = { onClick?.invoke() })
+                        .clickable(
+                            enabled = enabled,
+                            onClick = {
+                                tickTrigger++
+                                rowShakeTrigger++
+                                onClick?.invoke()
+                            }
+                        )
                 )
             } else {
                 Box(
                     modifier = Modifier
                         .size(40.dp)
+                        .scale(tickScale.value)
                         .clip(CircleShape)
                         .border(2.dp, PrayerAccentSoft, CircleShape)
-                        .clickable(enabled = enabled, onClick = { onClick?.invoke() })
+                        .clickable(
+                            enabled = enabled,
+                            onClick = {
+                                tickTrigger++
+                                onClick?.invoke()
+                            }
+                        )
                 )
             }
 
@@ -397,8 +469,9 @@ private fun PrayerRow(
 @Composable
 private fun PrayerSummaryIndicator(
     progress: Float,
-    primaryText: String,
-    secondaryText: String
+    durationTimeText: String,
+    timeLeftLabel: String,
+    prayerNameLabel: String?
 ) {
     Box(
         modifier = Modifier.size(112.dp),
@@ -412,86 +485,34 @@ private fun PrayerSummaryIndicator(
             trackColor = PrayerIndicatorTrack
         )
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
+                .padding(top = 8.dp)
         ) {
             Text(
-                text = primaryText,
+                text = durationTimeText,
                 color = AppPrimaryText,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
             Text(
-                text = secondaryText,
+                text = timeLeftLabel,
                 color = AppSecondaryText,
-                fontSize = 12.sp,
+                fontSize = 10.sp,
                 fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = prayerNameLabel ?:"Fajr",
+                color = AppSecondaryText,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
         }
     }
 }
-
-@Composable
-private fun rememberNextPrayerProgress(prayers: List<PrayerRowUi>): NextPrayerProgress? {
-    if (prayers.isEmpty() || prayers.any { it.time == "--:--" }) return null
-
-    val calendar = Calendar.getInstance()
-    val nowMinutes = calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE)
-    val prayerMinutes = prayers.mapNotNull { prayer ->
-        parsePrayerMinutes(prayer.time)?.let { prayer.name to it }
-    }
-    if (prayerMinutes.isEmpty()) return null
-
-    val nextPrayer = prayerMinutes.firstOrNull { (_, minutes) -> minutes > nowMinutes }
-        ?: prayerMinutes.firstOrNull()
-        ?: return null
-    val nextMinutes = nextPrayer.second
-    val previousMinutes = prayerMinutes.lastOrNull { (_, minutes) -> minutes <= nowMinutes }?.second
-        ?: (prayerMinutes.lastOrNull()?.second?.minus(24 * 60))
-        ?: return null
-
-    val adjustedNextMinutes = if (nextMinutes <= nowMinutes) nextMinutes + 24 * 60 else nextMinutes
-    val adjustedNowMinutes = if (nextMinutes <= nowMinutes) nowMinutes + 24 * 60 else nowMinutes
-    val segmentDuration = (adjustedNextMinutes - previousMinutes).coerceAtLeast(1)
-    val elapsed = (adjustedNowMinutes - previousMinutes).coerceIn(0, segmentDuration)
-    val remaining = (adjustedNextMinutes - adjustedNowMinutes).coerceAtLeast(0)
-
-    return NextPrayerProgress(
-        name = nextPrayer.first,
-        progress = elapsed.toFloat() / segmentDuration.toFloat(),
-        timeLeftLabel = formatDurationLabel(remaining),
-        time = formatPrayerDisplayTime(nextMinutes)
-    )
-}
-
-private fun parsePrayerMinutes(prayerTime: String): Int? {
-    val parsed = runCatching {
-        SimpleDateFormat("HH:mm", Locale.US).parse(prayerTime)
-    }.getOrNull() ?: return null
-    val calendar = Calendar.getInstance().apply { this.time = parsed }
-    return calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE)
-}
-
-private fun formatDurationLabel(totalMinutes: Int): String {
-    val hours = totalMinutes / 60
-    val minutes = totalMinutes % 60
-    return if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
-}
-
-private fun formatPrayerDisplayTime(totalMinutes: Int): String {
-    val normalizedMinutes = ((totalMinutes % (24 * 60)) + (24 * 60)) % (24 * 60)
-    val hours = normalizedMinutes / 60
-    val minutes = normalizedMinutes % 60
-    return String.format(Locale.US, "%02d:%02d", hours, minutes)
-}
-
-private data class NextPrayerProgress(
-    val name: String,
-    val progress: Float,
-    val timeLeftLabel: String,
-    val time: String
-)
 
 private fun Context.openAppSettings() {
     val intent = Intent(
