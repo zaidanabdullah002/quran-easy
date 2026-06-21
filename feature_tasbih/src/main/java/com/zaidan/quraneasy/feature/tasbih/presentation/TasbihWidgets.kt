@@ -1,6 +1,7 @@
 package com.zaidan.quraneasy.feature.tasbih.presentation
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,10 +21,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.Image
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import com.zaidan.quraneasy.core.feedbacks.rememberTasbihBeadHaptics
 import com.zaidan.quraneasy.core.theme.AppDimens
+import com.zaidan.quraneasy.core.ui.AppCardDefaults
+import com.zaidan.quraneasy.core.ui.hapticClick
 import com.zaidan.quraneasy.core.R
 import kotlin.math.roundToInt
 
@@ -34,9 +37,9 @@ fun TasbihTargetChip(target: Int,
 ) {
     Card(
         shape = RoundedCornerShape(AppDimens.CardRadius.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        elevation = AppCardDefaults.interactiveElevation(defaultElevation = 8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        onClick = onClick
+        onClick = hapticClick(onClick = onClick)
     ) {
         RowCentered(
             modifier = Modifier.padding(horizontal = AppDimens.ScreenPaddingLarge.dp, vertical = AppDimens.ScreenPadding.dp)
@@ -157,18 +160,25 @@ fun TasbihSwipeArea(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
+    val beadHaptics = rememberTasbihBeadHaptics()
     var beadOffsetY by remember { mutableFloatStateOf(0f) }
     var hasReachedReleaseZone by remember { mutableStateOf(false) }
+    var hasPlayedGrip by remember { mutableStateOf(false) }
+    var hasPlayedTension by remember { mutableStateOf(false) }
     val maxOffset = 300f
     val releaseThreshold = -220f
     val slowdownZone = 170f
+    val gripThreshold = -26f
+    val tensionThreshold = -150f
     val beadSize = 96.dp
 
     Box(
         modifier = modifier
             .pointerInput(Unit) {
                 detectVerticalDragGestures(
-                    onVerticalDrag = { change, dragAmount ->
+                    onVerticalDrag = @androidx.annotation.RequiresPermission(android.Manifest.permission.VIBRATE) @androidx.annotation.RequiresPermission(
+                        android.Manifest.permission.VIBRATE
+                    ) { change, dragAmount ->
                         val next = beadOffsetY + dragAmount
                         val limited = next.coerceIn(-maxOffset, 0f)
                         beadOffsetY = if (limited <= -slowdownZone) {
@@ -178,15 +188,40 @@ fun TasbihSwipeArea(
                             limited
                         }.coerceIn(-maxOffset, 0f)
 
+                        if (!hasPlayedGrip && beadOffsetY <= gripThreshold) {
+                            beadHaptics.playGrip()
+                            hasPlayedGrip = true
+                        }
+
+                        if (hasPlayedGrip && beadOffsetY > gripThreshold) {
+                            hasPlayedGrip = false
+                        }
+
+                        if (!hasPlayedTension && beadOffsetY <= tensionThreshold) {
+                            beadHaptics.playTension()
+                            hasPlayedTension = true
+                        }
+
+                        if (hasPlayedTension && beadOffsetY > tensionThreshold) {
+                            hasPlayedTension = false
+                        }
+
                         hasReachedReleaseZone = beadOffsetY <= releaseThreshold
                         if (beadOffsetY != 0f) change.consume()
                     },
-                    onDragEnd = {
+                    onDragEnd = @androidx.annotation.RequiresPermission(android.Manifest.permission.VIBRATE) @androidx.annotation.RequiresPermission(
+                        android.Manifest.permission.VIBRATE
+                    ) {
                         if (hasReachedReleaseZone) {
+                            beadHaptics.playRelease()
                             onSwipeUp()
+                        } else if (beadOffsetY < gripThreshold) {
+                            beadHaptics.playSnapBack()
                         }
                         beadOffsetY = 0f
                         hasReachedReleaseZone = false
+                        hasPlayedGrip = false
+                        hasPlayedTension = false
                     }
                 )
             }

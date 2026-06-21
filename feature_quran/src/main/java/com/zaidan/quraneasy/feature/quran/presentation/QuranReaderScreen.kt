@@ -1,5 +1,6 @@
 package com.zaidan.quraneasy.feature.quran.presentation
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,9 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,19 +35,27 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.zaidan.quraneasy.core.theme.AppBackground
+import com.zaidan.quraneasy.core.theme.AppPrimaryText
 import com.zaidan.quraneasy.core.theme.QuranFont
+import com.zaidan.quraneasy.core.ui.AppCardDefaults
 import com.zaidan.quraneasy.core.ui.AppErrorView
 import com.zaidan.quraneasy.core.ui.AppLoadingView
+import com.zaidan.quraneasy.core.ui.HapticIconButton
 import com.zaidan.quraneasy.feature.quran.presentation.model.AyahUiModel
 import com.zaidan.quraneasy.feature.quran.presentation.model.AyahUiState
 import com.zaidan.quraneasy.feature.quran.presentation.model.ReaderHeaderUiModel
 import com.zaidan.quraneasy.feature.quran.presentation.model.dummyData.ayahList
 import com.zaidan.quraneasy.feature.quran.presentation.viewmodel.QuranReaderViewModel
 
-private val ReaderBackground = Color(0xFFF3F3F3)
+private val ReaderBackground = AppBackground
 private val ReaderTopBar = Color(0xFF2B2B2B)
-private val ayahLineGap = 48.sp
+private val ReaderPageSurface = Color(0xFFFCFBF8)
+private val ReaderAyahBorder = Color(0xFFEDE8DF)
+private val ReaderAyahText = AppPrimaryText
+private val ayahLineGap = 56.sp
 private val ayahFontSize = 32.sp
+private const val ArabicEndOfAyahMark = '\u06DD'
 
 @Preview(showBackground = true)
 @Composable
@@ -150,8 +157,8 @@ private fun QuranReaderContent(
             }
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
@@ -192,7 +199,7 @@ private fun RowCenteredTopBar(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
     ) {
-        IconButton(onClick = onBackClick) {
+        HapticIconButton(onClick = onBackClick) {
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
                 contentDescription = "Back",
@@ -245,22 +252,21 @@ private fun QuranAyahCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp,
-            pressedElevation = 5.dp
-        )
+        shape = RoundedCornerShape(20.dp),
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, ReaderAyahBorder),
+        elevation = AppCardDefaults.staticElevation(defaultElevation = 0.5.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp)
+                .background(ReaderPageSurface)
+                .padding(horizontal = 18.dp, vertical = 16.dp)
         ) {
             Text(
-                text = ayah.arabicText.trim(),
+                text = buildAyahDisplayText(ayah),
                 modifier = Modifier.fillMaxWidth(),
-                color = Color(0xFF202020),
+                color = ReaderAyahText,
                 fontSize = ayahFontSize,
                 fontWeight = FontWeight.Medium,
                 fontFamily = QuranFont,
@@ -270,3 +276,16 @@ private fun QuranAyahCard(
         }
     }
 }
+
+private fun buildAyahDisplayText(ayah: AyahUiModel): String {
+    val ayahNumber = ayah.numberInSurah.toArabicIndicDigits()
+    return "${ayah.arabicText.trim()} $ArabicEndOfAyahMark$ayahNumber"
+}
+
+private fun Int.toArabicIndicDigits(): String = toString().map { digit ->
+    if (digit in '0'..'9') {
+        ('\u0660'.code + (digit - '0')).toChar()
+    } else {
+        digit
+    }
+}.joinToString(separator = "")

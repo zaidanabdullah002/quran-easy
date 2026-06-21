@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.zaidan.quraneasy.core.ui.hapticClick
 import com.zaidan.quraneasy.core.theme.AppIconTile
 import com.zaidan.quraneasy.core.theme.AppPrimaryGradientBottom
 import com.zaidan.quraneasy.core.theme.AppPrimaryGradientTop
@@ -91,7 +92,7 @@ private fun FeatureCard(
     onClick: () -> Unit
 ) {
     Card(
-        onClick = onClick,
+        onClick = hapticClick(onClick = onClick),
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentHeight(),

@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.zaidan.quraneasy.core.ui.AppCardDefaults
 import com.zaidan.quraneasy.core.theme.AppBackground
 import com.zaidan.quraneasy.core.theme.AppPrimaryText
 import com.zaidan.quraneasy.core.theme.AppSecondaryText
@@ -91,7 +92,8 @@ fun FeelingDetailScreen(
                     item {
                         Card(
                             colors = CardDefaults.cardColors(containerColor = AppSurface),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            elevation = AppCardDefaults.staticElevation(defaultElevation = 2.dp)
                         ) {
                             Column(Modifier.padding(20.dp)) {
                                 val accent = feeling?.accent.toColorOrNull() ?: Color(0xFF667084)
@@ -115,7 +117,8 @@ fun FeelingDetailScreen(
                                 Spacer(Modifier.height(14.dp))
                                 Card(
                                     colors = CardDefaults.cardColors(containerColor = accent.copy(alpha = 0.12f)),
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth(),
+                                    elevation = AppCardDefaults.staticElevation(defaultElevation = 0.dp)
                                 ) {
                                     Text(
                                         text = feeling?.artworkKey?.replaceFirstChar { it.uppercase() } ?: "Curated Quran reflections",
@@ -145,7 +148,8 @@ private fun VerseCard(
 ) {
     Card(
         colors = CardDefaults.cardColors(containerColor = AppSoftSurface),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        elevation = AppCardDefaults.staticElevation(defaultElevation = 1.dp)
     ) {
         Column(Modifier.padding(18.dp)) {
             Text(

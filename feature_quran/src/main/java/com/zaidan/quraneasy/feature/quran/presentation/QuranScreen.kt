@@ -30,7 +30,6 @@ import androidx.compose.material.icons.outlined.KeyboardArrowLeft
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -47,6 +46,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zaidan.quraneasy.core.ui.AppCardDefaults
+import com.zaidan.quraneasy.core.ui.HapticIconButton
+import com.zaidan.quraneasy.core.ui.hapticClick
 import com.zaidan.quraneasy.core.ui.AppErrorView
 import com.zaidan.quraneasy.core.ui.AppLoadingView
 import com.zaidan.quraneasy.feature.quran.presentation.model.JuzUiModel
@@ -241,7 +243,7 @@ fun TopSection(
             modifier = Modifier
                 .fillMaxWidth()
         ) {
-            IconButton(onClick = onBackClick) {
+            HapticIconButton(onClick = onBackClick) {
                 Icon(
                     imageVector = Icons.Outlined.KeyboardArrowLeft,
                     contentDescription = null,
@@ -329,7 +331,7 @@ fun QuranTab(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        onClick = onClick,
+        onClick = hapticClick(onClick = onClick),
         modifier = modifier.fillMaxHeight(),
         shape = RoundedCornerShape(18.dp),
         color = if (selected)
@@ -371,17 +373,14 @@ fun SurahCard(
     onClick: () -> Unit = {}
 ) {
     Card(
-        onClick = onClick,
+        onClick = hapticClick(onClick = onClick),
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(26.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
         border = BorderStroke(1.dp, Color(0xFFE8E2D8)),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp,
-            pressedElevation = 5.dp
-        )
+        elevation = AppCardDefaults.interactiveElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -466,17 +465,14 @@ fun JuzCard(
     onClick: () -> Unit = {}
 ) {
     Card(
-        onClick = onClick,
+        onClick = hapticClick(onClick = onClick),
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(26.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
         border = BorderStroke(1.dp, Color(0xFFE8E2D8)),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp,
-            pressedElevation = 5.dp
-        )
+        elevation = AppCardDefaults.interactiveElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier

@@ -10,13 +10,13 @@ import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,14 +29,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -45,8 +42,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -62,6 +59,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -72,6 +71,9 @@ import com.zaidan.quraneasy.core.theme.AppPrimaryText
 import com.zaidan.quraneasy.core.theme.AppSecondaryText
 import com.zaidan.quraneasy.core.theme.AppSoftSurface
 import com.zaidan.quraneasy.core.theme.AppSurface
+import com.zaidan.quraneasy.core.ui.AppCardDefaults
+import com.zaidan.quraneasy.core.ui.AppHapticType
+import com.zaidan.quraneasy.core.ui.hapticClickable
 import com.zaidan.quraneasy.feature.prayer.presentation.viewmodel.PrayerViewModel
 
 private val prayerCardHorizontalPadding = 12.dp
@@ -163,10 +165,11 @@ fun PrayerTrackerCardFeature(prayerViewModel: PrayerViewModel) {
                             hostActivity,
                             permission
                         ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-                        val shouldShowRationale = ActivityCompat.shouldShowRequestPermissionRationale(
-                            hostActivity,
-                            permission
-                        )
+                        val shouldShowRationale =
+                            ActivityCompat.shouldShowRequestPermissionRationale(
+                                hostActivity,
+                                permission
+                            )
                         Log.d(
                             TAG,
                             "permissionCheck(): permission=$permission granted=$granted shouldShowRationale=$shouldShowRationale hasRequestedBefore=$hasRequestedLocationPermission"
@@ -197,12 +200,13 @@ fun PrayerTrackerCard(
     onAllPrayersCompleted: () -> Unit = {}
 ) {
     val canTogglePrayers = uiState.cardMode == PrayerCardMode.Ready ||
-        uiState.cardMode == PrayerCardMode.ReadyOfflineCache
+            uiState.cardMode == PrayerCardMode.ReadyOfflineCache
     val canRequestPermission = uiState.cardMode == PrayerCardMode.NoPermission &&
-        onCardClick != null
+            onCardClick != null
     val prayers = when (uiState.cardMode) {
         PrayerCardMode.Ready,
         PrayerCardMode.ReadyOfflineCache -> uiState.prayers
+
         PrayerCardMode.NoPermission,
         PrayerCardMode.Loading,
         PrayerCardMode.Unavailable -> PrayerRowUi.placeholderList()
@@ -213,6 +217,7 @@ fun PrayerTrackerCard(
             val completedCount = prayers.count { it.completed }
             "$completedCount of ${prayers.size} completed"
         }
+
         PrayerCardMode.Loading -> "Loading prayer times..."
         PrayerCardMode.NoPermission -> "Location permission required"
         PrayerCardMode.Unavailable -> "Prayer times unavailable"
@@ -246,11 +251,14 @@ fun PrayerTrackerCard(
                 scaleX = celebrationState.scale,
                 scaleY = celebrationState.scale
             )
-            .clickable(enabled = canRequestPermission) { onCardClick?.invoke() },
+            .hapticClickable(
+                enabled = canRequestPermission,
+                onClick = { onCardClick?.invoke() }
+            ),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = celebrationState.backgroundColor),
         border = BorderStroke(1.dp, celebrationState.borderColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = AppCardDefaults.interactiveElevation(defaultElevation = 2.dp)
     ) {
         Box(
             modifier = Modifier
@@ -322,7 +330,8 @@ fun PrayerTrackerCard(
                             Spacer(modifier = Modifier.height(12.dp))
                             LinearProgressIndicator(
                                 progress = { progress.coerceIn(0f, 1f) },
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
                                     .height(10.dp),
                                 color = PrayerAccentDeep,
                                 trackColor = PrayerAccentSoft
@@ -423,8 +432,9 @@ private fun PrayerRow(
                         .scale(tickScale.value)
                         .clip(CircleShape)
                         .border(2.dp, PrayerAccentSoft, CircleShape)
-                        .clickable(
+                        .hapticClickable(
                             enabled = enabled,
+                            type = AppHapticType.ToggleOff,
                             onClick = {
                                 tickTrigger++
                                 rowShakeTrigger++
@@ -439,8 +449,9 @@ private fun PrayerRow(
                         .scale(tickScale.value)
                         .clip(CircleShape)
                         .border(2.dp, PrayerAccentSoft, CircleShape)
-                        .clickable(
+                        .hapticClickable(
                             enabled = enabled,
+                            type = AppHapticType.ToggleOn,
                             onClick = {
                                 tickTrigger++
                                 onClick?.invoke()
@@ -486,7 +497,8 @@ private fun PrayerSummaryIndicator(
         )
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(top = 8.dp)
         ) {
             Text(
@@ -504,7 +516,7 @@ private fun PrayerSummaryIndicator(
                 textAlign = TextAlign.Center
             )
             Text(
-                text = prayerNameLabel ?:"Fajr",
+                text = prayerNameLabel ?: "Fajr",
                 color = AppSecondaryText,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,

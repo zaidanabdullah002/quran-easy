@@ -10,7 +10,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +20,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.zaidan.quraneasy.core.ui.HapticTextButton
 
 @Composable
 fun TargetPickerDialog(
@@ -37,7 +37,7 @@ fun TargetPickerDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 val targets = listOf(33,99,100,1000)
                 targets.forEach { values->
-                    TextButton(
+                    HapticTextButton(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             onConfirm(values)
@@ -66,7 +66,7 @@ fun TargetPickerDialog(
         },
         confirmButton = {
             // This button handles the custom value saving
-            TextButton(
+            HapticTextButton(
                 onClick = {
                     val intValue = customValue.toIntOrNull()
                     if (intValue != null && intValue > 0) {
@@ -80,7 +80,7 @@ fun TargetPickerDialog(
         },
         dismissButton = {
             // This button handles cancellation
-            TextButton(onClick = onDismiss) {
+            HapticTextButton(onClick = onDismiss) {
                 Text("Cancel")
             }
         }

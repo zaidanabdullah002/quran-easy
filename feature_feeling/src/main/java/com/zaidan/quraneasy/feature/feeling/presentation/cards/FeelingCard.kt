@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import com.zaidan.quraneasy.core.theme.AppPrimaryText
 import com.zaidan.quraneasy.core.theme.AppSecondaryText
 import com.zaidan.quraneasy.core.theme.AppSurface
+import com.zaidan.quraneasy.core.ui.AppCardDefaults
+import com.zaidan.quraneasy.core.ui.hapticClick
 import com.zaidan.quraneasy.feature.feeling.presentation.Feeling
 import com.zaidan.quraneasy.feature.feeling.presentation.FeelingCategory
 import com.zaidan.quraneasy.feature.feeling.presentation.VerseRef
@@ -53,12 +55,13 @@ fun FeelingCard(
 ) {
     val accent = feeling.accent.toColorOrNull() ?: Color(0xFF667084)
     Card(
-        onClick = onClick,
+        onClick = hapticClick(onClick = onClick),
         modifier = Modifier
             .fillMaxWidth()
             .height(96.dp),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = AppSurface)
+        colors = CardDefaults.cardColors(containerColor = AppSurface),
+        elevation = AppCardDefaults.interactiveElevation(defaultElevation = 3.dp)
     ) {
         Row(
             modifier = Modifier

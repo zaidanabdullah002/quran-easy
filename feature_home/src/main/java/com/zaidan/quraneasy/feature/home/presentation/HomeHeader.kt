@@ -7,7 +7,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Stars
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zaidan.quraneasy.core.theme.AppPrimaryGradientBottom
 import com.zaidan.quraneasy.core.theme.AppPrimaryGradientTop
+import com.zaidan.quraneasy.core.ui.HapticIconButton
 
 @Preview(showBackground = true)
 @Composable
@@ -64,7 +64,7 @@ fun HomeHeader() {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                IconButton(
+                HapticIconButton(
                     onClick = { /* TODO */ },
                     modifier = Modifier
                         .size(40.dp)
@@ -78,7 +78,7 @@ fun HomeHeader() {
                     )
                 }
 
-                IconButton(onClick = { /* TODO */ }) {
+                HapticIconButton(onClick = { /* TODO */ }) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
                         contentDescription = "Menu",
