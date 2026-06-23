@@ -20,8 +20,7 @@ fun NavGraphBuilder.quranGraph(
             quranViewModel = quranViewModel,
             onBackClick = { navController.popBackStack() },
             onSurahClick = { surahNumber -> navController.navigate(QuranRoutes.reader(ReaderType.SURAH.ordinal,surahNumber)) },
-            onJuzClick = { juzNumber -> navController.navigate(QuranRoutes.reader(ReaderType.JUZ.ordinal,juzNumber)) },
-            onBookmarkClick = {}
+            onJuzClick = { juzNumber -> navController.navigate(QuranRoutes.reader(ReaderType.JUZ.ordinal,juzNumber)) }
         )
     }
 

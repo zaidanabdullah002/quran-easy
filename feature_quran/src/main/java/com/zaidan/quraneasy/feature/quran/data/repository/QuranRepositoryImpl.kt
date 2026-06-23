@@ -4,12 +4,16 @@ import android.util.Log
 import com.zaidan.quraneasy.core.model.DownloadState
 import com.zaidan.quraneasy.feature.quran.data.local.QuranLocalDataSource
 import com.zaidan.quraneasy.feature.quran.data.local.entity.AyahEntity
+import com.zaidan.quraneasy.feature.quran.data.local.entity.BookmarkEntity
+import com.zaidan.quraneasy.feature.quran.data.local.entity.BookmarkType
 import com.zaidan.quraneasy.feature.quran.data.remote.QuranRemoteDataSource
 import com.zaidan.quraneasy.feature.quran.data.toUiModel
 import com.zaidan.quraneasy.feature.quran.domain.repository.QuranRepository
 import com.zaidan.quraneasy.feature.quran.presentation.model.AyahUiModel
+import com.zaidan.quraneasy.feature.quran.presentation.model.QuranBookmarkUiModel
 import com.zaidan.quraneasy.feature.quran.presentation.model.SurahUiModel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -50,6 +54,46 @@ class QuranRepositoryImpl @Inject constructor(
             }
         }
     }
+
+    override fun observeBookmarks(): Flow<List<QuranBookmarkUiModel>> {
+        return combine(
+            localDataSource.observeBookmarks(),
+            localDataSource.observeAllSurahs()
+        ) { bookmarks, surahs ->
+            val surahsByNumber = surahs.associateBy { it.number }
+            bookmarks.mapNotNull { bookmark ->
+                when (bookmark.type) {
+                    BookmarkType.SURAH -> {
+                        val surahNumber = bookmark.surahNumber ?: return@mapNotNull null
+                        val surah = surahsByNumber[surahNumber] ?: return@mapNotNull null
+                        QuranBookmarkUiModel.SurahBookmark(
+                            id = bookmark.id,
+                            createdAt = bookmark.createdAt,
+                            surahNumber = surah.number,
+                            englishName = surah.englishName,
+                            arabicName = surah.arabicName,
+                            translation = surah.translation
+                        )
+                    }
+
+                    BookmarkType.JUZ -> {
+                        val juzNumber = bookmark.juzNumber ?: return@mapNotNull null
+                        QuranBookmarkUiModel.JuzBookmark(
+                            id = bookmark.id,
+                            createdAt = bookmark.createdAt,
+                            juzNumber = juzNumber
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    override fun isSurahBookmarked(surahNumber: Int): Flow<Boolean> =
+        localDataSource.isSurahBookmarked(surahNumber)
+
+    override fun isJuzBookmarked(juzNumber: Int): Flow<Boolean> =
+        localDataSource.isJuzBookmarked(juzNumber)
 
     override fun observePage(pageNumber: Int): Flow<List<AyahEntity>> {
         TODO("Not yet implemented")
@@ -111,5 +155,31 @@ class QuranRepositoryImpl @Inject constructor(
                 "ensureJuzDownloaded: failed to download juzNumber $juzNumber , ${e.message}"
             )
         }
+    }
+
+    override suspend fun addSurahBookmark(surahNumber: Int) {
+        localDataSource.insertBookmark(
+            BookmarkEntity(
+                type = BookmarkType.SURAH,
+                surahNumber = surahNumber
+            )
+        )
+    }
+
+    override suspend fun addJuzBookmark(juzNumber: Int) {
+        localDataSource.insertBookmark(
+            BookmarkEntity(
+                type = BookmarkType.JUZ,
+                juzNumber = juzNumber
+            )
+        )
+    }
+
+    override suspend fun removeSurahBookmark(surahNumber: Int) {
+        localDataSource.deleteSurahBookmark(surahNumber)
+    }
+
+    override suspend fun removeJuzBookmark(juzNumber: Int) {
+        localDataSource.deleteJuzBookmark(juzNumber)
     }
 }

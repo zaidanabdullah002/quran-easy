@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -51,7 +52,9 @@ import com.zaidan.quraneasy.core.ui.AppCardDefaults
 import com.zaidan.quraneasy.core.ui.HapticIconButton
 import com.zaidan.quraneasy.core.ui.hapticClick
 import com.zaidan.quraneasy.core.ui.AppErrorView
-import com.zaidan.quraneasy.core.ui.AppLoadingView
+import com.zaidan.quraneasy.core.ui.AppSkeletonBlock
+import com.zaidan.quraneasy.core.ui.AppSkeletonLine
+import com.zaidan.quraneasy.feature.quran.presentation.model.QuranBookmarkUiModel
 import com.zaidan.quraneasy.feature.quran.presentation.model.JuzUiModel
 import com.zaidan.quraneasy.feature.quran.presentation.model.QuranUiState
 import com.zaidan.quraneasy.feature.quran.presentation.model.SurahUiModel
@@ -80,7 +83,6 @@ fun QuranScreenPreview() {
         onBackClick = {},
         onSurahClick = {},
         onJuzClick = {},
-        onBookmarkClick = {},
         selectTab = {}
     )
 }
@@ -90,7 +92,6 @@ fun QuranScreen(
     onBackClick: () -> Unit,
     onSurahClick: (Int) -> Unit,
     onJuzClick: (Int) -> Unit,
-    onBookmarkClick: () -> Unit,
     quranViewModel: QuranViewModel
 ) {
     val uiState = quranViewModel.uiState.collectAsStateWithLifecycle().value
@@ -99,8 +100,7 @@ fun QuranScreen(
         selectTab = quranViewModel::selectTab,
         onBackClick = onBackClick,
         onSurahClick = onSurahClick,
-        onJuzClick = onJuzClick,
-        onBookmarkClick = onBookmarkClick
+        onJuzClick = onJuzClick
     )
 }
 
@@ -110,7 +110,6 @@ private fun QuranScreenContent(
     onBackClick: () -> Unit,
     onSurahClick: (Int) -> Unit,
     onJuzClick: (Int) -> Unit,
-    onBookmarkClick: () -> Unit,
     selectTab: (Int) -> Unit
 ) {
     val TAG = "QuranScreenContent"
@@ -132,14 +131,9 @@ private fun QuranScreenContent(
         )
 
         if (uiState.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                AppLoadingView(
-                    title = "Downloading surah list",
-                    subtitle = "Preparing the Quran index for offline browsing"
-                )
+            when (selectedTab) {
+                ReaderType.JUZ.ordinal -> QuranJuzListSkeleton()
+                else -> QuranSurahListSkeleton()
             }
         } else if (uiState.message.isNotEmpty()) {
             Box(
@@ -193,12 +187,76 @@ private fun QuranScreenContent(
                 }
 
                 else -> Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    BookmarkEmptyState()
+                    BookmarkContent(
+                        bookmarks = uiState.bookmarks,
+                        onSurahClick = onSurahClick,
+                        onJuzClick = onJuzClick
+                    )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun BookmarkContent(
+    bookmarks: List<QuranBookmarkUiModel>,
+    onSurahClick: (Int) -> Unit,
+    onJuzClick: (Int) -> Unit
+) {
+    if (bookmarks.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            BookmarkEmptyState()
+        }
+        return
+    }
+
+    LazyColumn(
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 18.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxSize()
+    ) {
+        items(bookmarks, key = { it.id }) { bookmark ->
+            BookmarkCard(
+                bookmark = bookmark,
+                onClick = {
+                    when (bookmark) {
+                        is QuranBookmarkUiModel.SurahBookmark -> onSurahClick(bookmark.surahNumber)
+                        is QuranBookmarkUiModel.JuzBookmark -> onJuzClick(bookmark.juzNumber)
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun QuranSurahListSkeleton() {
+    LazyColumn(
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 18.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxSize()
+    ) {
+        items(6) {
+            SurahCardSkeleton()
+        }
+    }
+}
+
+@Composable
+private fun QuranJuzListSkeleton() {
+    LazyColumn(
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 18.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxSize()
+    ) {
+        items(7) {
+            JuzCardSkeleton()
         }
     }
 }
@@ -239,6 +297,98 @@ private fun BookmarkEmptyState() {
             textAlign = TextAlign.Center,
             lineHeight = 20.sp
         )
+    }
+}
+
+@Composable
+private fun BookmarkCard(
+    bookmark: QuranBookmarkUiModel,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = hapticClick(onClick = onClick),
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(26.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, Color(0xFFE8E2D8)),
+        elevation = AppCardDefaults.interactiveElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(60.dp)
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(Color(0xFF1F1F1F)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Favorite,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                when (bookmark) {
+                    is QuranBookmarkUiModel.SurahBookmark -> {
+                        Text(
+                            text = "Surah ${bookmark.surahNumber} · ${bookmark.englishName}",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF1A1A1A),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = bookmark.arabicName,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF444444),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = bookmark.translation,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF6F7681),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    is QuranBookmarkUiModel.JuzBookmark -> {
+                        Text(
+                            text = "Juz ${bookmark.juzNumber}",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF1A1A1A),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "Saved for quick return",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF6F7681),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -535,24 +685,99 @@ fun JuzCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+            }
+        }
+    }
+}
 
-                Text(
-                    text = "Juz ${juz.juzNum}",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF6F7681),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+@Composable
+private fun SurahCardSkeleton() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(26.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, Color(0xFFE8E2D8)),
+        elevation = AppCardDefaults.interactiveElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 124.dp)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AppSkeletonBlock(
+                modifier = Modifier
+                    .size(74.dp)
+                    .clip(RoundedCornerShape(24.dp)),
+                tint = Color(0xFFEAE5DC)
+            )
 
-                Text(
-                    text = "${juz.verses} verses",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF8B6F47),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Box(
+                modifier = Modifier
+                    .width(1.dp)
+                    .height(82.dp)
+                    .background(Color(0xFFE9E2D7))
+            )
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.52f).height(20.dp))
+                AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.38f).height(16.dp))
+                AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.44f).height(15.dp))
+                AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.28f).height(14.dp), tint = Color(0xFFF0E2C7))
+            }
+        }
+    }
+}
+
+@Composable
+private fun JuzCardSkeleton() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(26.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, Color(0xFFE8E2D8)),
+        elevation = AppCardDefaults.interactiveElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 104.dp)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AppSkeletonBlock(
+                modifier = Modifier
+                    .size(74.dp)
+                    .clip(RoundedCornerShape(24.dp)),
+                tint = Color(0xFFEAE5DC)
+            )
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Box(
+                modifier = Modifier
+                    .width(1.dp)
+                    .height(58.dp)
+                    .background(Color(0xFFE9E2D7))
+            )
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.5f).height(20.dp))
+                AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.34f).height(15.dp))
+                AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.26f).height(14.dp), tint = Color(0xFFF0E2C7))
             }
         }
     }

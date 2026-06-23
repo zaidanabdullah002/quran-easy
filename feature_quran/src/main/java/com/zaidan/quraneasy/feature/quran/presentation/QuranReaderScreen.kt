@@ -9,16 +9,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Icon
@@ -27,9 +31,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -44,7 +50,7 @@ import com.zaidan.quraneasy.core.theme.AppBackground
 import com.zaidan.quraneasy.core.theme.AppPrimaryText
 import com.zaidan.quraneasy.core.theme.QuranFont
 import com.zaidan.quraneasy.core.ui.AppErrorView
-import com.zaidan.quraneasy.core.ui.AppLoadingView
+import com.zaidan.quraneasy.core.ui.AppSkeletonLine
 import com.zaidan.quraneasy.core.ui.HapticIconButton
 import com.zaidan.quraneasy.feature.quran.presentation.model.AyahUiModel
 import com.zaidan.quraneasy.feature.quran.presentation.model.AyahUiState
@@ -79,7 +85,8 @@ private fun QuranReaderScreenPreview() {
             subtitle = "2 verses",
             arabicName = "الفاتحة"
         ),
-        onBackClick = {}
+        onBackClick = {},
+        onBookmarkClick = {}
     )
 }
 
@@ -114,7 +121,8 @@ fun QuranReaderScreen(
     QuranReaderContent(
         ayahUiState = ayahUiState,
         title = title,
-        onBackClick = onBackClick
+        onBackClick = onBackClick,
+        onBookmarkClick = quranReaderViewModel::toggleBookmark
     )
 }
 
@@ -122,7 +130,8 @@ fun QuranReaderScreen(
 private fun QuranReaderContent(
     ayahUiState: AyahUiState,
     title: ReaderHeaderUiModel,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onBookmarkClick: () -> Unit
 ) {
     val readerListState = rememberLazyListState()
     Column(
@@ -132,29 +141,17 @@ private fun QuranReaderContent(
     ) {
         QuranReaderTopBar(
             title = title,
-            onBackClick = onBackClick
+            onBackClick = onBackClick,
+            isBookmarked = ayahUiState.isBookmarked,
+            onBookmarkClick = onBookmarkClick
         )
 
         if (ayahUiState.isLoading) {
-            Box(
+            ReaderSkeleton(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight(0.84f),
-                contentAlignment = Alignment.Center
-            ) {
-                AppLoadingView(
-                    title = if (title.title.startsWith("Juz")) {
-                        "Downloading juz content"
-                    } else {
-                        "Downloading surah content"
-                    },
-                    subtitle = if (title.title.startsWith("Juz")) {
-                        "Preparing this juz for smooth offline reading"
-                    } else {
-                        "Preparing this surah for smooth offline reading"
-                    }
-                )
-            }
+                    .weight(1f)
+            )
         } else if (ayahUiState.message.isNullOrBlank().not()) {
             Box(
                 modifier = Modifier
@@ -188,9 +185,53 @@ private fun QuranReaderContent(
 }
 
 @Composable
+private fun ReaderSkeleton(
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        item {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(ReaderPageSurface)
+                    .border(BorderStroke(1.dp, ReaderAyahBorder), RoundedCornerShape(28.dp))
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 24.dp)
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(18.dp)
+                ) {
+                    repeat(7) { index ->
+                        AppSkeletonLine(
+                            modifier = Modifier
+                                .fillMaxWidth(
+                                    when (index % 3) {
+                                        0 -> 0.96f
+                                        1 -> 0.88f
+                                        else -> 0.78f
+                                    }
+                                )
+                                .height(34.dp),
+                            tint = Color(0xFFF0ECE4)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun QuranReaderTopBar(
     title: ReaderHeaderUiModel,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    isBookmarked: Boolean,
+    onBookmarkClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -201,7 +242,9 @@ private fun QuranReaderTopBar(
     ) {
         RowCenteredTopBar(
             onBackClick = onBackClick,
-            title = title
+            title = title,
+            isBookmarked = isBookmarked,
+            onBookmarkClick = onBookmarkClick
         )
     }
 }
@@ -209,7 +252,9 @@ private fun QuranReaderTopBar(
 @Composable
 private fun RowCenteredTopBar(
     onBackClick: () -> Unit,
-    title: ReaderHeaderUiModel
+    title: ReaderHeaderUiModel,
+    isBookmarked: Boolean,
+    onBookmarkClick: () -> Unit
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -225,11 +270,9 @@ private fun RowCenteredTopBar(
 
         Spacer(modifier = Modifier.padding(start = 4.dp))
 
-        Icon(
-            imageVector = Icons.Outlined.FavoriteBorder,
-            contentDescription = null,
-            tint = Color.White
-        )
+        HapticIconButton(onClick = onBookmarkClick) {
+            AnimatedBookmarkHeart(isBookmarked = isBookmarked)
+        }
 
         Spacer(modifier = Modifier.padding(start = 8.dp))
 
@@ -260,6 +303,43 @@ private fun RowCenteredTopBar(
             textAlign = TextAlign.End
         )
     }
+}
+
+@Composable
+private fun AnimatedBookmarkHeart(
+    isBookmarked: Boolean
+) {
+    val scale = remember { Animatable(1f) }
+
+    LaunchedEffect(isBookmarked) {
+        if (isBookmarked) {
+            scale.snapTo(0.82f)
+            scale.animateTo(
+                targetValue = 1.22f,
+                animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing)
+            )
+            scale.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 140, easing = FastOutSlowInEasing)
+            )
+        } else {
+            scale.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 120, easing = FastOutSlowInEasing)
+            )
+        }
+    }
+
+    Icon(
+        imageVector = if (isBookmarked) {
+            Icons.Filled.Favorite
+        } else {
+            Icons.Outlined.FavoriteBorder
+        },
+        contentDescription = "Bookmark",
+        tint = if (isBookmarked) Color(0xFFFF5A6E) else Color.White,
+        modifier = Modifier.scale(scale.value)
+    )
 }
 
 @Composable

@@ -26,6 +26,24 @@ class ObserveJuzUseCase @Inject constructor(
     ) = repository.observeJuz(juzNumber)
 }
 
+class ObserveBookmarksUseCase @Inject constructor(
+    private val repository: QuranRepository,
+) {
+    operator fun invoke() = repository.observeBookmarks()
+}
+
+class IsSurahBookmarkedUseCase @Inject constructor(
+    private val repository: QuranRepository,
+) {
+    operator fun invoke(surahNumber: Int) = repository.isSurahBookmarked(surahNumber)
+}
+
+class IsJuzBookmarkedUseCase @Inject constructor(
+    private val repository: QuranRepository,
+) {
+    operator fun invoke(juzNumber: Int) = repository.isJuzBookmarked(juzNumber)
+}
+
 class ObservePageUseCase @Inject constructor(
     private val repository: QuranRepository,
 ) {
@@ -57,3 +75,26 @@ class EnsureJuzDownloadedUseCase @Inject constructor(
     ) = repository.ensureJuzDownloaded(juzNumber)
 }
 
+class AddSurahBookmarkUseCase @Inject constructor(
+    private val repository: QuranRepository,
+) {
+    suspend operator fun invoke(surahNumber: Int) = repository.addSurahBookmark(surahNumber)
+}
+
+class AddJuzBookmarkUseCase @Inject constructor(
+    private val repository: QuranRepository,
+) {
+    suspend operator fun invoke(juzNumber: Int) = repository.addJuzBookmark(juzNumber)
+}
+
+class RemoveSurahBookmarkUseCase @Inject constructor(
+    private val repository: QuranRepository,
+) {
+    suspend operator fun invoke(surahNumber: Int) = repository.removeSurahBookmark(surahNumber)
+}
+
+class RemoveJuzBookmarkUseCase @Inject constructor(
+    private val repository: QuranRepository,
+) {
+    suspend operator fun invoke(juzNumber: Int) = repository.removeJuzBookmark(juzNumber)
+}

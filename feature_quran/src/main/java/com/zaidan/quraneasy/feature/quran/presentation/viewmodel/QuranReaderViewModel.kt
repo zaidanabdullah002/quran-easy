@@ -4,8 +4,11 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zaidan.quraneasy.feature.quran.domain.usecase.QuranUseCasesData
+import com.zaidan.quraneasy.feature.quran.presentation.ReaderType
 import com.zaidan.quraneasy.feature.quran.presentation.model.AyahUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,9 +28,15 @@ class QuranReaderViewModel @Inject constructor(
 
     private val _ayahUiState = MutableStateFlow(AyahUiState(isLoading = true))
     val ayahUiState: StateFlow<AyahUiState> = _ayahUiState.asStateFlow()
+    private var bookmarkJob: Job? = null
+    private var currentReaderType: Int? = null
+    private var currentItemNumber: Int? = null
 
     fun loadAyahWithSurahNumber(surahNumber: Int) {
         Log.i(TAG, "loadAyahWithSurahNumber: $surahNumber")
+        currentReaderType = ReaderType.SURAH.ordinal
+        currentItemNumber = surahNumber
+        observeBookmarkState()
         viewModelScope.launch {
             _ayahUiState.update {
                 it.copy(isLoading = true, message = "")
@@ -64,6 +73,9 @@ class QuranReaderViewModel @Inject constructor(
 
     fun loadAyahWithJuzNumber(juzNumber: Int) {
         Log.i(TAG, "loadAyahWithJuzNumber: $juzNumber")
+        currentReaderType = ReaderType.JUZ.ordinal
+        currentItemNumber = juzNumber
+        observeBookmarkState()
         viewModelScope.launch {
             _ayahUiState.update {
                 it.copy(isLoading = true, message = "")
@@ -93,6 +105,49 @@ class QuranReaderViewModel @Inject constructor(
                         isReady = false,
                         message = throwable.message ?: "juzNumber: $juzNumber Download Failed"
                     )
+                }
+            }
+        }
+    }
+
+    fun toggleBookmark() {
+        val readerType = currentReaderType ?: return
+        val itemNumber = currentItemNumber ?: return
+
+        viewModelScope.launch {
+            when (readerType) {
+                ReaderType.SURAH.ordinal -> {
+                    if (_ayahUiState.value.isBookmarked) {
+                        quranUseCases.removeSurahBookmark(itemNumber)
+                    } else {
+                        quranUseCases.addSurahBookmark(itemNumber)
+                    }
+                }
+
+                ReaderType.JUZ.ordinal -> {
+                    if (_ayahUiState.value.isBookmarked) {
+                        quranUseCases.removeJuzBookmark(itemNumber)
+                    } else {
+                        quranUseCases.addJuzBookmark(itemNumber)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun observeBookmarkState() {
+        bookmarkJob?.cancel()
+        val readerType = currentReaderType ?: return
+        val itemNumber = currentItemNumber ?: return
+        bookmarkJob = viewModelScope.launch {
+            val flow = when (readerType) {
+                ReaderType.SURAH.ordinal -> quranUseCases.isSurahBookmarked(itemNumber)
+                ReaderType.JUZ.ordinal -> quranUseCases.isJuzBookmarked(itemNumber)
+                else -> return@launch
+            }
+            flow.collectLatest { bookmarked ->
+                _ayahUiState.update {
+                    it.copy(isBookmarked = bookmarked)
                 }
             }
         }

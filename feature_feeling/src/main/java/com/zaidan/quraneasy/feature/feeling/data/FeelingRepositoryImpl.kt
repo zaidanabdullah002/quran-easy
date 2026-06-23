@@ -34,6 +34,13 @@ class FeelingRepositoryImpl @Inject constructor(
     }
 
     private suspend fun loadVerses(verseRefs: List<VerseRef>): List<FeelingVerseUiModel> {
+        verseRefs
+            .map { it.surah }
+            .distinct()
+            .forEach { surahNumber ->
+                quranUseCases.ensureSurahDownloaded(surahNumber)
+            }
+
         return verseRefs.mapNotNull { verseRef ->
             val ayahs = quranUseCases.observeSurah(verseRef.surah).first()
             val match = ayahs.firstOrNull { it.numberInSurah == verseRef.ayah } ?: return@mapNotNull null

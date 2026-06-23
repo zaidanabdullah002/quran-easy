@@ -6,5 +6,6 @@ data class QuranUiState(
     val isReady: Boolean = false,
     val message: String = "",
     val surahs: List<SurahUiModel> = emptyList(),
-    val juzs: List<JuzUiModel> = emptyList()
+    val juzs: List<JuzUiModel> = emptyList(),
+    val bookmarks: List<QuranBookmarkUiModel> = emptyList()
 )

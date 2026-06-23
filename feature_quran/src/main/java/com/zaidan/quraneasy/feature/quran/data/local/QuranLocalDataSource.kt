@@ -2,14 +2,17 @@ package com.zaidan.quraneasy.feature.quran.data.local
 
 import com.zaidan.quraneasy.core.model.DownloadState
 import com.zaidan.quraneasy.feature.quran.data.local.dao.AyahDao
+import com.zaidan.quraneasy.feature.quran.data.local.dao.BookmarkDao
 import com.zaidan.quraneasy.feature.quran.data.local.dao.SurahDao
 import com.zaidan.quraneasy.feature.quran.data.local.entity.AyahEntity
+import com.zaidan.quraneasy.feature.quran.data.local.entity.BookmarkEntity
 import com.zaidan.quraneasy.feature.quran.data.local.entity.SurahEntity
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class QuranLocalDataSource @Inject constructor(
     private val ayahDao: AyahDao,
+    private val bookmarkDao: BookmarkDao,
     private val surahDao: SurahDao,
 ) {
     // Ayah
@@ -80,4 +83,25 @@ class QuranLocalDataSource @Inject constructor(
             downloadState = downloadState,
         )
     }
+
+    fun observeBookmarks(): Flow<List<BookmarkEntity>> =
+        bookmarkDao.observeBookmarks()
+
+    suspend fun insertBookmark(bookmark: BookmarkEntity) {
+        bookmarkDao.insertBookmark(bookmark)
+    }
+
+    suspend fun deleteSurahBookmark(surahNumber: Int) {
+        bookmarkDao.deleteSurahBookmark(surahNumber = surahNumber)
+    }
+
+    suspend fun deleteJuzBookmark(juzNumber: Int) {
+        bookmarkDao.deleteJuzBookmark(juzNumber = juzNumber)
+    }
+
+    fun isSurahBookmarked(surahNumber: Int): Flow<Boolean> =
+        bookmarkDao.isSurahBookmarked(surahNumber = surahNumber)
+
+    fun isJuzBookmarked(juzNumber: Int): Flow<Boolean> =
+        bookmarkDao.isJuzBookmarked(juzNumber = juzNumber)
 }

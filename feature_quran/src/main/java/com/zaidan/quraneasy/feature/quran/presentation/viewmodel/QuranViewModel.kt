@@ -43,14 +43,18 @@ class QuranViewModel @Inject constructor(
             )
         }
     )
+    private val _bookmarks = quranUseCases.observeBookmarks()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val uiState: StateFlow<QuranUiState> = combine(
         _uiState,
         _surahs,
-        _juzs
-    ) { baseState, surahList, juzList ->
+        _juzs,
+        _bookmarks
+    ) { baseState, surahList, juzList, bookmarks ->
         baseState.copy(
             surahs = surahList,
-            juzs = juzList
+            juzs = juzList,
+            bookmarks = bookmarks
         )
     }.stateIn(
         viewModelScope,

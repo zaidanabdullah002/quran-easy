@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -33,6 +34,8 @@ import com.zaidan.quraneasy.core.theme.AppSoftSurface
 import com.zaidan.quraneasy.core.theme.AppSurface
 import com.zaidan.quraneasy.core.theme.QuranFont
 import com.zaidan.quraneasy.feature.feeling.presentation.topbar.FeelingTopBar
+import com.zaidan.quraneasy.core.ui.AppSkeletonBlock
+import com.zaidan.quraneasy.core.ui.AppSkeletonLine
 
 @Composable
 fun FeelingDetailScreen(
@@ -68,11 +71,7 @@ fun FeelingDetailScreen(
 
         when {
             uiState.isLoading -> {
-                Text(
-                    text = "Loading...",
-                    modifier = Modifier.padding(24.dp),
-                    color = AppSecondaryText
-                )
+                FeelingDetailSkeleton()
             }
 
             uiState.message != null -> {
@@ -143,6 +142,45 @@ fun FeelingDetailScreen(
 }
 
 @Composable
+private fun FeelingDetailSkeleton() {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        item {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = AppSurface),
+                modifier = Modifier.fillMaxWidth(),
+                elevation = AppCardDefaults.staticElevation(defaultElevation = 2.dp)
+            ) {
+                Column(Modifier.padding(20.dp)) {
+                    AppSkeletonBlock(
+                        modifier = Modifier.size(44.dp),
+                        tint = Color(0xFFF1E6E6)
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.48f).height(28.dp))
+                    Spacer(Modifier.height(8.dp))
+                    AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.72f).height(16.dp))
+                    Spacer(Modifier.height(14.dp))
+                    AppSkeletonBlock(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        tint = Color(0xFFF7E8E8)
+                    )
+                }
+            }
+        }
+
+        items(4) {
+            FeelingVerseCardSkeleton()
+        }
+    }
+}
+
+@Composable
 private fun VerseCard(
     verse: FeelingVerseUiModel
 ) {
@@ -172,6 +210,28 @@ private fun VerseCard(
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun FeelingVerseCardSkeleton() {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = AppSoftSurface),
+        modifier = Modifier.fillMaxWidth(),
+        elevation = AppCardDefaults.staticElevation(defaultElevation = 1.dp)
+    ) {
+        Column(Modifier.padding(18.dp)) {
+            AppSkeletonLine(
+                modifier = Modifier.fillMaxWidth(0.94f).height(32.dp),
+                tint = Color(0xFFE8E5DD)
+            )
+            Spacer(Modifier.height(10.dp))
+            AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.34f).height(13.dp))
+            Spacer(Modifier.height(8.dp))
+            AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.88f).height(15.dp))
+            Spacer(Modifier.height(6.dp))
+            AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.76f).height(15.dp))
         }
     }
 }

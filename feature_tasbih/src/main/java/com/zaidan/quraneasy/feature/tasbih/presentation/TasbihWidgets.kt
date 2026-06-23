@@ -1,5 +1,6 @@
 package com.zaidan.quraneasy.feature.tasbih.presentation
 
+import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -57,29 +58,6 @@ fun TasbihTargetChip(target: Int,
                 modifier = Modifier.padding(start = 10.dp)
             )
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun TasbihTextChipPreview(){
-    TasbihTextChip(tasbihText = "subhan allah")
-}
-
-@Composable
-fun TasbihTextChip(tasbihText: String){
-    Card(
-        shape = RoundedCornerShape(AppDimens.CardRadius.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFE8E8E8)),
-        ) {
-        Text(
-            text = tasbihText,
-            color = Color(0xFF70798A),
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.padding(10.dp)
-        )
     }
 }
 
@@ -148,12 +126,14 @@ fun TasbihCounterRing(
 
 @Preview(showBackground = true)
 @Composable
+@RequiresPermission("android.permission.VIBRATE")
 fun TasbihSwipeAreaPreview() {
     TasbihSwipeArea(onSwipeUp = {}) {
         Text("Swipe anywhere")
     }
 }
 
+@RequiresPermission("android.permission.VIBRATE")
 @Composable
 fun TasbihSwipeArea(
     onSwipeUp: () -> Unit,

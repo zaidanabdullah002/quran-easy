@@ -4,5 +4,6 @@ data class AyahUiState(
     val isLoading: Boolean = false,
     val isReady: Boolean = false,
     val message: String? = null,
-    val ayahs: List<AyahUiModel> = emptyList()
+    val ayahs: List<AyahUiModel> = emptyList(),
+    val isBookmarked: Boolean = false
 )
