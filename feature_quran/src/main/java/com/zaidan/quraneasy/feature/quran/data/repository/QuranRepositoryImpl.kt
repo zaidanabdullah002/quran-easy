@@ -154,6 +154,7 @@ class QuranRepositoryImpl @Inject constructor(
                 TAG,
                 "ensureJuzDownloaded: failed to download juzNumber $juzNumber , ${e.message}"
             )
+            throw e
         }
     }
 

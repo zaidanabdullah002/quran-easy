@@ -1,14 +1,21 @@
 package com.zaidan.quraneasy.feature.home.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Stars
 import androidx.compose.material3.Icon
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -23,7 +30,10 @@ import com.zaidan.quraneasy.core.ui.HapticIconButton
 
 @Preview(showBackground = true)
 @Composable
-fun HomeHeader() {
+fun HomeHeader(
+    onAboutClick: () -> Unit = {}
+) {
+    var isMenuExpanded by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -45,7 +55,7 @@ fun HomeHeader() {
             // 2. Stacked Typography: Creates better visual hierarchy
             Column {
                 Text(
-                    text = "Al Quran",
+                    text = "Quran Easy",
                     color = Color.White.copy(alpha = 0.7f),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
@@ -65,7 +75,7 @@ fun HomeHeader() {
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 HapticIconButton(
-                    onClick = { /* TODO */ },
+                    onClick = {},
                     modifier = Modifier
                         .size(40.dp)
                         .background(Color.White.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
@@ -78,12 +88,27 @@ fun HomeHeader() {
                     )
                 }
 
-                HapticIconButton(onClick = { /* TODO */ }) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Menu",
-                        tint = Color.White
-                    )
+                Box {
+                    HapticIconButton(onClick = { isMenuExpanded = true }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Menu",
+                            tint = Color.White
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = isMenuExpanded,
+                        onDismissRequest = { isMenuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(text = "About") },
+                            onClick = {
+                                isMenuExpanded = false
+                                onAboutClick()
+                            }
+                        )
+                    }
                 }
             }
         }

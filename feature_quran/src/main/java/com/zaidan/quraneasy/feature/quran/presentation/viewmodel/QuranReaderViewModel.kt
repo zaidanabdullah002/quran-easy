@@ -89,13 +89,23 @@ class QuranReaderViewModel @Inject constructor(
                 val ayahs = quranUseCases.observeJuz(juzNumber).first()
                 Log.i(TAG, "loadAyahWithJuzNumber ayahList: $ayahs")
 
-                _ayahUiState.update {
-                    it.copy(
-                        isLoading = false,
-                        isReady = true,
-                        message = "",
-                        ayahs = ayahs
-                    )
+                if (ayahs.isEmpty()) {
+                    _ayahUiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isReady = false,
+                            message = "No ayahs found for Juz $juzNumber after download."
+                        )
+                    }
+                } else {
+                    _ayahUiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isReady = true,
+                            message = "",
+                            ayahs = ayahs
+                        )
+                    }
                 }
             }.onFailure { throwable ->
                 Log.i(TAG, "downloadingAyahWithJuzNumber: failed $juzNumber, ${throwable.message}")

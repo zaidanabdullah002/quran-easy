@@ -1,6 +1,7 @@
 package com.zaidan.quraneasy.feature.tasbih.presentation
 
 import android.annotation.SuppressLint
+import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zaidan.quraneasy.core.theme.AppDimens
 
+@RequiresPermission("android.permission.VIBRATE")
 @Preview(showBackground = true)
 @Composable
 fun TasbihContentPreview() {
@@ -33,7 +35,7 @@ fun TasbihContentPreview() {
         onTargetChange = {}
     )
 }
-
+@RequiresPermission("android.permission.VIBRATE")
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun TasbihContent(
@@ -183,10 +185,6 @@ fun TasbihContent(
 
                         Spacer(
                             modifier = Modifier.height(4.dp)
-                        )
-
-                        TasbihTextChip(
-                            tasbihText = uiState.tasbihText
                         )
                     }
                 }

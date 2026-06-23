@@ -16,10 +16,17 @@ fun NavGraphBuilder.homeGraph(
         HomeScreen(
             onReadQuranClick = { navController.navigate(Screen.Quran.route) },
             onTasbihClick = { navController.navigate(Screen.Tasbih.route) },
+            onAboutClick = { navController.navigate(Screen.About.route) },
             onFeelingClick = { feeling ->
                 navController.navigate("$FEELING_ROUTE_BASE/${feeling.id}")
             },
             prayerViewModel = prayerViewModel
+        )
+    }
+
+    composable(Screen.About.route) {
+        AboutScreen(
+            onBackClick = { navController.popBackStack() }
         )
     }
 }

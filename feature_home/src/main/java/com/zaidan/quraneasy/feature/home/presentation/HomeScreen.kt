@@ -34,6 +34,7 @@ fun HomeScreenPreview() {
     HomeScreen(
         onReadQuranClick = {},
         onTasbihClick = {},
+        onAboutClick = {},
         onFeelingClick = {},
         feelings = emptyList(),
         prayerViewModel = viewModel()
@@ -44,6 +45,7 @@ fun HomeScreenPreview() {
 fun HomeScreen(
     onReadQuranClick: () -> Unit,
     onTasbihClick: () -> Unit,
+    onAboutClick: () -> Unit,
     onFeelingClick: (Feeling) -> Unit,
     prayerViewModel: PrayerViewModel,
     feelingViewModel: FeelingViewModel = hiltViewModel()
@@ -52,6 +54,7 @@ fun HomeScreen(
     HomeScreen(
         onReadQuranClick = onReadQuranClick,
         onTasbihClick = onTasbihClick,
+        onAboutClick = onAboutClick,
         onFeelingClick = onFeelingClick,
         feelings = feelings,
         prayerViewModel = prayerViewModel
@@ -62,6 +65,7 @@ fun HomeScreen(
 fun HomeScreen(
     onReadQuranClick: () -> Unit,
     onTasbihClick: () -> Unit,
+    onAboutClick: () -> Unit,
     onFeelingClick: (Feeling) -> Unit,
     feelings: List<Feeling>,
     prayerViewModel: PrayerViewModel
@@ -72,7 +76,7 @@ fun HomeScreen(
             .background(AppBackground),
         verticalArrangement = Arrangement.Top
     ) {
-        HomeHeader()
+        HomeHeader(onAboutClick = onAboutClick)
 
         Column(
             modifier = Modifier
@@ -109,4 +113,3 @@ fun HomeScreen(
         }
     }
 }
-
