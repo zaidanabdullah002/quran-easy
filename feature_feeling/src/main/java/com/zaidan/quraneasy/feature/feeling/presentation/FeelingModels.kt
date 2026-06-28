@@ -10,6 +10,7 @@ data class Feeling(
     val title: String,
     val subtitle: String,
     val verses: List<VerseRef>,
+    val previewTranslation: String? = null,
     val accent: String? = null,
     val artworkKey: String? = null,
     val category: FeelingCategory = FeelingCategory.Feeling

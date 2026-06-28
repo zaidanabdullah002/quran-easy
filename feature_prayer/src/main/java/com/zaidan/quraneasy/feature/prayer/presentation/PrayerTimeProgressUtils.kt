@@ -14,10 +14,11 @@ fun calculateCurrentPrayerProgress(
     prayers: List<PrayerRowUi>,
     calendar: Calendar = Calendar.getInstance()
 ): CurrentPrayerProgress? {
-    if (prayers.isEmpty() || prayers.any { it.time == "--:--" }) return null
+    val trackablePrayers = prayers.filter { it.trackable }
+    if (trackablePrayers.isEmpty() || trackablePrayers.any { it.time == "--:--" }) return null
 
     val nowMinutes = calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE)
-    val prayerMinutes = prayers.mapNotNull { prayer ->
+    val prayerMinutes = trackablePrayers.mapNotNull { prayer ->
         parsePrayerMinutes(prayer.time)?.let { prayer.name to it }
     }
     if (prayerMinutes.isEmpty()) return null

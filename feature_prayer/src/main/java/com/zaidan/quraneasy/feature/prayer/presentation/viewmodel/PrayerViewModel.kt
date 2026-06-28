@@ -79,7 +79,8 @@ class PrayerViewModel @Inject constructor(
                                 name = prayer.name,
                                 time = prayer.time,
                                 completed = prayer.completed,
-                                enabled = true
+                                enabled = prayer.name != "Sunrise",
+                                trackable = prayer.name != "Sunrise"
                             )
                         }
                     }
@@ -127,7 +128,10 @@ class PrayerViewModel @Inject constructor(
             PrayerCardUiState(
                 cardMode = effectiveMode,
                 prayers = visiblePrayers.map { row ->
-                    row.copy(enabled = effectiveMode == PrayerCardMode.Ready || effectiveMode == PrayerCardMode.ReadyOfflineCache)
+                    row.copy(
+                        enabled = row.trackable &&
+                            (effectiveMode == PrayerCardMode.Ready || effectiveMode == PrayerCardMode.ReadyOfflineCache)
+                    )
                 },
                 locationLabel = locationLabel,
                 banner = bannerForState(

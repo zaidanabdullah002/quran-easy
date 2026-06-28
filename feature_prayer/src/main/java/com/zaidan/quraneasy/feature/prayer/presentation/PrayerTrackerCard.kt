@@ -88,6 +88,7 @@ private val PrayerRowBorder = Color(0xFFDDE3EE)
 private val PrayerIndicatorTrack = Color(0xFFE8EDF6)
 private val PrayerHeaderSurface = Color(0xFFF3F6FC)
 private val PrayerLocationText = Color(0xFF4A5875)
+private val PrayerRowLeadingInset = 54.dp
 
 @Preview(showBackground = true)
 @Composable
@@ -97,6 +98,7 @@ fun PrayerTrackerCardPreview() {
             cardMode = PrayerCardMode.Ready,
             prayers = listOf(
                 PrayerRowUi("Fajr", "04:07", true, true),
+                PrayerRowUi("Sunrise", "05:31", false, false, trackable = false),
                 PrayerRowUi("Dhuhr", "12:22", true, true),
                 PrayerRowUi("Asr", "15:54", false, true),
                 PrayerRowUi("Maghrib", "19:21", false, true),
@@ -214,8 +216,9 @@ fun PrayerTrackerCard(
     val statusText = when (uiState.cardMode) {
         PrayerCardMode.Ready,
         PrayerCardMode.ReadyOfflineCache -> {
-            val completedCount = prayers.count { it.completed }
-            "$completedCount of ${prayers.size} completed"
+            val trackablePrayers = prayers.filter { it.trackable }
+            val completedCount = trackablePrayers.count { it.completed }
+            "$completedCount of ${trackablePrayers.size} completed"
         }
 
         PrayerCardMode.Loading -> "Loading prayer times..."
@@ -228,11 +231,16 @@ fun PrayerTrackerCard(
         else -> null
     }
     val locationLabel = uiState.locationLabel
-    val totalPrayerCount = prayers.count { it.completed }
-    val progress = if (prayers.isNotEmpty()) totalPrayerCount / prayers.size.toFloat() else 0f
+    val trackablePrayers = prayers.filter { it.trackable }
+    val totalPrayerCount = trackablePrayers.count { it.completed }
+    val progress = if (trackablePrayers.isNotEmpty()) {
+        totalPrayerCount / trackablePrayers.size.toFloat()
+    } else {
+        0f
+    }
     val cardAlpha = if (canTogglePrayers) 1f else 0.55f
     val currentPrayerProgress = remember(prayers) { calculateCurrentPrayerProgress(prayers) }
-    val isAllCompleted = prayers.size == 5 && prayers.all { it.completed }
+    val isAllCompleted = trackablePrayers.size == 5 && trackablePrayers.all { it.completed }
     val celebrationState = rememberPrayerCompletionCelebrationState(
         isAllCompleted = isAllCompleted,
         onCelebrationTriggered = onAllPrayersCompleted
@@ -352,6 +360,7 @@ fun PrayerTrackerCard(
                         name = prayer.name,
                         time = prayer.time,
                         completed = prayer.completed,
+                        trackable = prayer.trackable,
                         enabled = prayer.enabled && canTogglePrayers,
                         onClick = {
                             if (prayer.enabled && canTogglePrayers) {
@@ -379,9 +388,34 @@ private fun PrayerRow(
     name: String,
     time: String,
     completed: Boolean,
+    trackable: Boolean,
     enabled: Boolean,
     onClick: (() -> Unit)? = null
 ) {
+    if (!trackable) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 14.dp + PrayerRowLeadingInset, end = 14.dp, top = 4.dp, bottom = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = name,
+                color = AppPrimaryText,
+                fontSize = titleFontSize,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = time,
+                color = AppSecondaryText,
+                fontSize = subtitleFontSize,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        return
+    }
+
     var tickTrigger by remember(name, time) { mutableIntStateOf(0) }
     var rowShakeTrigger by remember(name, time) { mutableIntStateOf(0) }
     val tickScale = remember { Animatable(1f) }

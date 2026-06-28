@@ -22,11 +22,13 @@ data class PrayerRowUi(
     val name: String,
     val time: String,
     val completed: Boolean,
-    val enabled: Boolean
+    val enabled: Boolean,
+    val trackable: Boolean = true
 ) {
     companion object {
         fun placeholderList() = listOf(
             PrayerRowUi("Fajr", "--:--", false, false),
+            PrayerRowUi("Sunrise", "--:--", false, false, trackable = false),
             PrayerRowUi("Dhuhr", "--:--", false, false),
             PrayerRowUi("Asr", "--:--", false, false),
             PrayerRowUi("Maghrib", "--:--", false, false),

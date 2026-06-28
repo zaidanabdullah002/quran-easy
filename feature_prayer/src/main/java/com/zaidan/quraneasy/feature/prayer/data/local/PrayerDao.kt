@@ -17,11 +17,12 @@ interface PrayerDao {
         WHERE date = :date AND locationKey = :locationKey
         ORDER BY CASE name
             WHEN 'Fajr' THEN 1
-            WHEN 'Dhuhr' THEN 2
-            WHEN 'Asr' THEN 3
-            WHEN 'Maghrib' THEN 4
-            WHEN 'Isha' THEN 5
-            ELSE 6
+            WHEN 'Sunrise' THEN 2
+            WHEN 'Dhuhr' THEN 3
+            WHEN 'Asr' THEN 4
+            WHEN 'Maghrib' THEN 5
+            WHEN 'Isha' THEN 6
+            ELSE 7
         END
         """
     )
@@ -47,11 +48,12 @@ interface PrayerDao {
         WHERE date = :date AND locationKey = :locationKey
         ORDER BY CASE name
             WHEN 'Fajr' THEN 1
-            WHEN 'Dhuhr' THEN 2
-            WHEN 'Asr' THEN 3
-            WHEN 'Maghrib' THEN 4
-            WHEN 'Isha' THEN 5
-            ELSE 6
+            WHEN 'Sunrise' THEN 2
+            WHEN 'Dhuhr' THEN 3
+            WHEN 'Asr' THEN 4
+            WHEN 'Maghrib' THEN 5
+            WHEN 'Isha' THEN 6
+            ELSE 7
         END
         """
     )

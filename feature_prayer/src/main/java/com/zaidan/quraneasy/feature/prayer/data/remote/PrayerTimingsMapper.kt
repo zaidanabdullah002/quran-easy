@@ -11,6 +11,7 @@ fun PrayerTimingsResponse.toPrayerScheduleEntities(
     val timings = data.timings
     return listOf(
         PrayerScheduleEntity(date, locationKey, locationLabel, "Fajr", timings.fajr),
+        PrayerScheduleEntity(date, locationKey, locationLabel, "Sunrise", timings.sunrise),
         PrayerScheduleEntity(date, locationKey, locationLabel, "Dhuhr", timings.dhuhr),
         PrayerScheduleEntity(date, locationKey, locationLabel, "Asr", timings.asr),
         PrayerScheduleEntity(date, locationKey, locationLabel, "Maghrib", timings.maghrib),

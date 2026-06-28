@@ -17,7 +17,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.zaidan.quraneasy.core.theme.AppPrimaryText
@@ -40,6 +42,7 @@ private fun FeelingCardPreview() {
             title = "Need Hope",
             subtitle = "Allah's mercy never ends",
             verses = listOf(VerseRef(39, 53)),
+            previewTranslation = "Do not lose hope in Allah's mercy...",
             accent = "#E45B5B",
             artworkKey = "Mercy",
             category = FeelingCategory.Feeling
@@ -58,7 +61,7 @@ fun FeelingCard(
         onClick = hapticClick(onClick = onClick),
         modifier = Modifier
             .fillMaxWidth()
-            .height(96.dp),
+            .height(126.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = AppSurface),
         elevation = AppCardDefaults.interactiveElevation(defaultElevation = 3.dp)
@@ -96,6 +99,18 @@ fun FeelingCard(
                     color = AppSecondaryText,
                     style = MaterialTheme.typography.bodyMedium
                 )
+
+                feeling.previewTranslation?.let { translation ->
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = "\"$translation\"",
+                        color = AppSecondaryText.copy(alpha = 0.82f),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontStyle = FontStyle.Italic,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
 
             Card(
