@@ -1,11 +1,15 @@
 package com.zaidan.quraneasy.feature.quran.data.remote.dto
 
+import com.squareup.moshi.JsonClass
+
+@JsonClass(generateAdapter = true)
 data class SurahApiResponse(
     val code: Int,
     val status: String,
     val data: SurahDto
 )
 
+@JsonClass(generateAdapter = true)
 data class SurahDto(
     val number: Int,
     val name: String,
@@ -16,6 +20,7 @@ data class SurahDto(
     val ayahs: List<SurahAyahDto>
 )
 
+@JsonClass(generateAdapter = true)
 data class SurahAyahDto(
     val number: Int,
     val text: String,
@@ -28,6 +33,7 @@ data class SurahAyahDto(
     val sajda: SajdaDto? //(critical) false or object
 )
 
+@JsonClass(generateAdapter = true)
 data class SajdaDto(
     val id: Int = 0,
     val recommended: Boolean = false,
