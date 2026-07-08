@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -40,14 +39,33 @@ class FeelingViewModel @Inject constructor(
 
     private fun loadFeeling() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, message = null) }
+            val feeling = runCatching {
+                feelingRepository.getFeeling(feelingId)
+            }.getOrElse { throwable ->
+                _uiState.value = FeelingDetailUiState(
+                    isLoading = false,
+                    message = throwable.message ?: "Unable to load feeling"
+                )
+                return@launch
+            }
+
+            _uiState.value = FeelingDetailUiState(
+                isLoading = true,
+                feeling = feeling
+            )
+
             runCatching {
-                feelingRepository.getFeelingDetail(feelingId)
-            }.onSuccess { state ->
-                _uiState.value = state
+                feelingRepository.getFeelingVerses(feelingId)
+            }.onSuccess { verses ->
+                _uiState.value = FeelingDetailUiState(
+                    isLoading = false,
+                    feeling = feeling,
+                    verses = verses
+                )
             }.onFailure { throwable ->
                 _uiState.value = FeelingDetailUiState(
                     isLoading = false,
+                    feeling = feeling,
                     message = throwable.message ?: "Unable to load feeling"
                 )
             }

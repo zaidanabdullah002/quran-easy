@@ -2,7 +2,6 @@ package com.zaidan.quraneasy.feature.feeling.data
 
 import com.zaidan.quraneasy.feature.feeling.presentation.Feeling
 import com.zaidan.quraneasy.feature.feeling.presentation.FeelingCategory
-import com.zaidan.quraneasy.feature.feeling.presentation.FeelingDetailUiState
 import com.zaidan.quraneasy.feature.feeling.presentation.FeelingEntry
 import com.zaidan.quraneasy.feature.feeling.presentation.FeelingVerseUiModel
 import com.zaidan.quraneasy.feature.feeling.presentation.VerseRef
@@ -29,17 +28,14 @@ class FeelingRepositoryImpl @Inject constructor(
             }
     }
 
-    override suspend fun getFeelingDetail(feelingId: String): FeelingDetailUiState {
-        val catalog = localDataSource.loadCatalog()
-        val selected = catalog.firstOrNull { it.id == feelingId } ?: catalog.first()
-        return FeelingDetailUiState(
-            isLoading = false,
-            feeling = selected.toFeeling(),
-            verses = loadVerses(selected.verses)
-        )
-    }
+    override suspend fun getFeeling(feelingId: String): Feeling =
+        findFeelingEntry(feelingId).toFeeling()
+
+    override suspend fun getFeelingVerses(feelingId: String): List<FeelingVerseUiModel> =
+        loadVerses(findFeelingEntry(feelingId).verses)
 
     private suspend fun loadVerses(verseRefs: List<VerseRef>): List<FeelingVerseUiModel> {
+        quranUseCases.ensureSurahListDownloaded()
         verseRefs
             .map { it.surah }
             .distinct()
@@ -72,6 +68,11 @@ class FeelingRepositoryImpl @Inject constructor(
                 ayahNumber = verseRef.ayah
             )
         }.getOrNull()?.takeIf { it.isNotBlank() }
+    }
+
+    private fun findFeelingEntry(feelingId: String): FeelingEntry {
+        val catalog = localDataSource.loadCatalog()
+        return catalog.firstOrNull { it.id == feelingId } ?: catalog.first()
     }
 }
 

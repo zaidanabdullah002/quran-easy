@@ -105,11 +105,12 @@ class PrayerViewModel @Inject constructor(
             val hasPermission = inputs.hasPermission
             val cardMode = inputs.cardMode
             val locationLabel = inputs.locationLabel
+            val hasLoadedPrayerData = prayers.any { row ->
+                row.trackable && row.time != "--:--"
+            }
             val effectiveMode = if (!hasPermission) {
                 PrayerCardMode.NoPermission
-            } else if (cardMode == PrayerCardMode.NoPermission && prayers.isNotEmpty()) {
-                PrayerCardMode.Ready
-            } else if (cardMode == PrayerCardMode.Loading && prayers.isNotEmpty()) {
+            } else if (hasLoadedPrayerData) {
                 PrayerCardMode.Ready
             } else if (cardMode == PrayerCardMode.NoPermission) {
                 if (prayers.isEmpty()) PrayerCardMode.Loading else PrayerCardMode.Ready
@@ -227,14 +228,18 @@ class PrayerViewModel @Inject constructor(
         viewModelScope.launch {
             val uiState = uiStateFlow.value
             Log.d(TAG, "togglePrayer(): currentUiState=$uiState")
-            if (uiState.cardMode != PrayerCardMode.Ready &&
-                uiState.cardMode != PrayerCardMode.ReadyOfflineCache
-            ) {
-                Log.i(TAG, "togglePrayer(): ignored because cardMode=${uiState.cardMode}")
+            val prayer = uiState.prayers.getOrNull(index)
+            if (prayer == null) {
+                Log.i(TAG, "togglePrayer(): ignored because prayer index=$index is missing")
                 return@launch
             }
-
-            val prayer = uiState.prayers.getOrNull(index) ?: return@launch
+            if (!prayer.enabled || !prayer.trackable || prayer.time == "--:--") {
+                Log.i(
+                    TAG,
+                    "togglePrayer(): ignored because prayer is not interactive name=${prayer.name} enabled=${prayer.enabled} time=${prayer.time}"
+                )
+                return@launch
+            }
             Log.i(TAG, "togglePrayer(): toggling prayer=${prayer.name} date=${activeDateState.value}")
             togglePrayerStatusUseCase(date = activeDateState.value, prayerName = prayer.name)
         }

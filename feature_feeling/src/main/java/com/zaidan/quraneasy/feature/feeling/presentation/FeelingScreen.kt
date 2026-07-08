@@ -71,7 +71,7 @@ fun FeelingDetailScreen(
 
         when {
             uiState.isLoading -> {
-                FeelingDetailSkeleton()
+                FeelingDetailLoadingContent(feeling = feeling)
             }
 
             uiState.message != null -> {
@@ -142,7 +142,10 @@ fun FeelingDetailScreen(
 }
 
 @Composable
-private fun FeelingDetailSkeleton() {
+private fun FeelingDetailLoadingContent(
+    feeling: Feeling?
+) {
+    val accent = feeling?.accent.toColorOrNull() ?: Color(0xFF667084)
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
@@ -155,27 +158,60 @@ private fun FeelingDetailSkeleton() {
                 elevation = AppCardDefaults.staticElevation(defaultElevation = 2.dp)
             ) {
                 Column(Modifier.padding(20.dp)) {
-                    AppSkeletonBlock(
-                        modifier = Modifier.size(44.dp),
-                        tint = Color(0xFFF1E6E6)
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.48f).height(28.dp))
-                    Spacer(Modifier.height(8.dp))
-                    AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.72f).height(16.dp))
-                    Spacer(Modifier.height(14.dp))
-                    AppSkeletonBlock(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        tint = Color(0xFFF7E8E8)
-                    )
-                }
+                    if (feeling == null) {
+                        AppSkeletonBlock(
+                            modifier = Modifier.size(44.dp),
+                            tint = Color(0xFFF1E6E6)
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.48f).height(28.dp))
+                        Spacer(Modifier.height(8.dp))
+                        AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.72f).height(16.dp))
+                        Spacer(Modifier.height(14.dp))
+                        AppSkeletonBlock(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp),
+                            tint = Color(0xFFF7E8E8)
+                        )
+                    } else {
+                        Text(
+                            text = feeling.emoji,
+                            style = MaterialTheme.typography.displaySmall
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            text = feeling.title,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = AppPrimaryText,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            text = feeling.subtitle,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = AppSecondaryText
+                        )
+                        Spacer(Modifier.height(14.dp))
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = accent.copy(alpha = 0.12f)),
+                            modifier = Modifier.fillMaxWidth(),
+                            elevation = AppCardDefaults.staticElevation(defaultElevation = 0.dp)
+                        ) {
+                            AppSkeletonBlock(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp),
+                                tint = accent.copy(alpha = 0.18f)
+                            )
+                        }
+                    }
+                }   
             }
         }
 
         items(4) {
-            FeelingVerseCardSkeleton()
+            FeelingVerseCardSkeleton(accent = accent)
         }
     }
 }
@@ -216,6 +252,13 @@ private fun VerseCard(
 
 @Composable
 private fun FeelingVerseCardSkeleton() {
+    FeelingVerseCardSkeleton(accent = Color(0xFFE8E5DD))
+}
+
+@Composable
+private fun FeelingVerseCardSkeleton(
+    accent: Color
+) {
     Card(
         colors = CardDefaults.cardColors(containerColor = AppSoftSurface),
         modifier = Modifier.fillMaxWidth(),
@@ -224,7 +267,7 @@ private fun FeelingVerseCardSkeleton() {
         Column(Modifier.padding(18.dp)) {
             AppSkeletonLine(
                 modifier = Modifier.fillMaxWidth(0.94f).height(32.dp),
-                tint = Color(0xFFE8E5DD)
+                tint = accent.copy(alpha = 0.24f)
             )
             Spacer(Modifier.height(10.dp))
             AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.34f).height(13.dp))
