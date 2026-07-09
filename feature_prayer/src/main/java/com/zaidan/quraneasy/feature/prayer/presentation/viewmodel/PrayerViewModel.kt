@@ -23,6 +23,7 @@ import com.zaidan.quraneasy.feature.prayer.presentation.PrayerRowUi
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -33,6 +34,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -262,7 +264,7 @@ class PrayerViewModel @Inject constructor(
         lastAcceptedLocation = location
         activeDateState.value = date
         activeLocationKeyState.value = locationKey
-        locationLabelState.value = resolveLocationLabel(location)
+        locationLabelState.value = resolveLocationLabelSafely(location)
         cardModeState.value = PrayerCardMode.Loading
         bannerState.value = null
         Log.d(
@@ -270,15 +272,16 @@ class PrayerViewModel @Inject constructor(
             "refreshForLocationIfNeeded(): updated active states date=$date locationKey=$locationKey locationLabel=${locationLabelState.value}"
         )
 
-        when (
-            refreshPrayerTimingsUseCase(
-                date = date,
-                latitude = location.latitude,
-                longitude = location.longitude,
-                locationKey = locationKey,
-                locationLabel = locationLabelState.value ?: "Prayer times for $locationKey"
-            )
-        ) {
+        val refreshResult = refreshPrayerTimingsUseCase(
+            date = date,
+            latitude = location.latitude,
+            longitude = location.longitude,
+            locationKey = locationKey,
+            locationLabel = locationLabelState.value ?: "Prayer times for $locationKey"
+        )
+        Log.i(TAG, "refreshForLocationIfNeeded(): refreshResult=$refreshResult")
+
+        when (refreshResult) {
             PrayerDataResult.Fresh -> {
                 cardModeState.value = PrayerCardMode.Ready
                 bannerState.value = null
@@ -386,6 +389,22 @@ class PrayerViewModel @Inject constructor(
             "resolveLocationLabel(): locality=$locality adminArea=$adminArea country=$country resolved=$resolved"
         )
         return resolved
+    }
+
+    private suspend fun resolveLocationLabelSafely(location: Location): String {
+        val fallback = "Prayer times for ${buildLocationKey(location.latitude, location.longitude)}"
+        return try {
+            withTimeoutOrNull(5_000) {
+                resolveLocationLabel(location)
+            } ?: fallback.also {
+                Log.w(TAG, "resolveLocationLabelSafely(): timed out, using fallback label")
+            }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            Log.w(TAG, "resolveLocationLabelSafely(): failed, using fallback label", error)
+            fallback
+        }
     }
 
     private fun restoreCachedLocationKey() {

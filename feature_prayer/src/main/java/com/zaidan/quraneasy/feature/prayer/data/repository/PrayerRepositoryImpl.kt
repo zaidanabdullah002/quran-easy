@@ -88,8 +88,13 @@ class PrayerRepositoryImpl @Inject constructor(
         } catch (error: Exception) {
             Log.e(TAG, "refreshPrayerSchedule(): failed for $date/$locationKey", error)
             if (cachedSchedules.isNotEmpty()) {
+                Log.w(
+                    TAG,
+                    "refreshPrayerSchedule(): falling back to cached schedules count=${cachedSchedules.size}"
+                )
                 PrayerDataResult.Cached
             } else {
+                Log.w(TAG, "refreshPrayerSchedule(): no cache available, returning unavailable")
                 PrayerDataResult.Unavailable
             }
         }

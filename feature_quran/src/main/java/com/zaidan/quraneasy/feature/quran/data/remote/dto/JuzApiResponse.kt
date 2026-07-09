@@ -26,7 +26,7 @@ data class JuzAyahDto(
     val page: Int,
     val ruku: Int,
     val hizbQuarter: Int,
-    val sajda: Boolean
+    val sajda: SajdaDto?
 )
 
 @JsonClass(generateAdapter = true)

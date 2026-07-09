@@ -17,9 +17,18 @@ class PrayerTimingsRemoteDataSource @Inject constructor(
         locationKey: String,
         locationLabel: String
     ): List<PrayerScheduleEntity> {
-        Log.i(TAG,"fetchPrayerTimings()")
+        Log.i(
+            TAG,
+            "fetchPrayerTimings(): date=$date lat=$latitude long=$longitude locationKey=$locationKey locationLabel=$locationLabel"
+        )
         val response = prayerTimingsApiService.getPrayerTimings(date, latitude, longitude)
-        Log.i(TAG,"fetchPrayerTimings() response: $response")
-        return response.toPrayerScheduleEntities(date, locationKey, locationLabel)
+        val timings = response.data.timings
+        Log.i(
+            TAG,
+            "fetchPrayerTimings(): code=${response.code} status=${response.status} timezone=${response.data.meta.timezone} fajr=${timings.fajr} dhuhr=${timings.dhuhr} maghrib=${timings.maghrib}"
+        )
+        return response.toPrayerScheduleEntities(date, locationKey, locationLabel).also { schedules ->
+            Log.d(TAG, "fetchPrayerTimings(): mappedSchedules=${schedules.size} first=${schedules.firstOrNull()}")
+        }
     }
 }
