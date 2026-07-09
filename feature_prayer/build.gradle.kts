@@ -4,6 +4,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -49,6 +50,7 @@ dependencies {
     kapt("com.google.dagger:hilt-compiler:2.51.1")
     implementation("com.google.dagger:hilt-android:2.51.1")
     implementation("com.squareup.moshi:moshi-kotlin:1.15.2")
+    ksp("com.squareup.moshi:moshi-kotlin-codegen:1.15.2")
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-moshi:2.11.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")

@@ -1,19 +1,23 @@
 package com.zaidan.quraneasy.feature.prayer.data.remote.dto
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 
+@JsonClass(generateAdapter = true)
 data class PrayerTimingsResponse(
     val code: Int,
     val status: String,
     val data: PrayerTimingsData
 )
 
+@JsonClass(generateAdapter = true)
 data class PrayerTimingsData(
     val timings: TimingsDto,
     val date: DateDto,
     val meta: MetaDto
 )
 
+@JsonClass(generateAdapter = true)
 data class TimingsDto(
     @Json(name = "Fajr") val fajr: String,
     @Json(name = "Sunrise") val sunrise: String,
@@ -28,6 +32,7 @@ data class TimingsDto(
     @Json(name = "Lastthird") val lastThird: String
 )
 
+@JsonClass(generateAdapter = true)
 data class DateDto(
     val readable: String,
     val timestamp: String,
@@ -35,6 +40,7 @@ data class DateDto(
     val gregorian: GregorianDto
 )
 
+@JsonClass(generateAdapter = true)
 data class HijriDto(
     val date: String,
     val format: String,
@@ -48,6 +54,7 @@ data class HijriDto(
     val method: String
 )
 
+@JsonClass(generateAdapter = true)
 data class GregorianDto(
     val date: String,
     val format: String,
@@ -59,15 +66,18 @@ data class GregorianDto(
     val lunarSighting: Boolean
 )
 
+@JsonClass(generateAdapter = true)
 data class LocalizedWeekdayDto(
     val en: String,
     val ar: String
 )
 
+@JsonClass(generateAdapter = true)
 data class GregorianWeekdayDto(
     val en: String
 )
 
+@JsonClass(generateAdapter = true)
 data class HijriMonthDto(
     val number: Int,
     val en: String,
@@ -75,16 +85,19 @@ data class HijriMonthDto(
     val days: Int
 )
 
+@JsonClass(generateAdapter = true)
 data class GregorianMonthDto(
     val number: Int,
     val en: String
 )
 
+@JsonClass(generateAdapter = true)
 data class DesignationDto(
     val abbreviated: String,
     val expanded: String
 )
 
+@JsonClass(generateAdapter = true)
 data class MetaDto(
     val latitude: Double,
     val longitude: Double,
@@ -96,6 +109,7 @@ data class MetaDto(
     val offset: OffsetDto
 )
 
+@JsonClass(generateAdapter = true)
 data class MethodDto(
     val id: Int,
     val name: String,
@@ -103,16 +117,19 @@ data class MethodDto(
     val location: CoordinatesDto
 )
 
+@JsonClass(generateAdapter = true)
 data class MethodParamsDto(
     @Json(name = "Fajr") val fajr: Int,
     @Json(name = "Isha") val isha: Int
 )
 
+@JsonClass(generateAdapter = true)
 data class CoordinatesDto(
     val latitude: Double,
     val longitude: Double
 )
 
+@JsonClass(generateAdapter = true)
 data class OffsetDto(
     @Json(name = "Imsak") val imsak: Int,
     @Json(name = "Fajr") val fajr: Int,
