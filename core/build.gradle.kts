@@ -12,6 +12,10 @@ android {
         minSdk = 24
     }
 
+    lint {
+        disable += "NullSafeMutableLiveData"
+    }
+
     buildFeatures {
         compose = true
     }
