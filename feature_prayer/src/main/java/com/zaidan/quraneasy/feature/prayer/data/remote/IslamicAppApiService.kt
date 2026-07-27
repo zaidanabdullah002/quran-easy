@@ -1,17 +1,18 @@
 package com.zaidan.quraneasy.feature.prayer.data.remote
 
-import com.zaidan.quraneasy.feature.prayer.data.remote.dto.PrayerTimingsResponse
+import com.zaidan.quraneasy.feature.prayer.data.remote.dto.IslamicAppTimingsResponse
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-
-interface PrayerTimingsApiService {
+interface IslamicAppApiService {
     @GET("timings/{date}")
     suspend fun getPrayerTimings(
         @Path("date") date: String,
         @Query("latitude") latitude: Double,
         @Query("longitude") longitude: Double,
-        @Query("method") method: Int = 2
-    ): PrayerTimingsResponse
+        @Query("timezone") timezone: String,
+        @Query("method") method: Int,
+        @Query("school") school: Int
+    ): IslamicAppTimingsResponse
 }

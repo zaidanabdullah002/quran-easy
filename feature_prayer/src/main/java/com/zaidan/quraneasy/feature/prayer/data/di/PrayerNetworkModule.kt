@@ -1,15 +1,13 @@
 package com.zaidan.quraneasy.feature.prayer.data.di
 
-import com.zaidan.quraneasy.feature.prayer.data.remote.NetworkConstants.CLOUD_BASE_URL
-import com.zaidan.quraneasy.feature.prayer.data.remote.PrayerTimingsApiService
+import com.zaidan.quraneasy.feature.prayer.data.remote.NetworkConstants.BASE_URL
+import com.zaidan.quraneasy.feature.prayer.data.remote.IslamicAppApiService
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Singleton
@@ -20,29 +18,25 @@ object PrayerNetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
-        val logging = HttpLoggingInterceptor().apply {
-            // Level.BODY shows URL, Headers, and the JSON response content
-            level = HttpLoggingInterceptor.Level.BODY
-        }
+    fun provideMoshi(): Moshi = Moshi.Builder().build()
 
-        return OkHttpClient.Builder()
-            .addInterceptor(logging)
-            .build()
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(): OkHttpClient {
+        return OkHttpClient.Builder().build()
     }
 
     @Provides
     @Singleton
-    fun providePrayerTimingsApiService(okHttpClient: OkHttpClient): PrayerTimingsApiService {
-        val moshi = Moshi.Builder()
-            .add(KotlinJsonAdapterFactory())
-            .build()
-
+    fun provideIslamicAppApiService(
+        okHttpClient: OkHttpClient,
+        moshi: Moshi
+    ): IslamicAppApiService {
         return Retrofit.Builder()
-            .baseUrl(CLOUD_BASE_URL)
+            .baseUrl(BASE_URL)
             .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .client(okHttpClient) // Attach the client with logging
+            .client(okHttpClient)
             .build()
-            .create(PrayerTimingsApiService::class.java)
+            .create(IslamicAppApiService::class.java)
     }
 }

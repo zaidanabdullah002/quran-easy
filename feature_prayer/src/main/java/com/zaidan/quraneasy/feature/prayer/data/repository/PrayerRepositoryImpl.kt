@@ -1,12 +1,11 @@
 package com.zaidan.quraneasy.feature.prayer.data.repository
 
-import android.util.Log
 import com.zaidan.quraneasy.feature.prayer.data.local.PrayerDao
 import com.zaidan.quraneasy.feature.prayer.data.local.entity.PrayerCompletionEntity
-import com.zaidan.quraneasy.feature.prayer.data.remote.PrayerTimingsRemoteDataSource
 import com.zaidan.quraneasy.feature.prayer.domain.Prayer
-import com.zaidan.quraneasy.feature.prayer.domain.PrayerDataResult
 import com.zaidan.quraneasy.feature.prayer.domain.PrayerState
+import com.zaidan.quraneasy.feature.prayer.domain.PrayerSchedule
+import com.zaidan.quraneasy.feature.prayer.data.local.entity.PrayerScheduleEntity
 import com.zaidan.quraneasy.feature.prayer.domain.repository.PrayerRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -15,25 +14,15 @@ import javax.inject.Singleton
 
 @Singleton
 class PrayerRepositoryImpl @Inject constructor(
-    private val prayerDao: PrayerDao,
-    private val remoteDataSource: PrayerTimingsRemoteDataSource
+    private val prayerDao: PrayerDao
 ) : PrayerRepository {
-
-    companion object{
-        private const val TAG = "PrayerRepositoryImpl"
-    }
 
     override fun observePrayerState(
         date: String,
         locationKey: String
     ): Flow<PrayerState> {
-        Log.i(TAG, "observePrayerState(): date=$date locationKey=$locationKey")
         return prayerDao.observeSchedules(date, locationKey)
             .combine(prayerDao.getCompletionsFlow(date)) { schedules, completions ->
-                Log.d(
-                    TAG,
-                    "observePrayerState(): schedules=${schedules.size} completions=${completions.size} date=$date locationKey=$locationKey"
-                )
                 val completionByName = completions.associateBy { it.name }
                 PrayerState(
                     prayers = schedules.map { schedule ->
@@ -42,68 +31,49 @@ class PrayerRepositoryImpl @Inject constructor(
                             time = schedule.time,
                             completed = completionByName[schedule.name]?.completed == true
                         )
-                    }
+                    },
+                    locationLabel = schedules.firstOrNull()?.locationLabel
                 )
             }
     }
 
     override suspend fun getCachedLocationKey(date: String): String? {
-        val locationKey = prayerDao.getCachedLocationKey(date)
-        Log.i(TAG, "getCachedLocationKey(): date=$date locationKey=$locationKey")
-        return locationKey
+        return prayerDao.getCachedLocationKey(date)
     }
 
     override suspend fun getCachedLocationLabel(date: String, locationKey: String): String? {
-        val locationLabel = prayerDao.getCachedLocationLabel(date, locationKey)
-        Log.i(TAG, "getCachedLocationLabel(): date=$date locationKey=$locationKey locationLabel=$locationLabel")
-        return locationLabel
+        return prayerDao.getCachedLocationLabel(date, locationKey)
     }
 
-    override suspend fun refreshPrayerSchedule(
+    override suspend fun hasSchedule(date: String, locationKey: String): Boolean =
+        prayerDao.getSchedules(date, locationKey).isNotEmpty()
+
+    override suspend fun saveSchedule(schedule: PrayerSchedule, locationLabel: String) {
+        prayerDao.replaceSchedule(
+            date = schedule.date,
+            locationKey = schedule.locationKey,
+            schedules = schedule.prayers.map { prayer ->
+                PrayerScheduleEntity(
+                    date = schedule.date,
+                    locationKey = schedule.locationKey,
+                    locationLabel = locationLabel,
+                    name = prayer.name,
+                    time = prayer.time
+                )
+            }
+        )
+    }
+
+    override suspend fun updateLocationLabel(
         date: String,
-        latitude: Double,
-        longitude: Double,
         locationKey: String,
         locationLabel: String
-    ): PrayerDataResult {
-        val cachedSchedules = prayerDao.getSchedules(date, locationKey)
-        Log.i(
-            TAG,
-            "refreshPrayerSchedule(): date=$date lat=$latitude long=$longitude locationKey=$locationKey locationLabel=$locationLabel cachedSchedules=${cachedSchedules.size}"
-        )
-        return try {
-            val remoteSchedules = remoteDataSource.fetchPrayerTimings(
-                date = date,
-                latitude = latitude,
-                longitude = longitude,
-                locationKey = locationKey,
-                locationLabel = locationLabel
-            )
-            Log.i(TAG, "refreshPrayerSchedule(): fetched remoteSchedules=${remoteSchedules.size}")
-            prayerDao.upsertSchedules(remoteSchedules)
-            prayerDao.deleteSchedulesExcept(date)
-            prayerDao.deleteCompletionsExcept(date)
-            Log.d(TAG, "refreshPrayerSchedule(): persisted schedules and cleaned old rows")
-            PrayerDataResult.Fresh
-        } catch (error: Exception) {
-            Log.e(TAG, "refreshPrayerSchedule(): failed for $date/$locationKey", error)
-            if (cachedSchedules.isNotEmpty()) {
-                Log.w(
-                    TAG,
-                    "refreshPrayerSchedule(): falling back to cached schedules count=${cachedSchedules.size}"
-                )
-                PrayerDataResult.Cached
-            } else {
-                Log.w(TAG, "refreshPrayerSchedule(): no cache available, returning unavailable")
-                PrayerDataResult.Unavailable
-            }
-        }
+    ) {
+        prayerDao.updateLocationLabel(date, locationKey, locationLabel)
     }
 
     override suspend fun togglePrayerCompletion(date: String, prayerName: String) {
-        Log.i(TAG,"togglePrayerCompletion(): prayerName=$prayerName, date=$date")
         val entity = prayerDao.getCompletion(date = date, name = prayerName)
-        Log.d(TAG,"togglePrayerCompletion(): entity=$entity")
         prayerDao.upsertCompletion(
             entity?.copy(
                 date = date,

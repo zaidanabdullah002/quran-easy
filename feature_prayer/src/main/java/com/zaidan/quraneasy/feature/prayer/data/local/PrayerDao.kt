@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import com.zaidan.quraneasy.feature.prayer.data.local.entity.PrayerCompletionEntity
 import com.zaidan.quraneasy.feature.prayer.data.local.entity.PrayerScheduleEntity
 import kotlinx.coroutines.flow.Flow
@@ -42,6 +43,27 @@ interface PrayerDao {
         schedules: List<PrayerScheduleEntity>
     )
 
+    @Transaction
+    suspend fun replaceSchedule(
+        date: String,
+        locationKey: String,
+        schedules: List<PrayerScheduleEntity>
+    ) {
+        deleteSchedule(date, locationKey)
+        upsertSchedules(schedules)
+    }
+
+    @Query("DELETE FROM prayer_schedule WHERE date = :date AND locationKey = :locationKey")
+    suspend fun deleteSchedule(date: String, locationKey: String)
+
+    @Query(
+        """
+        UPDATE prayer_schedule SET locationLabel = :locationLabel
+        WHERE date = :date AND locationKey = :locationKey
+        """
+    )
+    suspend fun updateLocationLabel(date: String, locationKey: String, locationLabel: String)
+
     @Query(
         """
         SELECT * FROM prayer_schedule
@@ -79,9 +101,4 @@ interface PrayerDao {
         name: String
     ): PrayerCompletionEntity?
 
-    @Query("DELETE FROM prayer_schedule WHERE date != :date")
-    suspend fun deleteSchedulesExcept(date: String)
-
-    @Query("DELETE FROM prayer_completion WHERE date != :date")
-    suspend fun deleteCompletionsExcept(date: String)
 }

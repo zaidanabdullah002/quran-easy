@@ -1,21 +1,27 @@
+import java.util.Properties
+
+val versionProperties = Properties().apply {
+    rootProject.file("version.properties").inputStream().use(::load)
+}
+
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.plugin.compose")
-    id("com.google.dagger.hilt.android")
-    id("com.google.devtools.ksp")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.hilt.android)
+    alias(libs.plugins.ksp)
 }
 
 android {
     namespace = "com.zaidan.quraneasy"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.zaidan.quraneasy"
         minSdk = 24
-        targetSdk = 35
-        versionCode = 4
-        versionName = "1.0.3"
+        targetSdk = 36
+        versionCode = versionProperties.getProperty("VERSION_CODE").toInt()
+        versionName = versionProperties.getProperty("VERSION_NAME")
     }
 
     lint {
@@ -56,16 +62,14 @@ dependencies {
     implementation(project(":feature_prayer"))
     implementation(project(":feature_feeling"))
 
-    implementation("androidx.activity:activity-compose:1.9.3")
-    implementation("androidx.compose.ui:ui:1.7.6")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.7.6")
-    implementation("androidx.compose.material3:material3:1.3.1")
-    implementation("androidx.navigation:navigation-compose:2.8.5")
-    implementation("androidx.compose.material:material-icons-extended:1.7.6")
-
-    implementation("com.google.dagger:hilt-android:2.51.1")
-    ksp("com.google.dagger:hilt-compiler:2.51.1")
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
-
-    debugImplementation("androidx.compose.ui:ui-tooling:1.7.6")
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.google.hilt.android)
+    ksp(libs.google.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+    debugImplementation(libs.androidx.compose.ui.tooling)
 }

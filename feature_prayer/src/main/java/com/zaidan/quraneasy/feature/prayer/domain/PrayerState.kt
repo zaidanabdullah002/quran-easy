@@ -1,5 +1,6 @@
 package com.zaidan.quraneasy.feature.prayer.domain
 
 data class PrayerState(
-    val prayers: List<Prayer> = emptyList()
+    val prayers: List<Prayer> = emptyList(),
+    val locationLabel: String? = null
 )
