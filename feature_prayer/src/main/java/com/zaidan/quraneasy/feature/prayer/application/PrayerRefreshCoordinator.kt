@@ -33,7 +33,7 @@ class PrayerRefreshCoordinator @Inject constructor(
     private val _activeContext = MutableStateFlow<PrayerContext?>(null)
     val activeContext: StateFlow<PrayerContext?> = _activeContext.asStateFlow()
 
-    private val _result = MutableStateFlow<PrayerDataResult>(PrayerDataResult.Unavailable)
+    private val _result = MutableStateFlow<PrayerDataResult>(PrayerDataResult.Refreshing)
     val result: StateFlow<PrayerDataResult> = _result.asStateFlow()
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -43,7 +43,7 @@ class PrayerRefreshCoordinator @Inject constructor(
             val fallbackLabel = "Prayer times for ${context.location.key}"
             val cachedLabel =
                 repository.getCachedLocationLabel(context.date, context.location.key) ?: fallbackLabel
-            _result.value = PrayerDataResult.Cached
+            _result.value = PrayerDataResult.Refreshing
 
             supervisorScope {
                 val labelTask = async {
@@ -126,6 +126,6 @@ class PrayerRefreshCoordinator @Inject constructor(
             date = date,
             location = PrayerLocation(coordinates[0], coordinates[1])
         )
-        _result.value = PrayerDataResult.Cached
+        _result.value = PrayerDataResult.Refreshing
     }
 }

@@ -65,11 +65,16 @@ private val ReaderPageSurface = Color(0xFFFCFBF8)
 private val ReaderAyahBorder = Color(0xFFEDE8DF)
 private val ReaderAyahText = AppPrimaryText
 private val ReaderMarkerText = Color(0xFF8B6F47)
+private val ReaderBismillahSurface = Color(0xFFE2F1E3)
+private val ReaderBismillahText = Color(0xFF315F42)
 private val ayahLineGap = 60.sp
 private val ayahFontSize = 34.sp
 private val ayahMarkerFontSize = 22.sp
 private const val ArabicVerseOpenMark = '\uFD3F'
 private const val ArabicVerseCloseMark = '\uFD3E'
+private const val AlFatihahSurahNumber = 1
+private const val AtTawbahSurahNumber = 9
+private const val BismillahText = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ"
 
 @Preview(showBackground = true)
 @Composable
@@ -347,37 +352,107 @@ private fun QuranReadingSheet(
     ayahs: List<AyahUiModel>
 ) {
     SelectionContainer {
-        Box(
+        Column(
             modifier = Modifier
                 .clip(RoundedCornerShape(28.dp))
                 .background(ReaderPageSurface)
                 .border(BorderStroke(1.dp, ReaderAyahBorder), RoundedCornerShape(28.dp))
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 24.dp)
+                .padding(horizontal = 20.dp, vertical = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Text(
-                text = buildReadingSheetText(ayahs),
-                modifier = Modifier.fillMaxWidth(),
-                color = ReaderAyahText,
-                fontSize = ayahFontSize,
-                fontWeight = FontWeight.Medium,
-                fontFamily = QuranFont,
-                textAlign = TextAlign.End,
-                lineHeight = ayahLineGap
-            )
+            ayahs.groupBy { it.surahNumber }.values.forEach { surahAyahs ->
+                val firstAyah = surahAyahs.firstOrNull()
+                val beginsAtFirstAyah = firstAyah?.numberInSurah == 1
+                val isAlFatihah = firstAyah?.surahNumber == AlFatihahSurahNumber
+                val showBismillah = beginsAtFirstAyah &&
+                    firstAyah.surahNumber != AtTawbahSurahNumber
+                val bodyAyahs = if (isAlFatihah && beginsAtFirstAyah) {
+                    surahAyahs.drop(1)
+                } else {
+                    surahAyahs
+                }
+
+                if (showBismillah) {
+                    BismillahHeader(
+                        ayahNumber = if (isAlFatihah) 1 else null,
+                    )
+                }
+
+                Text(
+                    text = buildReadingSheetText(
+                        ayahs = bodyAyahs,
+                        removeLeadingBismillah = showBismillah && !isAlFatihah,
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    color = ReaderAyahText,
+                    fontSize = ayahFontSize,
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = QuranFont,
+                    textAlign = TextAlign.End,
+                    lineHeight = ayahLineGap
+                )
+            }
         }
     }
 }
 
-private fun buildReadingSheetText(ayahs: List<AyahUiModel>) = buildAnnotatedString {
+@Composable
+private fun BismillahHeader(
+    ayahNumber: Int? = null,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(ReaderBismillahSurface)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = buildAnnotatedString {
+                append(BismillahText)
+                ayahNumber?.let { number ->
+                    append(' ')
+                    pushStyle(
+                        SpanStyle(
+                            color = ReaderMarkerText,
+                            fontSize = ayahMarkerFontSize,
+                            fontFamily = FontFamily.Default,
+                        )
+                    )
+                    append(number.toArabicIndicDigits())
+                    pop()
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            color = ReaderBismillahText,
+            fontSize = 31.sp,
+            fontWeight = FontWeight.Medium,
+            fontFamily = QuranFont,
+            textAlign = TextAlign.Center,
+            lineHeight = 46.sp
+        )
+    }
+}
+
+private fun buildReadingSheetText(
+    ayahs: List<AyahUiModel>,
+    removeLeadingBismillah: Boolean = false,
+) = buildAnnotatedString {
     ayahs.forEachIndexed { index, ayah ->
-        append(ayah.arabicText.trim())
+        val ayahText = if (index == 0 && removeLeadingBismillah) {
+            ayah.arabicText.withoutProviderBismillahPrefix()
+        } else {
+            ayah.arabicText.trim()
+        }
+        append(ayahText)
         append(' ')
         pushStyle(
             SpanStyle(
                 color = ReaderMarkerText,
                 fontSize = ayahMarkerFontSize,
-                fontFamily = FontFamily.Default
+                fontFamily = FontFamily.Default,
             )
         )
         append(ArabicVerseOpenMark)
@@ -389,6 +464,11 @@ private fun buildReadingSheetText(ayahs: List<AyahUiModel>) = buildAnnotatedStri
             append(' ')
         }
     }
+}
+
+internal fun String.withoutProviderBismillahPrefix(): String {
+    val providerWords = trim().split(Regex("\\s+"), limit = 5)
+    return providerWords.getOrElse(4) { trim() }
 }
 
 private fun Int.toArabicIndicDigits(): String = toString().map { digit ->

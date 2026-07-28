@@ -10,6 +10,7 @@ import com.zaidan.quraneasy.feature.quran.data.local.dao.TranslationDao
 import com.zaidan.quraneasy.feature.quran.data.local.dao.TranslationMetadataDao
 import com.zaidan.quraneasy.feature.quran.data.local.entity.AyahEntity
 import com.zaidan.quraneasy.feature.quran.data.local.entity.BookmarkEntity
+import com.zaidan.quraneasy.feature.quran.data.local.entity.DownloadedJuzEntity
 import com.zaidan.quraneasy.feature.quran.data.local.entity.SurahEntity
 import com.zaidan.quraneasy.feature.quran.data.local.entity.TranslationEntity
 import com.zaidan.quraneasy.feature.quran.data.local.entity.TranslationMetadataEntity
@@ -18,10 +19,11 @@ import com.zaidan.quraneasy.feature.quran.data.local.entity.TranslationMetadataE
     entities = [
         AyahEntity::class,
         BookmarkEntity::class,
+        DownloadedJuzEntity::class,
         SurahEntity::class,
         TranslationEntity::class,
         TranslationMetadataEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

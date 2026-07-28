@@ -80,6 +80,19 @@ object DatabaseModule {
         }
     }
 
+    private val migration3To4 = object : Migration(3, 4) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `downloaded_juz` (
+                    `juzNumber` INTEGER NOT NULL,
+                    PRIMARY KEY(`juzNumber`)
+                )
+                """.trimIndent()
+            )
+        }
+    }
+
     @Provides
     @Singleton
     fun provideQuranDatabase(@ApplicationContext context: Context): QuranDatabase {
@@ -87,7 +100,7 @@ object DatabaseModule {
             context,
             QuranDatabase::class.java,
             "quran_db"
-        ).addMigrations(migration1To2, migration2To3).build()
+        ).addMigrations(migration1To2, migration2To3, migration3To4).build()
     }
 
     @Provides

@@ -139,15 +139,23 @@ class QuranRepositoryImpl @Inject constructor(
     }
 
     override suspend fun ensureJuzDownloaded(juzNumber: Int) {
-        val ayahCount = localDataSource.getAyahCountForJuz(juzNumber)
-        if (ayahCount > 0) {
+        if (localDataSource.isJuzDownloaded(juzNumber)) {
             Log.i(TAG, "ensureJuzDownloaded: already downloaded")
             return
         }
         try {
             Log.i(TAG, "ensureJuzDownloaded: downloading juzNumber $juzNumber")
             val ayahList = remoteDataSource.downloadJuz(juzNumber)
-            localDataSource.insertAyahs(ayahList)
+            check(ayahList.isNotEmpty()) {
+                "Downloaded Juz $juzNumber contains no ayahs."
+            }
+            check(ayahList.all { it.juzNumber == juzNumber }) {
+                "Downloaded data contains ayahs outside Juz $juzNumber."
+            }
+            localDataSource.insertCompleteJuz(
+                juzNumber = juzNumber,
+                ayahs = ayahList,
+            )
             Log.i(TAG, "ensureJuzDownloaded: downloaded juzNumber $juzNumber")
         } catch (e: Exception) {
             Log.e(

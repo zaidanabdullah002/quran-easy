@@ -37,15 +37,23 @@ class QuranLocalDataSource @Inject constructor(
         ayahDao.insertAyahList(ayahs)
     }
 
+    suspend fun insertCompleteJuz(
+        juzNumber: Int,
+        ayahs: List<AyahEntity>,
+    ) {
+        ayahDao.insertCompleteJuz(
+            ayahList = ayahs,
+            juzNumber = juzNumber,
+        )
+    }
+
     suspend fun getAyahCountForSurah(
         surahNumber: Int,
     ): Int =
         ayahDao.getAyahCountForSurah(surahNumber)
 
-    suspend fun getAyahCountForJuz(
-        juzNumber: Int,
-    ): Int =
-        ayahDao.getAyahCountForJuz(juzNumber)
+    suspend fun isJuzDownloaded(juzNumber: Int): Boolean =
+        ayahDao.isJuzDownloaded(juzNumber)
 
     suspend fun getAyahCountForPage(
         pageNumber: Int,
