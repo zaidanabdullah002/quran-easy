@@ -39,7 +39,7 @@ import com.zaidan.quraneasy.core.ui.AppSkeletonLine
 
 @Composable
 fun FeelingDetailScreen(
-    viewModel: FeelingViewModel = hiltViewModel(),
+    viewModel: FeelingDetailViewModel = hiltViewModel(),
     onBackClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()

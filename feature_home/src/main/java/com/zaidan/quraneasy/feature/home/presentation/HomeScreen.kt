@@ -13,17 +13,17 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zaidan.quraneasy.core.theme.AppBackground
 import com.zaidan.quraneasy.core.theme.AppDimens
 import com.zaidan.quraneasy.feature.feeling.presentation.Feeling
-import com.zaidan.quraneasy.feature.feeling.presentation.FeelingViewModel
+import com.zaidan.quraneasy.feature.feeling.presentation.HomeFeelingViewModel
 import com.zaidan.quraneasy.feature.feeling.presentation.carousel.FeelingCarousel
 import com.zaidan.quraneasy.feature.prayer.presentation.PrayerTrackerCardFeature
 import com.zaidan.quraneasy.feature.prayer.presentation.viewmodel.PrayerViewModel
@@ -48,9 +48,9 @@ fun HomeScreen(
     onAboutClick: () -> Unit,
     onFeelingClick: (Feeling) -> Unit,
     prayerViewModel: PrayerViewModel,
-    feelingViewModel: FeelingViewModel = hiltViewModel()
+    feelingViewModel: HomeFeelingViewModel = hiltViewModel()
 ) {
-    val feelings by feelingViewModel.homeFeelings.collectAsState()
+    val feelings by feelingViewModel.feelings.collectAsStateWithLifecycle()
     HomeScreen(
         onReadQuranClick = onReadQuranClick,
         onTasbihClick = onTasbihClick,

@@ -2,6 +2,7 @@ package com.zaidan.quraneasy.feature.quran.data.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.zaidan.quraneasy.feature.quran.data.local.QuranDatabase
@@ -20,6 +21,11 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
+    private val defaultBookmarkSurahNumbers = listOf(
+        67, // Al-Mulk
+        18, // Al-Kahf
+        64, // At-Taghabun
+    )
 
     private val migration1To2 = object : Migration(1, 2) {
         override fun migrate(database: SupportSQLiteDatabase) {
@@ -93,6 +99,35 @@ object DatabaseModule {
         }
     }
 
+    private val migration4To5 = object : Migration(4, 5) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            insertDefaultBookmarks(database)
+        }
+    }
+
+    private val seedDefaultBookmarksCallback = object : RoomDatabase.Callback() {
+        override fun onCreate(database: SupportSQLiteDatabase) {
+            super.onCreate(database)
+            insertDefaultBookmarks(database)
+        }
+    }
+
+    private fun insertDefaultBookmarks(database: SupportSQLiteDatabase) {
+        defaultBookmarkSurahNumbers.forEachIndexed { index, surahNumber ->
+            database.execSQL(
+                """
+                INSERT OR IGNORE INTO `bookmarks`
+                    (`type`, `surahNumber`, `juzNumber`, `createdAt`)
+                VALUES ('SURAH', ?, NULL, ?)
+                """.trimIndent(),
+                arrayOf(
+                    surahNumber,
+                    (defaultBookmarkSurahNumbers.size - index).toLong(),
+                )
+            )
+        }
+    }
+
     @Provides
     @Singleton
     fun provideQuranDatabase(@ApplicationContext context: Context): QuranDatabase {
@@ -100,7 +135,15 @@ object DatabaseModule {
             context,
             QuranDatabase::class.java,
             "quran_db"
-        ).addMigrations(migration1To2, migration2To3, migration3To4).build()
+        )
+            .addMigrations(
+                migration1To2,
+                migration2To3,
+                migration3To4,
+                migration4To5,
+            )
+            .addCallback(seedDefaultBookmarksCallback)
+            .build()
     }
 
     @Provides

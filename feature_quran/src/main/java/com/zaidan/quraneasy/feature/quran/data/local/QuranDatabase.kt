@@ -23,7 +23,7 @@ import com.zaidan.quraneasy.feature.quran.data.local.entity.TranslationMetadataE
         SurahEntity::class,
         TranslationEntity::class,
         TranslationMetadataEntity::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

@@ -8,6 +8,8 @@ import com.zaidan.quraneasy.feature.feeling.presentation.VerseRef
 import com.zaidan.quraneasy.feature.quran.data.translation.AyahTranslationRepository
 import com.zaidan.quraneasy.feature.quran.domain.usecase.QuranUseCasesData
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -17,16 +19,26 @@ class FeelingRepositoryImpl @Inject constructor(
     private val quranUseCases: QuranUseCasesData,
     private val ayahTranslationRepository: AyahTranslationRepository
 ) : FeelingRepository {
+    private val homeFeelingsMutex = Mutex()
 
-    override suspend fun getHomeFeelings(): List<Feeling> {
-        return localDataSource.loadCatalog()
-            .filter { it.category == FeelingCategory.Feeling || it.category == FeelingCategory.QuranDua }
-            .map { entry ->
-                entry.toFeeling(
-                    previewTranslation = loadPreviewTranslation(entry.verses.firstOrNull())
-                )
-            }
-    }
+    @Volatile
+    private var homeFeelingsCache: List<Feeling>? = null
+
+    override suspend fun getHomeFeelings(): List<Feeling> =
+        homeFeelingsCache ?: homeFeelingsMutex.withLock {
+            homeFeelingsCache ?: localDataSource.loadCatalog()
+                .filter {
+                    it.category == FeelingCategory.Feeling ||
+                        it.category == FeelingCategory.QuranDua
+                }
+                .map { entry ->
+                    entry.toFeeling(
+                        previewTranslation =
+                            loadCachedPreviewTranslation(entry.verses.firstOrNull())
+                    )
+                }
+                .also { homeFeelingsCache = it }
+        }
 
     override suspend fun getFeeling(feelingId: String): Feeling =
         findFeelingEntry(feelingId).toFeeling()
@@ -58,12 +70,12 @@ class FeelingRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun loadPreviewTranslation(
+    private suspend fun loadCachedPreviewTranslation(
         verseRef: VerseRef?
     ): String? {
         verseRef ?: return null
         return runCatching {
-            ayahTranslationRepository.getTranslation(
+            ayahTranslationRepository.getCachedTranslation(
                 surahNumber = verseRef.surah,
                 ayahNumber = verseRef.ayah
             )

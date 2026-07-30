@@ -11,12 +11,13 @@ import javax.inject.Singleton
 class FeelingLocalDataSource @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    fun loadCatalog(): List<FeelingEntry> {
+    private val catalog: List<FeelingEntry> by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         val rawJson = context.resources
             .openRawResource(com.zaidan.quraneasy.feature_feeling.R.raw.feelings)
             .bufferedReader()
             .use { it.readText() }
-        return FeelingCatalog.load(rawJson)
+        FeelingCatalog.load(rawJson)
     }
-}
 
+    fun loadCatalog(): List<FeelingEntry> = catalog
+}

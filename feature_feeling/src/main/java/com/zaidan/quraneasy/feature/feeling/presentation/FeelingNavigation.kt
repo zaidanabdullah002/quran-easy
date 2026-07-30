@@ -18,11 +18,10 @@ fun NavGraphBuilder.feelingGraph(
         route = FEELING_ROUTE_PATTERN,
         arguments = listOf(navArgument("feelingId") { type = NavType.StringType })
     ) { backStackEntry ->
-        val viewModel: FeelingViewModel = hiltViewModel(backStackEntry)
+        val viewModel: FeelingDetailViewModel = hiltViewModel(backStackEntry)
         FeelingDetailScreen(
             viewModel = viewModel,
             onBackClick = { navController.popBackStack(Screen.Home.route, false) }
         )
     }
 }
-

@@ -8,8 +8,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,7 +19,7 @@ data class FeelingDetailUiState(
 )
 
 @HiltViewModel
-class FeelingViewModel @Inject constructor(
+class FeelingDetailViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val feelingRepository: FeelingRepository
 ) : ViewModel() {
@@ -29,9 +27,6 @@ class FeelingViewModel @Inject constructor(
     private val feelingId: String = savedStateHandle.get<String>("feelingId") ?: "hope"
     private val _uiState = MutableStateFlow(FeelingDetailUiState())
     val uiState: StateFlow<FeelingDetailUiState> = _uiState.asStateFlow()
-    val homeFeelings: StateFlow<List<Feeling>> = kotlinx.coroutines.flow.flow {
-        emit(feelingRepository.getHomeFeelings())
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     init {
         loadFeeling()

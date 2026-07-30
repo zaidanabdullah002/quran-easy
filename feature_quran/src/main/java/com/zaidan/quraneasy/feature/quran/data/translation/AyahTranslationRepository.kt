@@ -11,17 +11,27 @@ class AyahTranslationRepository @Inject constructor(
     private val translationDao: TranslationDao,
     private val quranApiService: QuranApiService
 ) {
+    suspend fun getCachedTranslation(
+        surahNumber: Int,
+        ayahNumber: Int,
+        translationId: String = DefaultTranslationId
+    ): String? = translationDao.getTranslation(
+        surahNumber = surahNumber,
+        ayahNumber = ayahNumber,
+        translationId = translationId
+    )?.text
+
     suspend fun getTranslation(
         surahNumber: Int,
         ayahNumber: Int,
         translationId: String = DefaultTranslationId
     ): String? {
-        val cached = translationDao.getTranslation(
+        val cached = getCachedTranslation(
             surahNumber = surahNumber,
             ayahNumber = ayahNumber,
             translationId = translationId
         )
-        if (cached != null) return cached.text
+        if (cached != null) return cached
 
         val response = quranApiService.getAyahTranslation(
             reference = "$surahNumber:$ayahNumber",

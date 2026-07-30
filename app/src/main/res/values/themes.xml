@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.QuranEasy" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowBackground">@color/quran_easy_launch_background</item>
+        <item name="android:navigationBarColor">@color/quran_easy_launch_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <style name="Theme.QuranEasy.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/quran_easy_launch_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+        <item name="postSplashScreenTheme">@style/Theme.QuranEasy</item>
+    </style>
+</resources>

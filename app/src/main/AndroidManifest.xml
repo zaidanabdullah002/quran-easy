@@ -8,11 +8,12 @@
         android:icon="@mipmap/quran_app_logo"
         android:label="QuranEasy"
         android:roundIcon="@mipmap/quran_app_logo"
-        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        android:theme="@style/Theme.QuranEasy">
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.QuranEasy.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
