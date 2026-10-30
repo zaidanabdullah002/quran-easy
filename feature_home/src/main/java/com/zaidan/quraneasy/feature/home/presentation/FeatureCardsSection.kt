@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoStories
+import androidx.compose.material.icons.outlined.CalendarViewWeek
 import androidx.compose.material.icons.outlined.Gesture
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -43,6 +44,7 @@ private val cardPadding = 18.dp
 fun FeatureCardsSection(
     onReadQuranClick: () -> Unit,
     onTasbihClick: () -> Unit,
+    onManzilClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -71,6 +73,19 @@ fun FeatureCardsSection(
             ),
             onClick = onTasbihClick
         )
+        Spacer(modifier = Modifier.height(featureCardBetweenGap))
+        FeatureCard(
+            title = "Manzil",
+            subtitle = "Selected verses for protection",
+            icon = Icons.Outlined.CalendarViewWeek,
+            backgroundBrush = Brush.verticalGradient(
+                listOf(
+                    AppPrimaryGradientTop,
+                    AppPrimaryGradientBottom
+                )
+            ),
+            onClick = onManzilClick
+        )
     }
 }
 
@@ -79,7 +94,8 @@ fun FeatureCardsSection(
 fun FeatureCardsSectionPreview() {
     FeatureCardsSection(
         onReadQuranClick = {},
-        onTasbihClick = {}
+        onTasbihClick = {},
+        onManzilClick = {}
     )
 }
 

@@ -16,6 +16,7 @@ fun NavGraphBuilder.homeGraph(
         HomeScreen(
             onReadQuranClick = { navController.navigate(Screen.Quran.route) },
             onTasbihClick = { navController.navigate(Screen.Tasbih.route) },
+            onManzilClick = { navController.navigate(Screen.Manzil.route) },
             onAboutClick = { navController.navigate(Screen.About.route) },
             onFeelingClick = { feeling ->
                 navController.navigate("$FEELING_ROUTE_BASE/${feeling.id}")

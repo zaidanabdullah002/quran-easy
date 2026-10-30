@@ -59,6 +59,7 @@ dependencies {
     implementation(project(":feature_home"))
     implementation(project(":feature_quran"))
     implementation(project(":feature_tasbih"))
+    implementation(project(":feature_manzil"))
     implementation(project(":feature_prayer"))
     implementation(project(":feature_feeling"))
 

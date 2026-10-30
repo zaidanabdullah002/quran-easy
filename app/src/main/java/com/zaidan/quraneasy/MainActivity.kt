@@ -43,6 +43,7 @@ import com.zaidan.quraneasy.core.theme.AppBackground
 import com.zaidan.quraneasy.feature.feeling.data.FeelingRepository
 import com.zaidan.quraneasy.feature.feeling.presentation.feelingGraph
 import com.zaidan.quraneasy.feature.home.presentation.homeGraph
+import com.zaidan.quraneasy.feature.manzil.presentation.manzilGraph
 import com.zaidan.quraneasy.feature.quran.presentation.quranGraph
 import com.zaidan.quraneasy.feature.tasbih.presentation.tasbihGraph
 import dagger.hilt.android.AndroidEntryPoint
@@ -85,6 +86,7 @@ class MainActivity : ComponentActivity() {
                             homeGraph(navController)
                             quranGraph(navController)
                             tasbihGraph(navController)
+                            manzilGraph(navController)
                             feelingGraph(navController)
                         }
                     }

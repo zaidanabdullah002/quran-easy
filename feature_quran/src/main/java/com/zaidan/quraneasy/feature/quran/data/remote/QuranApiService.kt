@@ -19,6 +19,12 @@ interface QuranApiService {
         @Path("surahNumber") surahNumber: Int
     ): SurahApiResponse
 
+    @GET("v1/surah/{surahNumber}/{edition}")
+    suspend fun getSurahEdition(
+        @Path("surahNumber") surahNumber: Int,
+        @Path("edition") edition: String,
+    ): SurahApiResponse
+
     @GET("v1/juz/{juzNumber}/quran-uthmani")
     suspend fun getJuz(
         @Path("juzNumber") juzNumber: Int

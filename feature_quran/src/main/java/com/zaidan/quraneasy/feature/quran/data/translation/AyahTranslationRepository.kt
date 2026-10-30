@@ -51,6 +51,42 @@ class AyahTranslationRepository @Inject constructor(
         return entity.text
     }
 
+    suspend fun getSurahTranslations(
+        surahNumber: Int,
+        ayahNumbers: Set<Int>,
+        translationId: String = DefaultTranslationId,
+    ): Map<Int, String> {
+        val cached = ayahNumbers.associateWith { ayahNumber ->
+            getCachedTranslation(surahNumber, ayahNumber, translationId)
+        }
+        if (cached.values.none { it == null }) {
+            return cached.mapValues { (_, text) -> text.orEmpty() }
+        }
+
+        val byNumber = quranApiService
+            .getSurahEdition(surahNumber, translationId)
+            .data
+            .ayahs
+            .associateBy { it.numberInSurah }
+        ayahNumbers.forEach { ayahNumber ->
+            val ayah = byNumber[ayahNumber] ?: error("No English for $surahNumber:$ayahNumber")
+            translationDao.upsertTranslation(
+                TranslationEntity(
+                    surahNumber = surahNumber,
+                    numberInSurah = ayah.numberInSurah,
+                    juzNumber = ayah.juz,
+                    pageNumber = ayah.page,
+                    translationId = translationId,
+                    languageCode = "en",
+                    text = ayah.text,
+                )
+            )
+        }
+        return ayahNumbers.associateWith { ayahNumber ->
+            byNumber.getValue(ayahNumber).text
+        }
+    }
+
     companion object {
         const val DefaultTranslationId = "en.asad"
     }

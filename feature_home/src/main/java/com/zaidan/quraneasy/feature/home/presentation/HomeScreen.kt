@@ -34,6 +34,7 @@ fun HomeScreenPreview() {
     HomeScreen(
         onReadQuranClick = {},
         onTasbihClick = {},
+        onManzilClick = {},
         onAboutClick = {},
         onFeelingClick = {},
         feelings = emptyList(),
@@ -45,6 +46,7 @@ fun HomeScreenPreview() {
 fun HomeScreen(
     onReadQuranClick: () -> Unit,
     onTasbihClick: () -> Unit,
+    onManzilClick: () -> Unit,
     onAboutClick: () -> Unit,
     onFeelingClick: (Feeling) -> Unit,
     prayerViewModel: PrayerViewModel,
@@ -54,6 +56,7 @@ fun HomeScreen(
     HomeScreen(
         onReadQuranClick = onReadQuranClick,
         onTasbihClick = onTasbihClick,
+        onManzilClick = onManzilClick,
         onAboutClick = onAboutClick,
         onFeelingClick = onFeelingClick,
         feelings = feelings,
@@ -65,6 +68,7 @@ fun HomeScreen(
 fun HomeScreen(
     onReadQuranClick: () -> Unit,
     onTasbihClick: () -> Unit,
+    onManzilClick: () -> Unit,
     onAboutClick: () -> Unit,
     onFeelingClick: (Feeling) -> Unit,
     feelings: List<Feeling>,
@@ -88,7 +92,8 @@ fun HomeScreen(
             FeatureCardsSection(
                 modifier = Modifier.fillMaxWidth(),
                 onReadQuranClick = onReadQuranClick,
-                onTasbihClick = onTasbihClick
+                onTasbihClick = onTasbihClick,
+                onManzilClick = onManzilClick
             )
             Spacer(Modifier.height(20.dp))
 
