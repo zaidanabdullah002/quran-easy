@@ -18,6 +18,7 @@ fun NavGraphBuilder.homeGraph(
             onTasbihClick = { navController.navigate(Screen.Tasbih.route) },
             onManzilClick = { navController.navigate(Screen.Manzil.route) },
             onAboutClick = { navController.navigate(Screen.About.route) },
+            onSettingsClick = { navController.navigate(Screen.Settings.route) { launchSingleTop = true } },
             onFeelingClick = { feeling ->
                 navController.navigate("$FEELING_ROUTE_BASE/${feeling.id}")
             },

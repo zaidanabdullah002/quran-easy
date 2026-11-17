@@ -27,11 +27,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.zaidan.quraneasy.core.ui.AppCardDefaults
-import com.zaidan.quraneasy.core.theme.AppBackground
-import com.zaidan.quraneasy.core.theme.AppPrimaryText
-import com.zaidan.quraneasy.core.theme.AppSecondaryText
-import com.zaidan.quraneasy.core.theme.AppSoftSurface
-import com.zaidan.quraneasy.core.theme.AppSurface
 import com.zaidan.quraneasy.core.theme.QuranFont
 import com.zaidan.quraneasy.feature.feeling.presentation.topbar.FeelingTopBar
 import com.zaidan.quraneasy.core.ui.AppSkeletonBlock
@@ -55,10 +50,11 @@ fun FeelingDetailScreen(
     onBackClick: () -> Unit
 ) {
     val feeling = uiState.feeling
+    val colors = MaterialTheme.colorScheme
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppBackground)
+            .background(colors.background)
             .statusBarsPadding()
     ) {
         FeelingTopBar(
@@ -78,7 +74,7 @@ fun FeelingDetailScreen(
                 Text(
                     text = uiState.message,
                     modifier = Modifier.padding(24.dp),
-                    color = AppSecondaryText
+                    color = colors.onSurfaceVariant
                 )
             }
 
@@ -90,7 +86,7 @@ fun FeelingDetailScreen(
                 ) {
                     item {
                         Card(
-                            colors = CardDefaults.cardColors(containerColor = AppSurface),
+                            colors = CardDefaults.cardColors(containerColor = colors.surface),
                             modifier = Modifier.fillMaxWidth(),
                             elevation = AppCardDefaults.staticElevation(defaultElevation = 2.dp)
                         ) {
@@ -104,14 +100,14 @@ fun FeelingDetailScreen(
                                 Text(
                                     text = feeling?.title.orEmpty(),
                                     style = MaterialTheme.typography.titleLarge,
-                                    color = AppPrimaryText,
+                                    color = colors.onSurface,
                                     fontWeight = FontWeight.SemiBold
                                 )
                                 Spacer(Modifier.height(6.dp))
                                 Text(
                                     text = feeling?.subtitle.orEmpty(),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = AppSecondaryText
+                                    color = colors.onSurfaceVariant
                                 )
                                 Spacer(Modifier.height(14.dp))
                                 Card(
@@ -145,6 +141,7 @@ fun FeelingDetailScreen(
 private fun FeelingDetailLoadingContent(
     feeling: Feeling?
 ) {
+    val colors = MaterialTheme.colorScheme
     val accent = feeling?.accent.toColorOrNull() ?: Color(0xFF667084)
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -153,7 +150,7 @@ private fun FeelingDetailLoadingContent(
     ) {
         item {
             Card(
-                colors = CardDefaults.cardColors(containerColor = AppSurface),
+                colors = CardDefaults.cardColors(containerColor = colors.surface),
                 modifier = Modifier.fillMaxWidth(),
                 elevation = AppCardDefaults.staticElevation(defaultElevation = 2.dp)
             ) {
@@ -183,14 +180,14 @@ private fun FeelingDetailLoadingContent(
                         Text(
                             text = feeling.title,
                             style = MaterialTheme.typography.titleLarge,
-                            color = AppPrimaryText,
+                            color = colors.onSurface,
                             fontWeight = FontWeight.SemiBold
                         )
                         Spacer(Modifier.height(6.dp))
                         Text(
                             text = feeling.subtitle,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = AppSecondaryText
+                            color = colors.onSurfaceVariant
                         )
                         Spacer(Modifier.height(14.dp))
                         Card(
@@ -220,8 +217,9 @@ private fun FeelingDetailLoadingContent(
 private fun VerseCard(
     verse: FeelingVerseUiModel
 ) {
+    val colors = MaterialTheme.colorScheme
     Card(
-        colors = CardDefaults.cardColors(containerColor = AppSoftSurface),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceVariant),
         modifier = Modifier.fillMaxWidth(),
         elevation = AppCardDefaults.staticElevation(defaultElevation = 1.dp)
     ) {
@@ -229,20 +227,20 @@ private fun VerseCard(
             Text(
                 text = verse.arabicText,
                 style = MaterialTheme.typography.headlineSmall,
-                color = AppPrimaryText,
+                color = colors.onSurface,
                 fontFamily = QuranFont
             )
             Spacer(Modifier.height(10.dp))
             Text(
                 text = "Surah ${verse.surahNumber}, Ayah ${verse.numberInSurah}",
-                color = AppSecondaryText,
+                color = colors.onSurfaceVariant,
                 style = MaterialTheme.typography.labelMedium
             )
             verse.translation?.takeIf { it.isNotBlank() }?.let {
                 Spacer(Modifier.height(6.dp))
                 Text(
                     text = it,
-                    color = AppPrimaryText,
+                    color = colors.onSurface,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -259,8 +257,9 @@ private fun FeelingVerseCardSkeleton() {
 private fun FeelingVerseCardSkeleton(
     accent: Color
 ) {
+    val colors = MaterialTheme.colorScheme
     Card(
-        colors = CardDefaults.cardColors(containerColor = AppSoftSurface),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceVariant),
         modifier = Modifier.fillMaxWidth(),
         elevation = AppCardDefaults.staticElevation(defaultElevation = 1.dp)
     ) {

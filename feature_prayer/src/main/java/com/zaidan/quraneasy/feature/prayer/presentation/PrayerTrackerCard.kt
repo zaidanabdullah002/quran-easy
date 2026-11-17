@@ -29,10 +29,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -53,10 +52,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
@@ -67,12 +68,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.zaidan.quraneasy.core.R
 import com.zaidan.quraneasy.core.feedbacks.rememberPrayerTickFeedbackController
 import com.zaidan.quraneasy.core.theme.AppPrimaryGradientBottom
-import com.zaidan.quraneasy.core.theme.AppPrimaryText
-import com.zaidan.quraneasy.core.theme.AppSecondaryText
-import com.zaidan.quraneasy.core.theme.AppSoftSurface
-import com.zaidan.quraneasy.core.theme.AppSurface
-import com.zaidan.quraneasy.core.ui.AppCardDefaults
 import com.zaidan.quraneasy.core.ui.AppHapticType
+import com.zaidan.quraneasy.core.ui.QuranEasySurface
 import com.zaidan.quraneasy.core.ui.hapticClickable
 import com.zaidan.quraneasy.feature.prayer.presentation.viewmodel.PrayerViewModel
 
@@ -82,14 +79,9 @@ private val titleFontSize = 20.sp
 private val subtitleFontSize = 14.sp
 private const val TAG = "PrayerTrackerCard"
 private val PrayerAccentDeep = AppPrimaryGradientBottom
-private val PrayerAccentSoft = Color(0xFFE7ECF8)
 private val PrayerSuccessTint = Color(0xFF1B8F6A)
-private val PrayerRowBorder = Color(0xFFDDE3EE)
-private val PrayerIndicatorTrack = Color(0xFFE8EDF6)
-private val PrayerHeaderSurface = Color(0xFFF3F6FC)
-private val PrayerLocationText = Color(0xFF4A5875)
 private val PrayerRowLeadingInset = 54.dp
-
+private const val progressIndicatorSize: Int = 112
 @Preview(showBackground = true)
 @Composable
 fun PrayerTrackerCardPreview() {
@@ -201,6 +193,7 @@ fun PrayerTrackerCard(
     onTogglePrayer: (Int, Boolean) -> Unit,
     onAllPrayersCompleted: () -> Unit = {}
 ) {
+    val colors = MaterialTheme.colorScheme
     val canTogglePrayers = uiState.cardMode == PrayerCardMode.Ready ||
             uiState.cardMode == PrayerCardMode.ReadyOfflineCache
     val canRequestPermission = uiState.cardMode == PrayerCardMode.NoPermission &&
@@ -252,7 +245,7 @@ fun PrayerTrackerCard(
     )
 
 
-    Card(
+    QuranEasySurface(
         modifier = Modifier
             .fillMaxWidth()
             .graphicsLayer(
@@ -264,9 +257,10 @@ fun PrayerTrackerCard(
                 onClick = { onCardClick?.invoke() }
             ),
         shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = celebrationState.backgroundColor),
         border = BorderStroke(1.dp, celebrationState.borderColor),
-        elevation = AppCardDefaults.interactiveElevation(defaultElevation = 2.dp)
+        elevation = 2.dp,
+        containerColor = celebrationState.backgroundColor,
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
     ) {
         Box(
             modifier = Modifier
@@ -300,8 +294,8 @@ fun PrayerTrackerCard(
                         .background(
                             Brush.verticalGradient(
                                 colors = listOf(
-                                    PrayerHeaderSurface,
-                                    AppSurface
+                                    colors.surfaceVariant,
+                                    colors.surface
                                 )
                             )
                         )
@@ -315,7 +309,7 @@ fun PrayerTrackerCard(
                         if (locationLabel != null) {
                             Text(
                                 text = locationLabel,
-                                color = PrayerLocationText,
+                                color = colors.onSurfaceVariant,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -323,14 +317,14 @@ fun PrayerTrackerCard(
                         }
                         Text(
                             text = "Prayer Tracker",
-                            color = AppPrimaryText,
+                            color = colors.onSurface,
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = statusText,
-                            color = if (canTogglePrayers) PrayerSuccessTint else AppSecondaryText,
+                            color = if (canTogglePrayers) PrayerSuccessTint else colors.onSurfaceVariant,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -342,7 +336,7 @@ fun PrayerTrackerCard(
                                     .fillMaxWidth()
                                     .height(10.dp),
                                 color = PrayerAccentDeep,
-                                trackColor = PrayerAccentSoft
+                                trackColor = colors.primary.copy(alpha = 0.24f)
                             )
                         }
                     }
@@ -392,6 +386,7 @@ private fun PrayerRow(
     enabled: Boolean,
     onClick: (() -> Unit)? = null
 ) {
+    val colors = MaterialTheme.colorScheme
     if (!trackable) {
         Row(
             modifier = Modifier
@@ -402,13 +397,13 @@ private fun PrayerRow(
         ) {
             Text(
                 text = name,
-                color = AppPrimaryText,
+                color = colors.onSurface,
                 fontSize = titleFontSize,
                 fontWeight = FontWeight.Bold
             )
             Text(
                 text = time,
-                color = AppSecondaryText,
+                color = colors.onSurfaceVariant,
                 fontSize = subtitleFontSize,
                 fontWeight = FontWeight.Bold
             )
@@ -450,8 +445,8 @@ private fun PrayerRow(
             .fillMaxWidth()
             .graphicsLayer { translationX = rowOffsetX.value }
             .clip(RoundedCornerShape(16.dp))
-            .background(AppSoftSurface)
-            .border(1.dp, PrayerRowBorder, RoundedCornerShape(16.dp))
+            .background(colors.surfaceVariant)
+            .border(1.dp, colors.outline, RoundedCornerShape(16.dp))
             .padding(horizontal = 14.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -465,7 +460,7 @@ private fun PrayerRow(
                         .size(40.dp)
                         .scale(tickScale.value)
                         .clip(CircleShape)
-                        .border(2.dp, PrayerAccentSoft, CircleShape)
+                        .border(2.dp, colors.primary.copy(alpha = 0.35f), CircleShape)
                         .hapticClickable(
                             enabled = enabled,
                             type = AppHapticType.ToggleOff,
@@ -482,7 +477,7 @@ private fun PrayerRow(
                         .size(40.dp)
                         .scale(tickScale.value)
                         .clip(CircleShape)
-                        .border(2.dp, PrayerAccentSoft, CircleShape)
+                        .border(2.dp, colors.primary.copy(alpha = 0.35f), CircleShape)
                         .hapticClickable(
                             enabled = enabled,
                             type = AppHapticType.ToggleOn,
@@ -497,14 +492,14 @@ private fun PrayerRow(
             Spacer(modifier = Modifier.size(14.dp))
             Text(
                 text = name,
-                color = AppPrimaryText,
+                color = colors.onSurface,
                 fontSize = titleFontSize,
                 fontWeight = FontWeight.Bold
             )
         }
         Text(
             text = time,
-            color = AppSecondaryText,
+            color = colors.onSurfaceVariant,
             fontSize = subtitleFontSize,
             fontWeight = FontWeight.Bold
         )
@@ -518,40 +513,42 @@ private fun PrayerSummaryIndicator(
     timeLeftLabel: String,
     prayerNameLabel: String?
 ) {
+    val colors = MaterialTheme.colorScheme
+    val fontScale = LocalDensity.current.fontScale //1f -> default, 2f -> maximum
+    val expandedFontSize = fontScale*progressIndicatorSize
     Box(
-        modifier = Modifier.size(112.dp),
+        modifier = Modifier.size(expandedFontSize.dp),
         contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator(
             progress = { progress.coerceIn(0f, 1f) },
-            modifier = Modifier.size(112.dp),
+            modifier = Modifier.size(expandedFontSize.dp),
             strokeWidth = 12.dp,
             color = PrayerAccentDeep,
-            trackColor = PrayerIndicatorTrack
+            trackColor = colors.primary.copy(alpha = 0.2f)
         )
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp)
         ) {
             Text(
                 text = durationTimeText,
-                color = AppPrimaryText,
+                color = colors.onSurface,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
             Text(
                 text = timeLeftLabel,
-                color = AppSecondaryText,
+                color = colors.onSurfaceVariant,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center
             )
             Text(
                 text = prayerNameLabel ?: "Fajr",
-                color = AppSecondaryText,
+                color = colors.onSurfaceVariant,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
@@ -567,6 +564,11 @@ private fun Context.openAppSettings() {
     )
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     startActivity(intent)
+}
+@Composable
+fun Int.nonScaledSp(): TextUnit {
+    // Divides the desired SP size by the scale factor to lock it into place
+    return (this / LocalDensity.current.fontScale).sp
 }
 
 private fun Context.findActivity(): Activity? {

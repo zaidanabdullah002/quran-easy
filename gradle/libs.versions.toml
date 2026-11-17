@@ -3,6 +3,7 @@ agp = "8.9.1"
 kotlin = "2.0.21"
 ksp = "2.0.21-1.0.25"
 activityCompose = "1.9.3"
+androidxCore = "1.15.0"
 coreSplashscreen = "1.2.0"
 compose = "1.7.6"
 material3 = "1.3.1"
@@ -22,9 +23,12 @@ room = "2.6.1"
 lazyColumnScrollbar = "2.2.0"
 adhan = "1.2.1"
 junit = "4.13.2"
+dataStore = "1.1.1"
 
 [libraries]
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
 androidx-core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
 androidx-compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
@@ -54,6 +58,7 @@ okhttp-logging-interceptor = { module = "com.squareup.okhttp3:logging-intercepto
 lazy-column-scrollbar = { module = "com.github.nanihadesuka:LazyColumnScrollbar", version.ref = "lazyColumnScrollbar" }
 adhan = { module = "com.batoulapps.adhan:adhan", version.ref = "adhan" }
 junit = { module = "junit:junit", version.ref = "junit" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "dataStore" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

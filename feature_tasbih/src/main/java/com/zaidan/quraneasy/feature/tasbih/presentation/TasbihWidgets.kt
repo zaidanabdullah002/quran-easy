@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,10 +37,11 @@ import kotlin.math.roundToInt
 fun TasbihTargetChip(target: Int,
                      onClick: () -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
     Card(
         shape = RoundedCornerShape(AppDimens.CardRadius.dp),
         elevation = AppCardDefaults.interactiveElevation(defaultElevation = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = colors.surface),
         onClick = hapticClick(onClick = onClick)
     ) {
         RowCentered(
@@ -47,12 +49,12 @@ fun TasbihTargetChip(target: Int,
         ) {
             Text(
                 text = "☝",
-                color = Color(0xFF3F3F3F),
+                color = colors.onSurface,
                 fontSize = 20.sp
             )
             Text(
                 text = "Target: $target",
-                color = Color(0xFF70798A),
+                color = colors.onSurfaceVariant,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.padding(start = 10.dp)
@@ -75,6 +77,7 @@ fun TasbihCounterRing(
     countTextSize: androidx.compose.ui.unit.TextUnit = 92.sp,
     labelTextSize: androidx.compose.ui.unit.TextUnit = 24.sp
 ) {
+    val colors = MaterialTheme.colorScheme
     Box(
         modifier = modifier,
         contentAlignment = Alignment.Center
@@ -85,7 +88,7 @@ fun TasbihCounterRing(
 
             // Background Circle (Placeholder)
             drawCircle(
-                color = Color(0xFFF3F3F3),
+                color = colors.surfaceVariant,
                 radius = radius,
                 style = Stroke(width = strokeWidth)
             )
@@ -93,7 +96,7 @@ fun TasbihCounterRing(
             // Progress Arc
             val progress = (count.toFloat() / target.coerceAtLeast(1).toFloat()).coerceIn(0f, 1f)
             drawArc(
-                color = Color.DarkGray,
+                color = colors.primary,
                 startAngle = -90f,
                 sweepAngle = progress * 360f,
                 useCenter = false,
@@ -109,13 +112,13 @@ fun TasbihCounterRing(
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = count.toString(),
-                color = Color(0xFF232323),
+                color = colors.onBackground,
                 fontSize = countTextSize,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
                 text = "Count",
-                color = Color(0xFF70798A),
+                color = colors.onSurfaceVariant,
                 fontSize = labelTextSize,
                 fontWeight = FontWeight.Medium
             )
@@ -140,6 +143,7 @@ fun TasbihSwipeArea(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
     val beadHaptics = rememberTasbihBeadHaptics()
     var beadOffsetY by remember { mutableFloatStateOf(0f) }
     var hasReachedReleaseZone by remember { mutableStateOf(false) }
@@ -206,7 +210,7 @@ fun TasbihSwipeArea(
 
         Text(
             text = "Swipe Bead up to count",
-            color = Color(0xFF70798A).copy(alpha = if (beadOffsetY == 0f) 0.6f else 0.2f),
+            color = colors.onSurfaceVariant.copy(alpha = if (beadOffsetY == 0f) 0.6f else 0.2f),
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium,
             modifier = Modifier

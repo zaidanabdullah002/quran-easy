@@ -1,0 +1,28 @@
+<resources>
+    <string name="settings_title">Settings</string>
+    <string name="back">Back</string>
+    <string name="appearance">Appearance</string>
+    <string name="theme">Theme</string>
+    <string name="system">System</string>
+    <string name="light">Light</string>
+    <string name="dark">Dark</string>
+    <string name="reading">Quran reading</string>
+    <string name="font">Quran font</string>
+    <string name="included_font">Al Qalam · Included font</string>
+    <string name="text_size">Quran text size</string>
+    <string name="percent">%1$d%%</string>
+    <string name="preview">Reading preview</string>
+    <string name="translated_names">Show translated Surah names</string>
+    <string name="keep_awake">Keep screen awake while reading</string>
+    <string name="reset_reading">Reset reading settings</string>
+    <string name="reset_title">Reset reading settings?</string>
+    <string name="reset_description">Restore the default font, text size, translated names, and screen-awake preference. Your theme, bookmarks, and downloads will be kept.</string>
+    <string name="cancel">Cancel</string>
+    <string name="reset">Reset</string>
+    <string name="retry">Retry</string>
+    <string name="read_error">Could not load settings.</string>
+    <string name="save_error">Could not save settings. Try again.</string>
+    <string name="dismiss">Dismiss</string>
+    <string name="arabic_preview" translatable="false">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</string>
+</resources>
+

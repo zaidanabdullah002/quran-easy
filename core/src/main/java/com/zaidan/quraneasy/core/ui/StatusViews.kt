@@ -1,18 +1,17 @@
 package com.zaidan.quraneasy.core.ui
 
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -33,6 +32,7 @@ fun AppLoadingView(
     subtitle: String,
     modifier: Modifier = Modifier
 ) {
+    val colors = MaterialTheme.colorScheme
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -48,7 +48,7 @@ fun AppLoadingView(
                 val arcSize = Size(size.width - stroke, size.height - stroke)
 
                 drawArc(
-                    color = Color(0xFFE8E2D8),
+                    color = colors.outlineVariant,
                     startAngle = 0f,
                     sweepAngle = 360f,
                     useCenter = false,
@@ -58,7 +58,7 @@ fun AppLoadingView(
                 )
 
                 drawArc(
-                    color = Color(0xFF1F1F1F),
+                    color = colors.primary,
                     startAngle = -90f,
                     sweepAngle = 120f,
                     useCenter = false,
@@ -71,12 +71,12 @@ fun AppLoadingView(
             Box(
                 modifier = Modifier
                     .size(50.dp)
-                    .background(Color.White, RoundedCornerShape(18.dp)),
+                    .background(colors.surface, RoundedCornerShape(18.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "Q",
-                    color = Color(0xFF1F1F1F),
+                    color = colors.primary,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -85,14 +85,14 @@ fun AppLoadingView(
 
         Text(
             text = title,
-            color = Color(0xFF1A1A1A),
+            color = colors.onSurface,
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold
         )
 
         Text(
             text = subtitle,
-            color = Color(0xFF6F7681),
+            color = colors.onSurfaceVariant,
             fontSize = 14.sp,
             textAlign = TextAlign.Center,
             lineHeight = 20.sp
@@ -105,17 +105,16 @@ fun AppErrorView(
     message: String,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    val colors = MaterialTheme.colorScheme
+    QuranEasySurface(
         modifier = modifier.padding(horizontal = 24.dp),
+        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 16.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFE8E2D8)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = 2.dp
     ) {
         Text(
             text = message,
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
-            color = Color(0xFF1A1A1A),
+            color = colors.onSurface,
             fontSize = 15.sp,
             textAlign = TextAlign.Center
         )

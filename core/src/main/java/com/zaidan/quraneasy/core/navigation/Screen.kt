@@ -3,6 +3,7 @@ package com.zaidan.quraneasy.core.navigation
 sealed class Screen(val route: String) {
     object Home : Screen("home")
     object About : Screen("about")
+    object Settings : Screen("settings")
     object Quran : Screen("quran")
     object Tasbih : Screen("tasbih")
     object Manzil : Screen("manzil")

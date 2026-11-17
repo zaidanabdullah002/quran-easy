@@ -55,6 +55,8 @@ android {
 
 dependencies {
     implementation(project(":core"))
+    implementation(project(":feature_settings"))
+    implementation(libs.androidx.lifecycle.runtime.compose)
 
     implementation(project(":feature_home"))
     implementation(project(":feature_quran"))

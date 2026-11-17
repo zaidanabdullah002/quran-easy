@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,8 +28,6 @@ import kotlinx.coroutines.delay
 private val PrayerCelebrationBackground = Color(0xFFE6F5EC)
 private val PrayerCelebrationBorder = Color(0xFF8FC8A8)
 private val PrayerCelebrationScrim = Color(0x2218213A)
-private val DefaultCardBackground = Color.White
-private val DefaultCardBorder = Color(0xFFD9D9DE)
 
 private const val CompletionPulseInDurationMs = 140
 private const val CompletionPulseOutDurationMs = 180
@@ -54,6 +53,7 @@ fun rememberPrayerCompletionCelebrationState(
     isAllCompleted: Boolean,
     onCelebrationTriggered: () -> Unit
 ): PrayerCompletionCelebrationState {
+    val colors = MaterialTheme.colorScheme
     var hasObservedInitialCompletionState by remember { mutableStateOf(false) }
     val celebrationScale = remember { Animatable(1f) }
     val celebrationGlow = remember { Animatable(0f) }
@@ -152,8 +152,8 @@ fun rememberPrayerCompletionCelebrationState(
 
     return PrayerCompletionCelebrationState(
         scale = celebrationScale.value,
-        backgroundColor = lerp(DefaultCardBackground, PrayerCelebrationBackground, celebrationGlow.value),
-        borderColor = lerp(DefaultCardBorder, PrayerCelebrationBorder, celebrationGlow.value),
+        backgroundColor = lerp(colors.surface, PrayerCelebrationBackground, celebrationGlow.value),
+        borderColor = lerp(colors.outline, PrayerCelebrationBorder, celebrationGlow.value),
         confettiVisible = celebrationPhase == PrayerCelebrationPhase.Celebrating ||
             celebrationConfettiAlpha.value > 0f,
         confettiAlpha = celebrationConfettiAlpha.value

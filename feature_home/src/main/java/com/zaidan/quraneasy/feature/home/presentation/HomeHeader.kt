@@ -17,6 +17,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
+import com.zaidan.quraneasy.feature_home.R
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -31,7 +33,8 @@ import com.zaidan.quraneasy.core.ui.HapticIconButton
 @Preview(showBackground = true)
 @Composable
 fun HomeHeader(
-    onAboutClick: () -> Unit = {}
+    onAboutClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {}
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
     Column(
@@ -101,6 +104,13 @@ fun HomeHeader(
                         expanded = isMenuExpanded,
                         onDismissRequest = { isMenuExpanded = false }
                     ) {
+                        DropdownMenuItem(
+                            text = { Text(text = stringResource(R.string.settings_menu)) },
+                            onClick = {
+                                isMenuExpanded = false
+                                onSettingsClick()
+                            }
+                        )
                         DropdownMenuItem(
                             text = { Text(text = "About") },
                             onClick = {

@@ -1,5 +1,6 @@
 package com.zaidan.quraneasy.core.ui
 
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -20,13 +21,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.zaidan.quraneasy.core.theme.AppSoftSurface
-import com.zaidan.quraneasy.core.theme.AppSurface
 
 @Composable
 fun AppSkeletonBlock(
     modifier: Modifier = Modifier,
-    tint: Color = AppSoftSurface
+    tint: Color = MaterialTheme.colorScheme.surfaceVariant
 ) {
     Box(
         modifier = modifier
@@ -38,7 +37,7 @@ fun AppSkeletonBlock(
 @Composable
 fun AppSkeletonLine(
     modifier: Modifier = Modifier,
-    tint: Color = AppSoftSurface
+    tint: Color = MaterialTheme.colorScheme.surfaceVariant
 ) {
     AppSkeletonBlock(
         modifier = modifier
@@ -65,7 +64,7 @@ private fun Modifier.skeletonBrush(
         brush = Brush.linearGradient(
             colors = listOf(
                 baseColor.copy(alpha = 0.92f),
-                AppSurface,
+                MaterialTheme.colorScheme.surface,
                 baseColor.copy(alpha = 0.92f)
             ),
             start = Offset(shift - 280f, shift - 280f),

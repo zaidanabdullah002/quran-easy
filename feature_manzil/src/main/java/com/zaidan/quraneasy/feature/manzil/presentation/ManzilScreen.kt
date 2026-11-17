@@ -30,6 +30,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -49,10 +50,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.zaidan.quraneasy.core.theme.AppBackground
-import com.zaidan.quraneasy.core.theme.AppPrimaryText
-import com.zaidan.quraneasy.core.theme.AppSecondaryText
-import com.zaidan.quraneasy.core.theme.QuranFont
+import com.zaidan.quraneasy.core.settings.ReaderSettingsEffects
+import com.zaidan.quraneasy.core.theme.LocalQuranTypography
 import com.zaidan.quraneasy.core.ui.AppCardDefaults
 import com.zaidan.quraneasy.core.ui.AppErrorView
 import com.zaidan.quraneasy.core.ui.HapticIconButton
@@ -65,9 +64,6 @@ private val ayahBorder = Color(0xFFEDE8DF)
 private val markerText = Color(0xFF8B6F47)
 private val bismillahSurface = Color(0xFFE2F1E3)
 private val bismillahText = Color(0xFF315F42)
-private val ayahFontSize = 34.sp
-private val ayahLineGap = 60.sp
-private val ayahMarkerFontSize = 22.sp
 private const val ArabicVerseOpenMark = '\uFD3F'
 private const val ArabicVerseCloseMark = '\uFD3E'
 private const val AlFatihahSurahNumber = 1
@@ -99,10 +95,11 @@ private fun ManzilListContent(
     onBackClick: () -> Unit,
     onPassageClick: (Int) -> Unit,
 ) {
+    val colors = MaterialTheme.colorScheme
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppBackground)
+            .background(colors.background)
     ) {
         ManzilTopBar(
             title = "Manzil",
@@ -130,12 +127,13 @@ private fun ManzilPassageCard(
     passage: ManzilPassage,
     onClick: () -> Unit,
 ) {
+    val colors = MaterialTheme.colorScheme
     Card(
         onClick = hapticClick(onClick = onClick),
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(26.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFE8E2D8)),
+        colors = CardDefaults.cardColors(containerColor = colors.surface),
+        border = BorderStroke(1.dp, colors.outline),
         elevation = AppCardDefaults.interactiveElevation(defaultElevation = 2.dp),
     ) {
         Row(
@@ -166,7 +164,7 @@ private fun ManzilPassageCard(
             ) {
                 Text(
                     text = passage.title,
-                    color = AppPrimaryText,
+                    color = colors.onSurface,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
@@ -174,7 +172,7 @@ private fun ManzilPassageCard(
                 )
                 Text(
                     text = passage.verseRange,
-                    color = AppSecondaryText,
+                    color = colors.onSurfaceVariant,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                 )
@@ -182,7 +180,7 @@ private fun ManzilPassageCard(
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
                 contentDescription = null,
-                tint = AppSecondaryText,
+                tint = colors.onSurfaceVariant,
             )
         }
     }
@@ -219,6 +217,7 @@ fun ManzilDetailScreen(
     onBackClick: () -> Unit,
     viewModel: ManzilViewModel = hiltViewModel(),
 ) {
+    ReaderSettingsEffects()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     ManzilDetailContent(
         uiState = uiState,
@@ -234,10 +233,11 @@ private fun ManzilDetailContent(
     onRetry: () -> Unit,
 ) {
     val passage = uiState.passage
+    val colors = MaterialTheme.colorScheme
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppBackground)
+            .background(colors.background)
     ) {
         ManzilTopBar(
             title = passage?.title ?: "Manzil",
@@ -250,7 +250,7 @@ private fun ManzilDetailContent(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
                 ) {
-                    CircularProgressIndicator(color = AppPrimaryText)
+                    CircularProgressIndicator(color = colors.primary)
                 }
             }
 
@@ -317,6 +317,7 @@ private fun ManzilTopBar(
 
 @Composable
 private fun ManzilReading(passage: ManzilPassageUi) {
+    val colors = MaterialTheme.colorScheme
     SelectionContainer {
         Column(
             modifier = Modifier
@@ -328,8 +329,8 @@ private fun ManzilReading(passage: ManzilPassageUi) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(28.dp))
-                    .background(pageSurface)
-                    .border(BorderStroke(1.dp, ayahBorder), RoundedCornerShape(28.dp))
+                    .background(colors.surface)
+                    .border(BorderStroke(1.dp, colors.outline), RoundedCornerShape(28.dp))
                     .padding(horizontal = 20.dp, vertical = 24.dp),
             ) {
                 ManzilPassageBlock(passage = passage)
@@ -340,6 +341,8 @@ private fun ManzilReading(passage: ManzilPassageUi) {
 
 @Composable
 private fun ManzilPassageBlock(passage: ManzilPassageUi) {
+    val typography = LocalQuranTypography.current
+    val colors = MaterialTheme.colorScheme
     val beginsAtFirstAyah = passage.startAyah == 1
     val isAlFatihah = passage.surahNumber == AlFatihahSurahNumber && beginsAtFirstAyah
     val showBismillah = beginsAtFirstAyah && passage.surahNumber != AtTawbahSurahNumber
@@ -348,7 +351,7 @@ private fun ManzilPassageBlock(passage: ManzilPassageUi) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(
             text = "${passage.title} · ${passage.verseRange()}",
-            color = AppPrimaryText,
+            color = colors.onSurface,
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold,
         )
@@ -361,18 +364,18 @@ private fun ManzilPassageBlock(passage: ManzilPassageUi) {
                 removeLeadingBismillah = showBismillah && !isAlFatihah,
             ),
             modifier = Modifier.fillMaxWidth(),
-            color = AppPrimaryText,
-            fontSize = ayahFontSize,
+            color = colors.onSurface,
+                fontSize = typography.ayahFontSize,
             fontWeight = FontWeight.Medium,
-            fontFamily = QuranFont,
+                fontFamily = typography.fontFamily,
             textAlign = TextAlign.End,
-            lineHeight = ayahLineGap,
+                lineHeight = typography.ayahLineHeight,
         )
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             passage.ayahs.forEach { ayah ->
                 Text(
                     text = "${ayah.numberInSurah}. ${ayah.english}",
-                    color = AppSecondaryText,
+                    color = colors.onSurfaceVariant,
                     fontSize = 15.sp,
                     lineHeight = 22.sp,
                 )
@@ -383,11 +386,13 @@ private fun ManzilPassageBlock(passage: ManzilPassageUi) {
 
 @Composable
 private fun BismillahHeader(ayahNumber: Int?) {
+    val typography = LocalQuranTypography.current
+    val colors = MaterialTheme.colorScheme
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(bismillahSurface)
+            .background(colors.secondaryContainer)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -398,8 +403,8 @@ private fun BismillahHeader(ayahNumber: Int?) {
                     append(' ')
                     withStyle(
                         SpanStyle(
-                            color = markerText,
-                            fontSize = ayahMarkerFontSize,
+                            color = colors.primary,
+                            fontSize = typography.verseMarkerFontSize,
                             fontFamily = FontFamily.Default,
                         )
                     ) {
@@ -408,41 +413,46 @@ private fun BismillahHeader(ayahNumber: Int?) {
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            color = bismillahText,
-            fontSize = 31.sp,
+            color = colors.onSecondaryContainer,
+            fontSize = typography.bismillahFontSize,
             fontWeight = FontWeight.Medium,
-            fontFamily = QuranFont,
+            fontFamily = typography.fontFamily,
             textAlign = TextAlign.Center,
-            lineHeight = 46.sp,
+            lineHeight = typography.bismillahLineHeight,
         )
     }
 }
 
+@Composable
 private fun buildReadingText(
     ayahs: List<ManzilAyahUi>,
     removeLeadingBismillah: Boolean,
-) = buildAnnotatedString {
-    ayahs.forEachIndexed { index, ayah ->
-        val ayahText = if (index == 0 && removeLeadingBismillah) {
-            ayah.arabic.withoutProviderBismillahPrefix()
-        } else {
-            ayah.arabic.trim()
-        }
-        append(ayahText)
-        append(' ')
-        withStyle(
-            SpanStyle(
-                color = markerText,
-                fontSize = ayahMarkerFontSize,
-                fontFamily = FontFamily.Default,
-            )
-        ) {
-            append(ArabicVerseOpenMark)
-            append(ayah.numberInSurah.toArabicIndicDigits())
-            append(ArabicVerseCloseMark)
-        }
-        if (index != ayahs.lastIndex) {
+) : androidx.compose.ui.text.AnnotatedString {
+    val typography = LocalQuranTypography.current
+    val markerColor = MaterialTheme.colorScheme.primary
+    return buildAnnotatedString {
+        ayahs.forEachIndexed { index, ayah ->
+            val ayahText = if (index == 0 && removeLeadingBismillah) {
+                ayah.arabic.withoutProviderBismillahPrefix()
+            } else {
+                ayah.arabic.trim()
+            }
+            append(ayahText)
             append(' ')
+            withStyle(
+                SpanStyle(
+                color = markerColor,
+                    fontSize = typography.verseMarkerFontSize,
+                    fontFamily = FontFamily.Default,
+                )
+            ) {
+                append(ArabicVerseOpenMark)
+                append(ayah.numberInSurah.toArabicIndicDigits())
+                append(ArabicVerseCloseMark)
+            }
+            if (index != ayahs.lastIndex) {
+                append(' ')
+            }
         }
     }
 }

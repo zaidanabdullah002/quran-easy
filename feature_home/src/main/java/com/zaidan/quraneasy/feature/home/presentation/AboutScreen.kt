@@ -27,12 +27,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.zaidan.quraneasy.core.theme.AppBackground
 import com.zaidan.quraneasy.core.theme.AppPrimaryGradientBottom
 import com.zaidan.quraneasy.core.theme.AppPrimaryGradientTop
-import com.zaidan.quraneasy.core.theme.AppPrimaryText
-import com.zaidan.quraneasy.core.theme.AppSecondaryText
-import com.zaidan.quraneasy.core.theme.AppSurface
 import com.zaidan.quraneasy.core.ui.AppCardDefaults
 import com.zaidan.quraneasy.core.ui.HapticIconButton
 
@@ -49,7 +45,7 @@ fun AboutScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppBackground)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
@@ -93,7 +89,7 @@ fun AboutScreen(
         ) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = AppSurface),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = AppCardDefaults.staticElevation(defaultElevation = 2.dp)
             ) {
                 Column(
@@ -102,19 +98,19 @@ fun AboutScreen(
                 ) {
                     Text(
                         text = "Quran Easy",
-                        color = AppPrimaryText,
+                        color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
                         text = "Made for easy daily Quran reading and a calmer spiritual routine.",
-                        color = AppSecondaryText,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "Made by Zaidan ❤️",
-                        color = AppPrimaryText,
+                        color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium
                     )

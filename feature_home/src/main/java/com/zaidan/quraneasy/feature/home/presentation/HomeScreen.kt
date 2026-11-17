@@ -2,6 +2,7 @@ package com.zaidan.quraneasy.feature.home.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,8 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.zaidan.quraneasy.core.theme.AppBackground
-import com.zaidan.quraneasy.core.theme.AppDimens
 import com.zaidan.quraneasy.feature.feeling.presentation.Feeling
 import com.zaidan.quraneasy.feature.feeling.presentation.HomeFeelingViewModel
 import com.zaidan.quraneasy.feature.feeling.presentation.carousel.FeelingCarousel
@@ -50,7 +49,8 @@ fun HomeScreen(
     onAboutClick: () -> Unit,
     onFeelingClick: (Feeling) -> Unit,
     prayerViewModel: PrayerViewModel,
-    feelingViewModel: HomeFeelingViewModel = hiltViewModel()
+    feelingViewModel: HomeFeelingViewModel = hiltViewModel(),
+    onSettingsClick: () -> Unit = {}
 ) {
     val feelings by feelingViewModel.feelings.collectAsStateWithLifecycle()
     HomeScreen(
@@ -58,6 +58,7 @@ fun HomeScreen(
         onTasbihClick = onTasbihClick,
         onManzilClick = onManzilClick,
         onAboutClick = onAboutClick,
+        onSettingsClick = onSettingsClick,
         onFeelingClick = onFeelingClick,
         feelings = feelings,
         prayerViewModel = prayerViewModel
@@ -72,35 +73,38 @@ fun HomeScreen(
     onAboutClick: () -> Unit,
     onFeelingClick: (Feeling) -> Unit,
     feelings: List<Feeling>,
-    prayerViewModel: PrayerViewModel
+    prayerViewModel: PrayerViewModel,
+    onSettingsClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppBackground),
+            .background(MaterialTheme.colorScheme.background),
         verticalArrangement = Arrangement.Top
     ) {
-        HomeHeader(onAboutClick = onAboutClick)
+        HomeHeader(onAboutClick = onAboutClick, onSettingsClick = onSettingsClick)
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = AppDimens.ScreenPaddingSmall.dp)
         ) {
-            Spacer(modifier = Modifier.height(AppDimens.LargeSectionSpacing.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             FeatureCardsSection(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
                 onReadQuranClick = onReadQuranClick,
                 onTasbihClick = onTasbihClick,
                 onManzilClick = onManzilClick
             )
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(16.dp))
 
             Text(
                 "How are you feeling today?",
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(horizontal = 20.dp)
             )
 
             Spacer(Modifier.height(12.dp))
@@ -111,9 +115,11 @@ fun HomeScreen(
             )
 
             Spacer(Modifier.height(24.dp))
-            PrayerTrackerCardFeature(
-                prayerViewModel = prayerViewModel
-            )
+            Box(modifier = Modifier.padding(horizontal = 20.dp)) {
+                PrayerTrackerCardFeature(
+                    prayerViewModel = prayerViewModel
+                )
+            }
             HomeFooter()
         }
     }

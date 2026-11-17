@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,9 +47,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.zaidan.quraneasy.core.theme.AppBackground
-import com.zaidan.quraneasy.core.theme.AppPrimaryText
-import com.zaidan.quraneasy.core.theme.QuranFont
+import com.zaidan.quraneasy.core.settings.ReaderSettingsEffects
+import com.zaidan.quraneasy.core.theme.LocalQuranTypography
 import com.zaidan.quraneasy.core.ui.AppErrorView
 import com.zaidan.quraneasy.core.ui.AppSkeletonLine
 import com.zaidan.quraneasy.core.ui.HapticIconButton
@@ -59,17 +59,7 @@ import com.zaidan.quraneasy.feature.quran.presentation.model.dummyData.ayahList
 import com.zaidan.quraneasy.feature.quran.presentation.viewmodel.QuranReaderViewModel
 import my.nanihadesuka.compose.LazyColumnScrollbar
 
-private val ReaderBackground = AppBackground
 private val ReaderTopBar = Color(0xFF2B2B2B)
-private val ReaderPageSurface = Color(0xFFFCFBF8)
-private val ReaderAyahBorder = Color(0xFFEDE8DF)
-private val ReaderAyahText = AppPrimaryText
-private val ReaderMarkerText = Color(0xFF8B6F47)
-private val ReaderBismillahSurface = Color(0xFFE2F1E3)
-private val ReaderBismillahText = Color(0xFF315F42)
-private val ayahLineGap = 60.sp
-private val ayahFontSize = 34.sp
-private val ayahMarkerFontSize = 22.sp
 private const val ArabicVerseOpenMark = '\uFD3F'
 private const val ArabicVerseCloseMark = '\uFD3E'
 private const val AlFatihahSurahNumber = 1
@@ -102,6 +92,7 @@ fun QuranReaderScreen(
     itemNumber: Int = 1,
     quranReaderViewModel: QuranReaderViewModel
 ) {
+    ReaderSettingsEffects()
     val ayahUiState by quranReaderViewModel.ayahUiState.collectAsState()
 
     LaunchedEffect(readerType, itemNumber) {
@@ -139,10 +130,11 @@ private fun QuranReaderContent(
     onBookmarkClick: () -> Unit
 ) {
     val readerListState = rememberLazyListState()
+    val colors = MaterialTheme.colorScheme
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(ReaderBackground)
+            .background(colors.background)
     ) {
         QuranReaderTopBar(
             title = title,
@@ -193,6 +185,7 @@ private fun QuranReaderContent(
 private fun ReaderSkeleton(
     modifier: Modifier = Modifier
 ) {
+    val colors = MaterialTheme.colorScheme
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 14.dp),
@@ -202,8 +195,8 @@ private fun ReaderSkeleton(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(28.dp))
-                    .background(ReaderPageSurface)
-                    .border(BorderStroke(1.dp, ReaderAyahBorder), RoundedCornerShape(28.dp))
+                    .background(colors.surface)
+                    .border(BorderStroke(1.dp, colors.outline), RoundedCornerShape(28.dp))
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 24.dp)
             ) {
@@ -222,7 +215,7 @@ private fun ReaderSkeleton(
                                     }
                                 )
                                 .height(34.dp),
-                            tint = Color(0xFFF0ECE4)
+                            tint = colors.surfaceVariant
                         )
                     }
                 }
@@ -351,12 +344,14 @@ private fun AnimatedBookmarkHeart(
 private fun QuranReadingSheet(
     ayahs: List<AyahUiModel>
 ) {
+    val typography = LocalQuranTypography.current
+    val colors = MaterialTheme.colorScheme
     SelectionContainer {
         Column(
             modifier = Modifier
                 .clip(RoundedCornerShape(28.dp))
-                .background(ReaderPageSurface)
-                .border(BorderStroke(1.dp, ReaderAyahBorder), RoundedCornerShape(28.dp))
+                .background(colors.surface)
+                .border(BorderStroke(1.dp, colors.outline), RoundedCornerShape(28.dp))
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 24.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
@@ -385,12 +380,12 @@ private fun QuranReadingSheet(
                         removeLeadingBismillah = showBismillah && !isAlFatihah,
                     ),
                     modifier = Modifier.fillMaxWidth(),
-                    color = ReaderAyahText,
-                    fontSize = ayahFontSize,
+                    color = colors.onSurface,
+                    fontSize = typography.ayahFontSize,
                     fontWeight = FontWeight.Medium,
-                    fontFamily = QuranFont,
+                    fontFamily = typography.fontFamily,
                     textAlign = TextAlign.End,
-                    lineHeight = ayahLineGap
+                    lineHeight = typography.ayahLineHeight
                 )
             }
         }
@@ -401,11 +396,13 @@ private fun QuranReadingSheet(
 private fun BismillahHeader(
     ayahNumber: Int? = null,
 ) {
+    val typography = LocalQuranTypography.current
+    val colors = MaterialTheme.colorScheme
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(ReaderBismillahSurface)
+            .background(colors.secondaryContainer)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -416,8 +413,8 @@ private fun BismillahHeader(
                     append(' ')
                     pushStyle(
                         SpanStyle(
-                            color = ReaderMarkerText,
-                            fontSize = ayahMarkerFontSize,
+                            color = colors.primary,
+                            fontSize = typography.verseMarkerFontSize,
                             fontFamily = FontFamily.Default,
                         )
                     )
@@ -426,42 +423,47 @@ private fun BismillahHeader(
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            color = ReaderBismillahText,
-            fontSize = 31.sp,
+            color = colors.onSecondaryContainer,
+            fontSize = typography.bismillahFontSize,
             fontWeight = FontWeight.Medium,
-            fontFamily = QuranFont,
+            fontFamily = typography.fontFamily,
             textAlign = TextAlign.Center,
-            lineHeight = 46.sp
+            lineHeight = typography.bismillahLineHeight
         )
     }
 }
 
+@Composable
 private fun buildReadingSheetText(
     ayahs: List<AyahUiModel>,
     removeLeadingBismillah: Boolean = false,
-) = buildAnnotatedString {
-    ayahs.forEachIndexed { index, ayah ->
-        val ayahText = if (index == 0 && removeLeadingBismillah) {
-            ayah.arabicText.withoutProviderBismillahPrefix()
-        } else {
-            ayah.arabicText.trim()
-        }
-        append(ayahText)
-        append(' ')
-        pushStyle(
-            SpanStyle(
-                color = ReaderMarkerText,
-                fontSize = ayahMarkerFontSize,
-                fontFamily = FontFamily.Default,
-            )
-        )
-        append(ArabicVerseOpenMark)
-        append(ayah.numberInSurah.toArabicIndicDigits())
-        append(ArabicVerseCloseMark)
-        pop()
-
-        if (index != ayahs.lastIndex) {
+) : androidx.compose.ui.text.AnnotatedString {
+    val typography = LocalQuranTypography.current
+    val markerColor = MaterialTheme.colorScheme.primary
+    return buildAnnotatedString {
+        ayahs.forEachIndexed { index, ayah ->
+            val ayahText = if (index == 0 && removeLeadingBismillah) {
+                ayah.arabicText.withoutProviderBismillahPrefix()
+            } else {
+                ayah.arabicText.trim()
+            }
+            append(ayahText)
             append(' ')
+            pushStyle(
+                SpanStyle(
+                    color = markerColor,
+                    fontSize = typography.verseMarkerFontSize,
+                    fontFamily = FontFamily.Default,
+                )
+            )
+            append(ArabicVerseOpenMark)
+            append(ayah.numberInSurah.toArabicIndicDigits())
+            append(ArabicVerseCloseMark)
+            pop()
+
+            if (index != ayahs.lastIndex) {
+                append(' ')
+            }
         }
     }
 }

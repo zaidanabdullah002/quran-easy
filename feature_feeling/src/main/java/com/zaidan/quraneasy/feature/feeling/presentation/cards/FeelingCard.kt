@@ -2,6 +2,7 @@ package com.zaidan.quraneasy.feature.feeling.presentation.cards
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,11 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.zaidan.quraneasy.core.theme.AppPrimaryText
-import com.zaidan.quraneasy.core.theme.AppSecondaryText
-import com.zaidan.quraneasy.core.theme.AppSurface
-import com.zaidan.quraneasy.core.ui.AppCardDefaults
-import com.zaidan.quraneasy.core.ui.hapticClick
+import com.zaidan.quraneasy.core.ui.QuranEasyActionSurface
 import com.zaidan.quraneasy.feature.feeling.presentation.Feeling
 import com.zaidan.quraneasy.feature.feeling.presentation.FeelingCategory
 import com.zaidan.quraneasy.feature.feeling.presentation.VerseRef
@@ -57,14 +54,14 @@ fun FeelingCard(
     onClick: () -> Unit
 ) {
     val accent = feeling.accent.toColorOrNull() ?: Color(0xFF667084)
-    Card(
-        onClick = hapticClick(onClick = onClick),
+    QuranEasyActionSurface(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .height(126.dp),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = AppSurface),
-        elevation = AppCardDefaults.interactiveElevation(defaultElevation = 3.dp)
+        elevation = 3.dp,
+        contentPadding = PaddingValues(0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -89,14 +86,14 @@ fun FeelingCard(
                     feeling.title,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleLarge,
-                    color = AppPrimaryText
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(Modifier.height(4.dp))
 
                 Text(
                     feeling.subtitle,
-                    color = AppSecondaryText,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium
                 )
 
@@ -104,7 +101,7 @@ fun FeelingCard(
                     Spacer(Modifier.height(6.dp))
                     Text(
                         text = "\"$translation\"",
-                        color = AppSecondaryText.copy(alpha = 0.82f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
                         style = MaterialTheme.typography.bodySmall,
                         fontStyle = FontStyle.Italic,
                         maxLines = 2,

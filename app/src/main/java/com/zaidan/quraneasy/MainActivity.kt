@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,7 +38,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.zaidan.quraneasy.core.navigation.Screen
-import com.zaidan.quraneasy.core.theme.AppBackground
+import com.zaidan.quraneasy.core.settings.AppSettings
+import com.zaidan.quraneasy.core.settings.SettingsRepository
+import com.zaidan.quraneasy.core.theme.QuranEasyTheme
 import com.zaidan.quraneasy.feature.feeling.data.FeelingRepository
 import com.zaidan.quraneasy.feature.feeling.presentation.feelingGraph
 import com.zaidan.quraneasy.feature.home.presentation.homeGraph
@@ -51,6 +52,11 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.retryWhen
+import java.io.IOException
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zaidan.quraneasy.feature.settings.presentation.settingsGraph
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -59,21 +65,41 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var feelingRepository: FeelingRepository
 
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
+
+    private var settingsReady = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        installSplashScreen().setKeepOnScreenCondition { !settingsReady }
         super.onCreate(savedInstanceState)
 
         preloadHomeData()
 
         enableEdgeToEdge()
         setContent {
+            val settingsFlow = remember(settingsRepository) {
+                var lastKnownSettings = AppSettings()
+                settingsRepository.settings
+                    .map<AppSettings, AppSettings?> { lastKnownSettings = it; it }
+                    .retryWhen { cause, _ ->
+                        if (cause is IOException) {
+                            emit(lastKnownSettings)
+                            delay(2000)
+                            true
+                        } else false
+                    }
+            }
+            val appSettings by settingsFlow.collectAsStateWithLifecycle(initialValue = null)
+            val resolvedSettings = appSettings ?: return@setContent
+            settingsReady = true
             val navController = rememberNavController()
             var showLaunchAnimation by rememberSaveable {
                 mutableStateOf(savedInstanceState == null)
             }
 
-            Box(modifier = Modifier.fillMaxSize()) {
-                MaterialTheme {
+            QuranEasyTheme(settings = resolvedSettings) {
+                Box(modifier = Modifier.fillMaxSize()) {
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
                         contentWindowInsets = WindowInsets(0)
@@ -88,14 +114,14 @@ class MainActivity : ComponentActivity() {
                             tasbihGraph(navController)
                             manzilGraph(navController)
                             feelingGraph(navController)
+                            settingsGraph(navController)
                         }
                     }
-                }
-
-                if (showLaunchAnimation) {
-                    QuranEasyLaunchAnimation(
-                        onFinished = { showLaunchAnimation = false }
-                    )
+                    if (showLaunchAnimation) {
+                        QuranEasyLaunchAnimation(
+                            onFinished = { showLaunchAnimation = false }
+                        )
+                    }
                 }
             }
         }
@@ -168,7 +194,7 @@ private fun QuranEasyLaunchAnimation(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppBackground),
+            .background(androidx.compose.material3.MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center
     ) {
         Image(

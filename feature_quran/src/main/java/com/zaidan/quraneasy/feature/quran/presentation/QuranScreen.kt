@@ -33,6 +33,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,6 +49,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zaidan.quraneasy.core.theme.LocalAppSettings
 import com.zaidan.quraneasy.core.ui.AppCardDefaults
 import com.zaidan.quraneasy.core.ui.HapticIconButton
 import com.zaidan.quraneasy.core.ui.hapticClick
@@ -119,10 +121,11 @@ private fun QuranScreenContent(
     val selectedTab = uiState.selectedTab
     val surahListState = rememberLazyListState()
     val juzListState = rememberLazyListState()
+    val colors = MaterialTheme.colorScheme
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF3F3F3))
+            .background(colors.background)
     ) {
         TopSection(
             selectedTab = selectedTab,
@@ -263,6 +266,7 @@ private fun QuranJuzListSkeleton() {
 
 @Composable
 private fun BookmarkEmptyState() {
+    val colors = MaterialTheme.colorScheme
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -285,14 +289,14 @@ private fun BookmarkEmptyState() {
 
         Text(
             text = "No bookmarks yet",
-            color = Color(0xFF1A1A1A),
+            color = colors.onBackground,
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold
         )
 
         Text(
             text = "Save verses here to revisit your favorite ayahs anytime.",
-            color = Color(0xFF6F7681),
+            color = colors.onSurfaceVariant,
             fontSize = 14.sp,
             textAlign = TextAlign.Center,
             lineHeight = 20.sp
@@ -305,12 +309,14 @@ private fun BookmarkCard(
     bookmark: QuranBookmarkUiModel,
     onClick: () -> Unit
 ) {
+    val showTranslatedSurahNames = LocalAppSettings.current.showTranslatedSurahNames
+    val colors = MaterialTheme.colorScheme
     Card(
         onClick = hapticClick(onClick = onClick),
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(26.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFE8E2D8)),
+        colors = CardDefaults.cardColors(containerColor = colors.surface),
+        border = BorderStroke(1.dp, colors.outline),
         elevation = AppCardDefaults.interactiveElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -346,7 +352,7 @@ private fun BookmarkCard(
                             text = "Surah ${bookmark.surahNumber} · ${bookmark.englishName}",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF1A1A1A),
+                            color = colors.onSurface,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -354,18 +360,20 @@ private fun BookmarkCard(
                             text = bookmark.arabicName,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF444444),
+                            color = colors.onSurface,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        Text(
-                            text = bookmark.translation,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF6F7681),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        if (showTranslatedSurahNames) {
+                            Text(
+                                text = bookmark.translation,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = colors.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
 
                     is QuranBookmarkUiModel.JuzBookmark -> {
@@ -373,7 +381,7 @@ private fun BookmarkCard(
                             text = "Juz ${bookmark.juzNumber}",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF1A1A1A),
+                            color = colors.onSurface,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -381,7 +389,7 @@ private fun BookmarkCard(
                             text = "Saved for quick return",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF6F7681),
+                            color = colors.onSurfaceVariant,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -496,12 +504,13 @@ fun QuranTab(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = MaterialTheme.colorScheme
     Surface(
         onClick = hapticClick(onClick = onClick),
         modifier = modifier.fillMaxHeight(),
         shape = RoundedCornerShape(18.dp),
         color = if (selected)
-            Color.White
+            colors.surface
         else
             Color.Transparent
     ) {
@@ -514,7 +523,7 @@ fun QuranTab(
         ) {
             CompositionLocalProvider(
                 LocalContentColor provides
-                        if (selected) Color(0xFF202020)
+                        if (selected) colors.onSurface
                         else Color.White.copy(alpha = 0.85f)
             ) {
                 icon()
@@ -538,14 +547,16 @@ fun SurahCard(
     surah: SurahUiModel,
     onClick: () -> Unit = {}
 ) {
+    val showTranslatedSurahNames = LocalAppSettings.current.showTranslatedSurahNames
+    val colors = MaterialTheme.colorScheme
     Card(
         onClick = hapticClick(onClick = onClick),
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(26.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = colors.surface
         ),
-        border = BorderStroke(1.dp, Color(0xFFE8E2D8)),
+        border = BorderStroke(1.dp, colors.outline),
         elevation = AppCardDefaults.interactiveElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -576,7 +587,7 @@ fun SurahCard(
                 modifier = Modifier
                     .width(1.dp)
                     .height(82.dp)
-                    .background(Color(0xFFE9E2D7))
+                    .background(colors.outline)
             )
 
             Spacer(modifier = Modifier.width(14.dp))
@@ -589,7 +600,7 @@ fun SurahCard(
                     text = surah.englishName,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1A1A1A),
+                    color = colors.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -598,25 +609,27 @@ fun SurahCard(
                     text = surah.arabicName,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFF444444),
+                    color = colors.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Text(
-                    text = surah.translation,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF6F7681),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                if (showTranslatedSurahNames) {
+                    Text(
+                        text = surah.translation,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = colors.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
 
                 Text(
                     text = "${surah.verses} verses",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF8B6F47),
+                    color = colors.primary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -630,14 +643,15 @@ fun JuzCard(
     juz: JuzUiModel,
     onClick: () -> Unit = {}
 ) {
+    val colors = MaterialTheme.colorScheme
     Card(
         onClick = hapticClick(onClick = onClick),
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(26.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = colors.surface
         ),
-        border = BorderStroke(1.dp, Color(0xFFE8E2D8)),
+        border = BorderStroke(1.dp, colors.outline),
         elevation = AppCardDefaults.interactiveElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -668,7 +682,7 @@ fun JuzCard(
                 modifier = Modifier
                     .width(1.dp)
                     .height(58.dp)
-                    .background(Color(0xFFE9E2D7))
+                    .background(colors.outline)
             )
 
             Spacer(modifier = Modifier.width(14.dp))
@@ -681,7 +695,7 @@ fun JuzCard(
                     text = juz.englishName,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1A1A1A),
+                    color = colors.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -695,8 +709,8 @@ private fun SurahCardSkeleton() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(26.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFE8E2D8)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         elevation = AppCardDefaults.interactiveElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -710,7 +724,7 @@ private fun SurahCardSkeleton() {
                 modifier = Modifier
                     .size(74.dp)
                     .clip(RoundedCornerShape(24.dp)),
-                tint = Color(0xFFEAE5DC)
+                tint = MaterialTheme.colorScheme.surfaceVariant
             )
 
             Spacer(modifier = Modifier.width(14.dp))
@@ -719,7 +733,7 @@ private fun SurahCardSkeleton() {
                 modifier = Modifier
                     .width(1.dp)
                     .height(82.dp)
-                    .background(Color(0xFFE9E2D7))
+                    .background(MaterialTheme.colorScheme.outlineVariant)
             )
 
             Spacer(modifier = Modifier.width(14.dp))
@@ -731,7 +745,7 @@ private fun SurahCardSkeleton() {
                 AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.52f).height(20.dp))
                 AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.38f).height(16.dp))
                 AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.44f).height(15.dp))
-                AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.28f).height(14.dp), tint = Color(0xFFF0E2C7))
+                AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.28f).height(14.dp), tint = MaterialTheme.colorScheme.secondaryContainer)
             }
         }
     }
@@ -742,8 +756,8 @@ private fun JuzCardSkeleton() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(26.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, Color(0xFFE8E2D8)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         elevation = AppCardDefaults.interactiveElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -757,7 +771,7 @@ private fun JuzCardSkeleton() {
                 modifier = Modifier
                     .size(74.dp)
                     .clip(RoundedCornerShape(24.dp)),
-                tint = Color(0xFFEAE5DC)
+                tint = MaterialTheme.colorScheme.surfaceVariant
             )
 
             Spacer(modifier = Modifier.width(14.dp))
@@ -766,7 +780,7 @@ private fun JuzCardSkeleton() {
                 modifier = Modifier
                     .width(1.dp)
                     .height(58.dp)
-                    .background(Color(0xFFE9E2D7))
+                    .background(MaterialTheme.colorScheme.outlineVariant)
             )
 
             Spacer(modifier = Modifier.width(14.dp))
@@ -777,7 +791,7 @@ private fun JuzCardSkeleton() {
             ) {
                 AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.5f).height(20.dp))
                 AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.34f).height(15.dp))
-                AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.26f).height(14.dp), tint = Color(0xFFF0E2C7))
+                AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.26f).height(14.dp), tint = MaterialTheme.colorScheme.secondaryContainer)
             }
         }
     }
