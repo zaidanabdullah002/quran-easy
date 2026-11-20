@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.Flow
 
 
 interface QuranRepository {
+    fun observeJuzIndex(): Flow<List<com.zaidan.quraneasy.feature.quran.presentation.model.JuzUiModel>>
+
     fun observeSurahs(): Flow<List<SurahUiModel>>
 
     fun observeSurah(surahNumber: Int,): Flow<List<AyahUiModel>>

@@ -1,5 +1,6 @@
 package com.zaidan.quraneasy.feature.manzil.presentation
 
+import com.zaidan.quraneasy.feature.quran.presentation.audio.QuranAudioRibbon
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -31,7 +32,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import com.zaidan.quraneasy.feature.quran.presentation.audio.ReaderAudioUiState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -110,6 +115,17 @@ private fun ManzilListContent(
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 18.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            item {
+                Surface(color = colors.surfaceContainerLow, shape = RoundedCornerShape(16.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text("SPIRITUAL SHIELD · MANZIL", color = colors.secondary, fontWeight = FontWeight.Bold)
+                        Text("Selected Quranic passages for daily recitation, remembrance, and reflection.",
+                            style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+                        Text("${manzilPassages.size} passages · ${manzilPassages.sumOf { it.endAyah - it.startAyah + 1 }} verses",
+                            style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+            }
             itemsIndexed(manzilPassages) { index, passage ->
                 ManzilPassageCard(
                     number = index + 1,
@@ -131,9 +147,9 @@ private fun ManzilPassageCard(
     Card(
         onClick = hapticClick(onClick = onClick),
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(26.dp),
-        colors = CardDefaults.cardColors(containerColor = colors.surface),
-        border = BorderStroke(1.dp, colors.outline),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceContainerLowest),
+        border = BorderStroke(1.dp, colors.outlineVariant),
         elevation = AppCardDefaults.interactiveElevation(defaultElevation = 2.dp),
     ) {
         Row(
@@ -145,14 +161,14 @@ private fun ManzilPassageCard(
         ) {
             Box(
                 modifier = Modifier
-                    .size(52.dp)
+                    .size(40.dp)
                     .clip(RoundedCornerShape(18.dp))
-                    .background(Color(0xFF1F1F1F)),
+                    .background(colors.primaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = number.toString(),
-                    color = Color.White,
+                    color = colors.onSurface,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                 )
@@ -219,10 +235,17 @@ fun ManzilDetailScreen(
 ) {
     ReaderSettingsEffects()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val audioState by viewModel.audioState.collectAsStateWithLifecycle()
+    LaunchedEffect(uiState) { viewModel.prepareAudio() }
+    DisposableEffect(viewModel) { onDispose(viewModel::stopAudio) }
     ManzilDetailContent(
         uiState = uiState,
         onBackClick = onBackClick,
         onRetry = viewModel::load,
+        audioState = audioState,
+        onToggleAudio = viewModel::toggleAudio,
+        onPreviousAyah = viewModel::previousAyah,
+        onNextAyah = viewModel::nextAyah,
     )
 }
 
@@ -231,6 +254,10 @@ private fun ManzilDetailContent(
     uiState: ManzilUiState,
     onBackClick: () -> Unit,
     onRetry: () -> Unit,
+    audioState: ReaderAudioUiState = ReaderAudioUiState(),
+    onToggleAudio: () -> Unit = {},
+    onPreviousAyah: () -> Unit = {},
+    onNextAyah: () -> Unit = {},
 ) {
     val passage = uiState.passage
     val colors = MaterialTheme.colorScheme
@@ -239,37 +266,44 @@ private fun ManzilDetailContent(
             .fillMaxSize()
             .background(colors.background)
     ) {
-        ManzilTopBar(
-            title = passage?.title ?: "Manzil",
-            subtitle = passage?.verseRange().orEmpty(),
+        if (passage != null) ManzilTopBar(
+            title = "Daily Manzil",
+            subtitle = "Continuous reading",
             onBackClick = onBackClick,
         )
-        when {
-            uiState.isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator(color = colors.primary)
-                }
-            }
-
-            uiState.message.isNotEmpty() -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(vertical = 32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-                ) {
-                    AppErrorView(message = uiState.message)
-                    Button(onClick = onRetry) {
-                        Text("Try again")
+        Box(Modifier.weight(1f)) {
+            when {
+                uiState.isLoading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator(color = colors.primary)
                     }
                 }
-            }
 
-            passage != null -> ManzilReading(passage = passage)
+                uiState.message.isNotEmpty() -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(vertical = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+                    ) {
+                        AppErrorView(message = uiState.message)
+                        Button(onClick = onRetry) {
+                            Text("Try again")
+                        }
+                    }
+                }
+
+                uiState.passages.isNotEmpty() -> ManzilReading(uiState.passages)
+                passage != null -> ManzilReading(listOf(passage))
+            }
+        }
+        val passages = uiState.passages.ifEmpty { listOfNotNull(passage) }
+        if (!uiState.isLoading && uiState.message.isEmpty() && passages.isNotEmpty()) {
+            ManzilAudioControls(passages, audioState, onToggleAudio, onPreviousAyah, onNextAyah)
         }
     }
 }
@@ -280,25 +314,26 @@ private fun ManzilTopBar(
     subtitle: String,
     onBackClick: () -> Unit,
 ) {
+    val colors = MaterialTheme.colorScheme
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF2B2B2B))
-            .statusBarsPadding()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(vertical = 8.dp)
     ) {
         HapticIconButton(onClick = onBackClick) {
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
                 contentDescription = "Back",
-                tint = Color.White,
+                tint = colors.onSurface,
                 modifier = Modifier.size(20.dp),
             )
         }
         Column(modifier = Modifier.padding(end = 16.dp)) {
             Text(
                 text = title,
-                color = Color.White,
+                color = colors.onSurface,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
@@ -307,7 +342,7 @@ private fun ManzilTopBar(
             if (subtitle.isNotEmpty()) {
                 Text(
                     text = subtitle,
-                    color = Color.White.copy(alpha = 0.78f),
+                    color = colors.onSurface.copy(alpha = 0.78f),
                     fontSize = 13.sp,
                 )
             }
@@ -316,69 +351,48 @@ private fun ManzilTopBar(
 }
 
 @Composable
-private fun ManzilReading(passage: ManzilPassageUi) {
+private fun ManzilReading(passages: List<ManzilPassageUi>) {
     val colors = MaterialTheme.colorScheme
-    SelectionContainer {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(PaddingValues(horizontal = 12.dp, vertical = 18.dp))
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(28.dp))
-                    .background(colors.surface)
-                    .border(BorderStroke(1.dp, colors.outline), RoundedCornerShape(28.dp))
-                    .padding(horizontal = 20.dp, vertical = 24.dp),
-            ) {
-                ManzilPassageBlock(passage = passage)
-            }
-        }
-    }
-}
-
-@Composable
-private fun ManzilPassageBlock(passage: ManzilPassageUi) {
     val typography = LocalQuranTypography.current
-    val colors = MaterialTheme.colorScheme
-    val beginsAtFirstAyah = passage.startAyah == 1
-    val isAlFatihah = passage.surahNumber == AlFatihahSurahNumber && beginsAtFirstAyah
-    val showBismillah = beginsAtFirstAyah && passage.surahNumber != AtTawbahSurahNumber
-    val bodyAyahs = if (isAlFatihah) passage.ayahs.drop(1) else passage.ayahs
-
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(
-            text = "${passage.title} · ${passage.verseRange()}",
-            color = colors.onSurface,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-        )
-        if (showBismillah) {
-            BismillahHeader(ayahNumber = if (isAlFatihah) 1 else null)
-        }
-        Text(
-            text = buildReadingText(
-                ayahs = bodyAyahs,
-                removeLeadingBismillah = showBismillah && !isAlFatihah,
-            ),
-            modifier = Modifier.fillMaxWidth(),
-            color = colors.onSurface,
-                fontSize = typography.ayahFontSize,
-            fontWeight = FontWeight.Medium,
-                fontFamily = typography.fontFamily,
-            textAlign = TextAlign.End,
-                lineHeight = typography.ayahLineHeight,
-        )
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            passage.ayahs.forEach { ayah ->
-                Text(
-                    text = "${ayah.numberInSurah}. ${ayah.english}",
-                    color = colors.onSurfaceVariant,
-                    fontSize = 15.sp,
-                    lineHeight = 22.sp,
-                )
+    SelectionContainer {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            item {
+                Surface(color = colors.surfaceContainerLowest, contentColor = colors.onSurface,
+                    border = BorderStroke(1.dp, colors.outlineVariant), shape = RoundedCornerShape(16.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("DAILY MANZIL", color = colors.secondary, style = MaterialTheme.typography.labelLarge)
+                        Text("Continuous recitation", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = colors.onSurface)
+                        Text("${passages.size} passages · ${passages.sumOf { it.ayahs.size }} verses",
+                            color = colors.onSurfaceVariant)
+                    }
+                }
+            }
+            itemsIndexed(passages, key = { index, passage -> "${passage.surahNumber}:${passage.startAyah}:$index" }) { index, passage ->
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "${passage.surahName} · ${passage.verseRange()}",
+                        color = colors.secondary,
+                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                    )
+                    val hasUnnumberedBismillah = passage.startAyah == 1 &&
+                        passage.surahNumber !in setOf(AlFatihahSurahNumber, AtTawbahSurahNumber)
+                    // Al-Fatihah already contains Bismillah as its numbered first ayah.
+                    // Show no additional invocations between continuous Manzil passages.
+                    if (index == 0 && hasUnnumberedBismillah) BismillahHeader(null)
+                    Text(
+                        text = buildReadingText(passage.ayahs, removeLeadingBismillah = hasUnnumberedBismillah),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                        fontFamily = typography.fontFamily,
+                        fontSize = typography.ayahFontSize,
+                        lineHeight = typography.ayahLineHeight,
+                        textAlign = TextAlign.End,
+                        color = colors.onSurface,
+                    )
+                    androidx.compose.material3.HorizontalDivider(color = colors.outlineVariant.copy(alpha = 0.55f))
+                }
             }
         }
     }
@@ -392,7 +406,8 @@ private fun BismillahHeader(ayahNumber: Int?) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(colors.secondaryContainer)
+            .background(colors.surfaceContainerLowest)
+            .border(1.dp, colors.outlineVariant, RoundedCornerShape(20.dp))
             .padding(horizontal = 16.dp, vertical = 14.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -477,3 +492,27 @@ private fun Int.toArabicIndicDigits(): String = toString().map { digit ->
         digit
     }
 }.joinToString(separator = "")
+
+@Composable
+private fun ManzilAudioControls(
+    passages: List<ManzilPassageUi>,
+    state: ReaderAudioUiState,
+    onToggle: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+) {
+    val playlist = passages.toAudioPlaylist()
+    val current = playlist.getOrNull(state.currentIndex) ?: return
+    val passage = passages.first { it.surahNumber == current.surahNumber &&
+        current.ayahNumber in it.startAyah..it.endAyah }
+    QuranAudioRibbon(
+        titleLabel = passage.surahName,
+        positionLabel = "${current.surahNumber}:${current.ayahNumber} · ${state.currentIndex + 1}/${playlist.size}",
+        totalAyahs = playlist.size,
+        audioUiState = state,
+        onToggleAudio = onToggle,
+        onPreviousAyah = onPrevious,
+        onNextAyah = onNext,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+    )
+}

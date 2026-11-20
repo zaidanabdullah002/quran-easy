@@ -8,5 +8,6 @@ data class SurahUiModel(
     val translation: String,
     val verses: Int,
     val arabicName: String,
+    val revelationType: String = "",
     val downloadedState: DownloadState = DownloadState.NOT_DOWNLOADED
 )

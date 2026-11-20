@@ -1,70 +1,50 @@
 package com.zaidan.quraneasy.feature.prayer.presentation
 
-import java.text.SimpleDateFormat
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import kotlinx.coroutines.delay
 import java.util.Calendar
-import java.util.Locale
 
-data class CurrentPrayerProgress(
-    val name: String,
-    val progress: Float,
-    val timeLeftLabel: String
-)
+data class CurrentPrayerProgress(val name: String, val progress: Float, val timeLeftLabel: String)
 
+/** Clock times are interpreted in the same device zone used by the schedule provider. */
 fun calculateCurrentPrayerProgress(
     prayers: List<PrayerRowUi>,
-    calendar: Calendar = Calendar.getInstance()
+    calendar: Calendar = Calendar.getInstance(),
 ): CurrentPrayerProgress? {
-    val trackablePrayers = prayers.filter { it.trackable }
-    if (trackablePrayers.isEmpty() || trackablePrayers.any { it.time == "--:--" }) return null
-
-    val nowMinutes = calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE)
-    val prayerMinutes = trackablePrayers.mapNotNull { prayer ->
-        parsePrayerMinutes(prayer.time)?.let { prayer.name to it }
-    }
-    if (prayerMinutes.isEmpty()) return null
-
-    val nextPrayer = prayerMinutes.firstOrNull { (_, minutes) -> minutes > nowMinutes }
-        ?: prayerMinutes.firstOrNull()
-        ?: return null
-    val currentPrayer = prayerMinutes.lastOrNull { (_, minutes) -> minutes <= nowMinutes }
-        ?: prayerMinutes.lastOrNull()?.let { it.first to (it.second - 24 * 60) }
-        ?: return null
-
-    val currentPrayerName = currentPrayer.first
-    val currentPrayerMinutes = currentPrayer.second
-    val nextPrayerMinutes = nextPrayer.second
-
-    val adjustedNextMinutes = if (nextPrayerMinutes <= currentPrayerMinutes) {
-        nextPrayerMinutes + 24 * 60
-    } else {
-        nextPrayerMinutes
-    }
-    val adjustedNowMinutes = if (nowMinutes < currentPrayerMinutes) {
-        nowMinutes + 24 * 60
-    } else {
-        nowMinutes
-    }
-
-    val segmentDuration = (adjustedNextMinutes - currentPrayerMinutes).coerceAtLeast(1)
-    val remaining = (adjustedNextMinutes - adjustedNowMinutes).coerceAtLeast(0)
-
+    val trackable = prayers.filter { it.trackable }
+    if (trackable.isEmpty()) return null
+    val times = trackable.map { prayer ->
+        val minutes = parsePrayerMinutes(prayer.time) ?: return null
+        prayer.name to minutes
+    }.sortedBy { it.second }
+    val now = calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE)
+    val next = times.firstOrNull { it.second > now }
+        ?: times.first().let { it.first to it.second + 1440 }
+    val previous = times.lastOrNull { it.second <= now }?.second ?: (times.last().second - 1440)
+    val remaining = next.second - now
     return CurrentPrayerProgress(
-        name = currentPrayerName,
-        progress = remaining.toFloat() / segmentDuration.toFloat(),
-        timeLeftLabel = formatDurationLabel(remaining)
+        name = next.first,
+        progress = (remaining.toFloat() / (next.second - previous).coerceAtLeast(1)).coerceIn(0f, 1f),
+        timeLeftLabel = if (remaining >= 60) "${remaining / 60}h ${remaining % 60}m" else "${remaining}m",
     )
 }
 
-private fun parsePrayerMinutes(prayerTime: String): Int? {
-    val parsed = runCatching {
-        SimpleDateFormat("HH:mm", Locale.US).parse(prayerTime)
-    }.getOrNull() ?: return null
-    val calendar = Calendar.getInstance().apply { time = parsed }
-    return calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE)
+@Composable
+fun rememberPrayerProgress(prayers: List<PrayerRowUi>): CurrentPrayerProgress? {
+    val progress by produceState(calculateCurrentPrayerProgress(prayers), prayers) {
+        while (true) {
+            value = calculateCurrentPrayerProgress(prayers)
+            delay(30_000)
+        }
+    }
+    return progress
 }
 
-private fun formatDurationLabel(totalMinutes: Int): String {
-    val hours = totalMinutes / 60
-    val minutes = totalMinutes % 60
-    return if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
+private fun parsePrayerMinutes(time: String): Int? {
+    if (!Regex("\\d{2}:\\d{2}").matches(time)) return null
+    val hour = time.substring(0, 2).toIntOrNull() ?: return null
+    val minute = time.substring(3, 5).toIntOrNull() ?: return null
+    return if (hour in 0..23 && minute in 0..59) hour * 60 + minute else null
 }

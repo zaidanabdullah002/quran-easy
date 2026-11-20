@@ -3,6 +3,10 @@ package com.zaidan.quraneasy.feature.quran.domain.usecase
 import com.zaidan.quraneasy.feature.quran.domain.repository.QuranRepository
 import javax.inject.Inject
 
+class ObserveJuzIndexUseCase @Inject constructor(private val repository: QuranRepository) {
+    operator fun invoke() = repository.observeJuzIndex()
+}
+
 class ObserveSurahsUseCase @Inject constructor(
     private val repository: QuranRepository,
 ) {

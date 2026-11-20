@@ -27,6 +27,24 @@ class QuranRepositoryImpl @Inject constructor(
         private const val TAG = "QuranRepositoryImpl"
     }
 
+    override fun observeJuzIndex() = combine(
+        localDataSource.observeCompleteJuzAyahs(), localDataSource.observeAllSurahs()
+    ) { ayahs, surahs ->
+        val names = surahs.associate { it.number to it.englishName }
+        val groups = ayahs.groupBy { it.juzNumber }
+        (1..30).map { number ->
+            val verses = groups[number].orEmpty()
+            fun reference(ayah: AyahEntity) =
+                "${names[ayah.surahNumber] ?: "Surah"} ${ayah.surahNumber}:${ayah.numberInSurah}"
+            com.zaidan.quraneasy.feature.quran.presentation.model.JuzUiModel(
+                juzNum = number, englishName = "Juz $number", verses = verses.size,
+                rangeDescription = if (verses.isEmpty()) "" else
+                    "${reference(verses.first())} – ${reference(verses.last())}",
+                surahCount = verses.map { it.surahNumber }.distinct().size
+            )
+        }
+    }
+
     override fun observeSurahs(): Flow<List<SurahUiModel>> {
         Log.i(TAG, "observeSurahs: called")
         return localDataSource.observeAllSurahs().map { surah ->
@@ -101,7 +119,7 @@ class QuranRepositoryImpl @Inject constructor(
 
     override suspend fun ensureSurahListDownloaded() {
         val surahCount = localDataSource.getSurahsCount()
-        if (surahCount == 114) {
+        if (surahCount == 114 && localDataSource.missingRevelationCount() == 0) {
             Log.i(TAG, "ensureSurahListDownloaded: already downloaded")
             return
         }
@@ -110,9 +128,10 @@ class QuranRepositoryImpl @Inject constructor(
             val surahs = remoteDataSource.downloadSurahList()
             Log.i(TAG, "ensureSurahListDownloaded: $surahs")
             localDataSource.insertSurahs(surahs)
+            localDataSource.updateRevelationTypes(surahs)
         } catch (e: Exception) {
             Log.e(TAG, "ensureSurahListDownloaded: failed to download , ${e.message}")
-            throw e
+            if (e is kotlinx.coroutines.CancellationException || surahCount != 114) throw e
         }
     }
 

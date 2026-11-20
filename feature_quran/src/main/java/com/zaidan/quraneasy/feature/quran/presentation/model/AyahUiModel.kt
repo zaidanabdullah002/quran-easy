@@ -5,4 +5,6 @@ data class AyahUiModel(
     val numberInSurah: Int,
     val arabicText: String,
     val translation: String? = null,
+    val juzNumber: Int = 0,
+    val pageNumber: Int = 0,
 )

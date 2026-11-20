@@ -1,194 +1,145 @@
 package com.zaidan.quraneasy.feature.tasbih.presentation
 
-import android.annotation.SuppressLint
 import androidx.annotation.RequiresPermission
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Refresh
+import androidx.compose.material.icons.outlined.Spa
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.zaidan.quraneasy.core.theme.AppDimens
+import com.zaidan.quraneasy.core.theme.QuranFont
+
+private data class Dhikr(val title: String, val arabic: String, val meaning: String)
+private val adhkar = listOf(
+    Dhikr("SubhanAllah", "سُبْحَانَ اللَّهِ", "Glory be to Allah"),
+    Dhikr("Alhamdulillah", "الْحَمْدُ لِلَّهِ", "All praise is to Allah"),
+    Dhikr("Allahu Akbar", "اللَّهُ أَكْبَرُ", "Allah is the Greatest"),
+)
 
 @RequiresPermission("android.permission.VIBRATE")
-@Preview(showBackground = true)
-@Composable
-fun TasbihContentPreview() {
-    TasbihContent(
-        uiState = TasbihUiState(),
-        onBackClick = {},
-        onResetClick = {},
-        onSwipeUp = {},
-        onTargetChange = {}
-    )
-}
-@RequiresPermission("android.permission.VIBRATE")
-@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun TasbihContent(
     uiState: TasbihUiState,
     onBackClick: () -> Unit,
     onResetClick: () -> Unit,
     onSwipeUp: () -> Unit,
-    onTargetChange: (Int) -> Unit
+    onTargetChange: (Int) -> Unit,
 ) {
-
-    var showDialog by remember {
-        mutableStateOf(false)
+    val colors = MaterialTheme.colorScheme
+    var showTarget by rememberSaveable { mutableStateOf(false) }
+    var showReset by rememberSaveable { mutableStateOf(false) }
+    var selected by rememberSaveable { mutableIntStateOf(0) }
+    var haptics by rememberSaveable { mutableStateOf(true) }
+    val feedback = LocalHapticFeedback.current
+    val dhikr = adhkar[selected]
+    val increment = {
+        if (haptics) feedback.performHapticFeedback(HapticFeedbackType.LongPress)
+        onSwipeUp()
     }
-
+    val latestIncrement by rememberUpdatedState(increment)
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-
-
+        Modifier.fillMaxSize().background(colors.background)
+            .verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-
-        TasbihTopBar(
-            onBackClick = onBackClick,
-            onResetClick = onResetClick
-        )
-
-        TasbihSwipeArea(
-            onSwipeUp = onSwipeUp,
-            modifier = Modifier.fillMaxSize()
-        ) {
-
-            BoxWithConstraints(
-                modifier = Modifier.fillMaxSize()
-            ) {
-
-                /*
-                 * Responsive breakpoints
-                 */
-                val isCompact = maxHeight < 700.dp
-                val isMedium = maxHeight in 700.dp..820.dp
-
-                /*
-                 * Vertical spacing zones
-                 */
-                val topZone = when {
-                    isCompact -> 170.dp
-                    isMedium -> 190.dp
-                    else -> 210.dp
+        Surface(color = colors.surfaceContainerLow, shape = RoundedCornerShape(16.dp)) {
+            Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Surface(color = colors.primary, shape = RoundedCornerShape(12.dp)) {
+                    Icon(Icons.Outlined.Spa, null, Modifier.padding(12.dp).size(24.dp), tint = colors.onPrimary)
                 }
-
-                val bottomZone = when {
-                    isCompact -> 220.dp
-                    isMedium -> 240.dp
-                    else -> 260.dp
+                Column(Modifier.weight(1f)) {
+                    Text(dhikr.title, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text(dhikr.meaning, style = MaterialTheme.typography.bodySmall)
                 }
-
-                /*
-                 * Available space for ring
-                 */
-                val availableRingHeight =
-                    (maxHeight - topZone - bottomZone)
-                        .coerceAtLeast(220.dp)
-
-                val availableRingWidth =
-                    (maxWidth - 56.dp)
-                        .coerceAtLeast(220.dp)
-
-                /*
-                 * Final responsive ring size
-                 * Added upper limit for tablets/foldables
-                 */
-                val ringSize = minOf(
-                    availableRingHeight,
-                    availableRingWidth,
-                    420.dp
+                Text(dhikr.arabic, fontFamily = QuranFont, fontSize = 24.sp, lineHeight = 40.sp)
+            }
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically) {
+            FilledTonalButton(onClick = { showTarget = true }, colors = ButtonDefaults.filledTonalButtonColors(
+                containerColor = colors.secondaryContainer, contentColor = colors.onSecondaryContainer)) {
+                Text("Target: ${uiState.target}")
+            }
+            IconButton(onClick = { showReset = true }) {
+                Icon(Icons.Outlined.Refresh, "Reset counter", tint = colors.secondary)
+            }
+            FilterChip(selected = haptics, onClick = { haptics = !haptics }, label = {
+                Text(if (haptics) "Haptic On" else "Haptic Off")
+            })
+        }
+        Surface(
+            onClick = increment, color = colors.surfaceContainerLowest,
+            shape = RoundedCornerShape(24.dp), shadowElevation = 1.dp,
+            modifier = Modifier.fillMaxWidth().pointerInput(Unit) {
+                var drag = 0f
+                detectVerticalDragGestures(
+                    onDragStart = { drag = 0f }, onDragCancel = { drag = 0f },
+                    onDragEnd = { if (drag < -64.dp.toPx()) latestIncrement() },
+                    onVerticalDrag = { change, amount -> drag += amount; change.consume() },
                 )
-
-                /*
-                 * Responsive typography
-                 */
-                val countTextSize = when {
-                    isCompact -> 64.sp
-                    isMedium -> 78.sp
-                    else -> 92.sp
+            },
+        ) {
+            Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                Surface(shape = CircleShape, color = colors.surfaceVariant) {
+                    Text("DAILY REMEMBRANCE", Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        style = MaterialTheme.typography.labelMedium)
                 }
-
-                val labelTextSize = when {
-                    isCompact -> 20.sp
-                    isMedium -> 22.sp
-                    else -> 24.sp
-                }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(
-                            horizontal = AppDimens.ScreenPaddingLarge.dp
-                        ),
-                    contentAlignment = Alignment.TopCenter
-                ) {
-
-                    /*
-                     * Counter ring
-                     */
-                    TasbihCounterRing(
-                        count = uiState.count,
-                        target = uiState.target,
-                        modifier = Modifier
-                            .padding(
-                                top = topZone +
-                                        ((availableRingHeight - ringSize) / 2)
-                            )
-                            .size(ringSize),
-                        countTextSize = countTextSize,
-                        labelTextSize = labelTextSize
+                Box(Modifier.size(240.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(
+                        progress = { (uiState.count.toFloat() / uiState.target.coerceAtLeast(1)).coerceIn(0f, 1f) },
+                        modifier = Modifier.fillMaxSize(), color = colors.secondary,
+                        trackColor = colors.surfaceVariant, strokeWidth = 8.dp,
                     )
-
-                    /*
-                     * Top content
-                     */
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(top = 10.dp)
-                    ) {
-
-                        TasbihTargetChip(
-                            target = uiState.target,
-                            onClick = {
-                                showDialog = true
-                            }
-                        )
-
-                        if (showDialog) {
-
-                            TargetPickerDialog(
-                                currentTarget = uiState.target,
-                                onDismiss = {
-                                    showDialog = false
-                                },
-                                onConfirm = {
-                                    showDialog = false
-                                    onTargetChange(it)
-                                }
-                            )
-                        }
-
-                        Spacer(
-                            modifier = Modifier.height(4.dp)
-                        )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(uiState.count.toString(), fontSize = 64.sp, fontWeight = FontWeight.Bold)
+                        Text("of ${uiState.target}", color = colors.onSurfaceVariant)
+                    }
+                }
+                Text(if (uiState.count >= uiState.target) "Target reached · Alhamdulillah" else "Tap here or swipe up to count",
+                    style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center)
+            }
+        }
+        Text("COMMON ADHKAR", style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            adhkar.forEachIndexed { index, item ->
+                Surface(onClick = { selected = index }, modifier = Modifier.weight(1f),
+                    color = if (selected == index) colors.secondaryContainer else colors.surfaceContainerLow,
+                    shape = RoundedCornerShape(12.dp)) {
+                    Column(Modifier.padding(10.dp)) {
+                        Text(item.title, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text(item.arabic, Modifier.fillMaxWidth().padding(top = 8.dp),
+                            fontFamily = QuranFont, fontSize = 22.sp, lineHeight = 36.sp,
+                            textAlign = TextAlign.End, color = colors.secondary)
                     }
                 }
             }
         }
     }
+    if (showTarget) TargetPickerDialog(uiState.target, { showTarget = false }) {
+        showTarget = false
+        onTargetChange(it)
+    }
+    if (showReset) AlertDialog(onDismissRequest = { showReset = false },
+        title = { Text("Reset counter?") }, text = { Text("Your current count will return to zero.") },
+        confirmButton = { TextButton(onClick = { showReset = false; onResetClick() }) { Text("Reset") } },
+        dismissButton = { TextButton(onClick = { showReset = false }) { Text("Cancel") } })
 }

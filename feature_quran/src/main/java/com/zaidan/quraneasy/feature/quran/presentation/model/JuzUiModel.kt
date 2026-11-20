@@ -4,4 +4,6 @@ data class JuzUiModel(
     val juzNum: Int,
     val englishName: String,
     val verses: Int,
+    val rangeDescription: String = "",
+    val surahCount: Int = 0,
 )

@@ -33,6 +33,7 @@ android {
 }
 
 dependencies {
+    testImplementation(libs.junit)
     implementation(project(":core"))
     implementation(project(":feature_quran"))
 

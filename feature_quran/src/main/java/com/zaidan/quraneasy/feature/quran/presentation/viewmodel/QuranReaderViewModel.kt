@@ -5,21 +5,29 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zaidan.quraneasy.feature.quran.domain.usecase.QuranUseCasesData
 import com.zaidan.quraneasy.feature.quran.presentation.ReaderType
+import com.zaidan.quraneasy.feature.quran.presentation.audio.QuranAyahAudioPlayer
+import com.zaidan.quraneasy.feature.quran.presentation.audio.AyahAudioItem
 import com.zaidan.quraneasy.feature.quran.presentation.model.AyahUiState
+import com.zaidan.quraneasy.feature.quran.presentation.model.AyahUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
+import com.zaidan.quraneasy.core.settings.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class QuranReaderViewModel @Inject constructor(
-    private val quranUseCases: QuranUseCasesData
+    private val quranUseCases: QuranUseCasesData,
+    private val audioPlayer: QuranAyahAudioPlayer,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     companion object {
@@ -28,18 +36,44 @@ class QuranReaderViewModel @Inject constructor(
 
     private val _ayahUiState = MutableStateFlow(AyahUiState(isLoading = true))
     val ayahUiState: StateFlow<AyahUiState> = _ayahUiState.asStateFlow()
+    val audioUiState = audioPlayer.state
+    val surahs = quranUseCases.observeSurahs()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     private var bookmarkJob: Job? = null
     private var currentReaderType: Int? = null
     private var currentItemNumber: Int? = null
 
+    fun setAudioPlaylist(ayahs: List<AyahUiModel>) = audioPlayer.setPlaylist(
+        ayahs.map { AyahAudioItem(it.surahNumber, it.numberInSurah) }
+    )
+
+    fun toggleAudioPlayback() = audioPlayer.togglePlayback()
+
+    fun playAyahAtIndex(index: Int) = audioPlayer.playIndex(index)
+
+    fun playPreviousAyah() = audioPlayer.previous()
+
+    fun playNextAyah() = audioPlayer.next()
+
+    fun stopAudio() = audioPlayer.stop()
+
+    fun cycleTextScale() {
+        viewModelScope.launch {
+            val currentScale = settingsRepository.settings.first().quranTextScale
+            val nextScale = if (currentScale >= 1.29f) 0.9f else (currentScale + 0.1f)
+            settingsRepository.setQuranTextScale(nextScale)
+        }
+    }
+
     fun loadAyahWithSurahNumber(surahNumber: Int) {
+        audioPlayer.setPlaylist(emptyList())
         Log.i(TAG, "loadAyahWithSurahNumber: $surahNumber")
         currentReaderType = ReaderType.SURAH.ordinal
         currentItemNumber = surahNumber
         observeBookmarkState()
         viewModelScope.launch {
             _ayahUiState.update {
-                it.copy(isLoading = true, message = "")
+                it.copy(isLoading = true, isReady = false, ayahs = emptyList(), message = "")
             }
 
             runCatching {
@@ -72,13 +106,14 @@ class QuranReaderViewModel @Inject constructor(
     }
 
     fun loadAyahWithJuzNumber(juzNumber: Int) {
+        audioPlayer.setPlaylist(emptyList())
         Log.i(TAG, "loadAyahWithJuzNumber: $juzNumber")
         currentReaderType = ReaderType.JUZ.ordinal
         currentItemNumber = juzNumber
         observeBookmarkState()
         viewModelScope.launch {
             _ayahUiState.update {
-                it.copy(isLoading = true, message = "")
+                it.copy(isLoading = true, isReady = false, ayahs = emptyList(), message = "")
             }
 
             runCatching {
@@ -161,5 +196,10 @@ class QuranReaderViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    override fun onCleared() {
+        audioPlayer.release()
+        super.onCleared()
     }
 }

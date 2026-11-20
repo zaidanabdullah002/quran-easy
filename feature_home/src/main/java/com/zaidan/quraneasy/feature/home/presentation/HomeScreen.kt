@@ -1,7 +1,6 @@
 package com.zaidan.quraneasy.feature.home.presentation
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -11,10 +10,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -22,8 +20,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zaidan.quraneasy.feature.feeling.presentation.Feeling
+import com.zaidan.quraneasy.feature.feeling.presentation.FeelingVerseUiModel
 import com.zaidan.quraneasy.feature.feeling.presentation.HomeFeelingViewModel
-import com.zaidan.quraneasy.feature.feeling.presentation.carousel.FeelingCarousel
 import com.zaidan.quraneasy.feature.prayer.presentation.PrayerTrackerCardFeature
 import com.zaidan.quraneasy.feature.prayer.presentation.viewmodel.PrayerViewModel
 
@@ -53,6 +51,7 @@ fun HomeScreen(
     onSettingsClick: () -> Unit = {}
 ) {
     val feelings by feelingViewModel.feelings.collectAsStateWithLifecycle()
+    val spotlights by feelingViewModel.spotlights.collectAsStateWithLifecycle()
     HomeScreen(
         onReadQuranClick = onReadQuranClick,
         onTasbihClick = onTasbihClick,
@@ -61,6 +60,8 @@ fun HomeScreen(
         onSettingsClick = onSettingsClick,
         onFeelingClick = onFeelingClick,
         feelings = feelings,
+        spotlights = spotlights,
+        onLoadSpotlight = feelingViewModel::loadSpotlight,
         prayerViewModel = prayerViewModel
     )
 }
@@ -74,53 +75,60 @@ fun HomeScreen(
     onFeelingClick: (Feeling) -> Unit,
     feelings: List<Feeling>,
     prayerViewModel: PrayerViewModel,
+    spotlights: Map<String, FeelingVerseUiModel> = emptyMap(),
+    onLoadSpotlight: (String) -> Unit = {},
     onSettingsClick: () -> Unit = {}
-) {
-    Column(
+) = HomeTheme {
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        verticalArrangement = Arrangement.Top
+            .background(SanctuaryColors.Background)
     ) {
-        HomeHeader(onAboutClick = onAboutClick, onSettingsClick = onSettingsClick)
-
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .padding(bottom = 16.dp)
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
+            HomeHeader(
+                onAboutClick = onAboutClick,
+                onSettingsClick = onSettingsClick
+            )
+
             FeatureCardsSection(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp),
-                onReadQuranClick = onReadQuranClick,
-                onTasbihClick = onTasbihClick,
-                onManzilClick = onManzilClick
-            )
-            Spacer(Modifier.height(16.dp))
-
-            Text(
-                "How are you feeling today?",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(horizontal = 20.dp)
+                onReadQuranClick = onReadQuranClick
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            FeelingCarousel(
+            SanctuarySection(
                 feelings = feelings,
-                onClick = onFeelingClick
+                spotlights = spotlights,
+                onLoadSpotlight = onLoadSpotlight,
+                onFeelingClick = onFeelingClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
             )
 
-            Spacer(Modifier.height(24.dp))
-            Box(modifier = Modifier.padding(horizontal = 20.dp)) {
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+            ) {
                 PrayerTrackerCardFeature(
-                    prayerViewModel = prayerViewModel
+                    prayerViewModel = prayerViewModel,
+                    compact = true
                 )
             }
-            HomeFooter()
+
+            Spacer(modifier = Modifier.height(20.dp))
         }
+
     }
 }

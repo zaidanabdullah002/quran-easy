@@ -49,7 +49,8 @@ fun SurahTitleDto.toEntity(): SurahEntity{
         englishName = englishName,
         arabicName = name,
         translation = englishNameTranslation,
-        ayahCount = numberOfAyahs
+        ayahCount = numberOfAyahs,
+        revelationType = revelationType
     )
 }
 
@@ -60,6 +61,7 @@ fun SurahEntity.toUiModel() : SurahUiModel {
         arabicName = arabicName,
         translation = translation,
         verses = ayahCount,
+        revelationType = revelationType,
         downloadedState = downloadState
     )
 }
@@ -69,7 +71,9 @@ fun AyahEntity.toUiModel() : AyahUiModel{
         surahNumber = surahNumber,
         numberInSurah = numberInSurah,
         arabicText = arabicText,
-        translation = ""
+        translation = "",
+        juzNumber = juzNumber,
+        pageNumber = pageNumber
     )
 }
 

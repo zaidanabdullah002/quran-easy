@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AyahDao {
+    @Query("SELECT * FROM ayah WHERE juzNumber IN (SELECT juzNumber FROM downloaded_juz) ORDER BY surahNumber, numberInSurah")
+    fun observeCompleteJuzAyahs(): Flow<List<AyahEntity>>
+
 
     @Query("SELECT * FROM ayah WHERE surahNumber = :surahNumber ORDER BY numberInSurah")
     fun observeAyahBySurah(surahNumber: Int): Flow<List<AyahEntity>>

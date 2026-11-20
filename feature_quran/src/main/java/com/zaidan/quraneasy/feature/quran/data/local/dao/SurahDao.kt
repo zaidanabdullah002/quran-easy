@@ -20,6 +20,12 @@ interface SurahDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertSurah(surah: SurahEntity)
 
+    @Query("SELECT COUNT(*) FROM surahs WHERE revelationType = ''")
+    suspend fun missingRevelationCount(): Int
+
+    @Query("UPDATE surahs SET revelationType = :type WHERE number = :number")
+    suspend fun updateRevelationType(number: Int, type: String)
+
     @Query("SELECT COUNT(*) FROM surahs")
     suspend fun getSurahsCount(): Int
 

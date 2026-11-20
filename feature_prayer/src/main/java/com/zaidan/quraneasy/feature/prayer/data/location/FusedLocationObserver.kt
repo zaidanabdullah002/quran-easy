@@ -32,22 +32,22 @@ class FusedLocationObserver @Inject constructor(
         val request = LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, 60_000L)
             .setMinUpdateDistanceMeters(500f)
             .build()
-        Log.d(TAG, "observeLocationUpdates(): request=$request")
+        Log.d(TAG, "observeLocationUpdates(): request configuration initialized")
 
         val callback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
-                Log.d(TAG, "onLocationResult(): result=$result")
+                Log.d(TAG, "onLocationResult(): received update")
                 result.lastLocation?.let {
-                    Log.i(TAG, "onLocationResult(): emitting lat=${it.latitude}, long=${it.longitude}")
+                    Log.i(TAG, "onLocationResult(): emitting location update")
                     trySend(it).isSuccess
                 }
             }
         }
 
         client.lastLocation.addOnSuccessListener { location ->
-            Log.d(TAG, "observeLocationUpdates(): lastLocation success location=$location")
+            Log.d(TAG, "observeLocationUpdates(): lastLocation success")
             location?.let {
-                Log.i(TAG, "observeLocationUpdates(): emitting cached lat=${it.latitude}, long=${it.longitude}")
+                Log.i(TAG, "observeLocationUpdates(): emitting cached location")
                 trySend(it).isSuccess
             }
         }.addOnFailureListener { error ->

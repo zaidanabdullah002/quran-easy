@@ -12,5 +12,7 @@ data class SurahEntity(
     val arabicName: String,
     val translation: String,
     val ayahCount: Int,
+    @androidx.room.ColumnInfo(defaultValue = "''")
+    val revelationType: String = "",
     val downloadState: DownloadState = DownloadState.NOT_DOWNLOADED
 )

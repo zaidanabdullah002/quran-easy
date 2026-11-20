@@ -12,11 +12,10 @@ fun NavGraphBuilder.manzilGraph(
     navController: NavHostController,
 ) {
     composable(Screen.Manzil.route) {
-        ManzilListScreen(
+        val viewModel: ManzilViewModel = hiltViewModel()
+        ManzilDetailScreen(
             onBackClick = { navController.popBackStack() },
-            onPassageClick = { index ->
-                navController.navigate(Screen.ManzilPassage.route(index))
-            },
+            viewModel = viewModel,
         )
     }
 

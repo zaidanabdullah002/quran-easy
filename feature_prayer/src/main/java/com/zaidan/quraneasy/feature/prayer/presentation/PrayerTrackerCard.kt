@@ -104,7 +104,10 @@ fun PrayerTrackerCardPreview() {
 }
 
 @Composable
-fun PrayerTrackerCardFeature(prayerViewModel: PrayerViewModel) {
+fun PrayerTrackerCardFeature(
+    prayerViewModel: PrayerViewModel,
+    compact: Boolean = false
+) {
     val uiState by prayerViewModel.uiStateFlow.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
     val activity = LocalContext.current.findActivity()
@@ -134,6 +137,34 @@ fun PrayerTrackerCardFeature(prayerViewModel: PrayerViewModel) {
             lifecycleOwner.lifecycle.removeObserver(observer)
             prayerViewModel.stopObservingLocation()
         }
+    }
+
+    if (compact) {
+        CompactPrayerTrackerCard(
+            uiState = uiState,
+            onTogglePrayer = { index, isCompleted ->
+                if (isCompleted) {
+                    feedbackController.playUncheckFeedback()
+                } else {
+                    feedbackController.playCheckFeedback()
+                }
+                prayerViewModel.togglePrayer(index)
+            },
+            onCardClick = if (uiState.cardMode == PrayerCardMode.NoPermission) {
+                {
+                    hasRequestedLocationPermission = true
+                    permissionLauncher.launch(
+                        arrayOf(
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                        )
+                    )
+                }
+            } else {
+                null
+            }
+        )
+        return
     }
 
     PrayerTrackerCard(
@@ -232,7 +263,7 @@ fun PrayerTrackerCard(
         0f
     }
     val cardAlpha = if (canTogglePrayers) 1f else 0.55f
-    val currentPrayerProgress = remember(prayers) { calculateCurrentPrayerProgress(prayers) }
+    val currentPrayerProgress = rememberPrayerProgress(prayers)
     val isAllCompleted = trackablePrayers.size == 5 && trackablePrayers.all { it.completed }
     val celebrationState = rememberPrayerCompletionCelebrationState(
         isAllCompleted = isAllCompleted,

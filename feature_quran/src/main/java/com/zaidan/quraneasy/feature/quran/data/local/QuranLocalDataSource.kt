@@ -15,6 +15,14 @@ class QuranLocalDataSource @Inject constructor(
     private val bookmarkDao: BookmarkDao,
     private val surahDao: SurahDao,
 ) {
+    suspend fun missingRevelationCount() = surahDao.missingRevelationCount()
+
+    suspend fun updateRevelationTypes(surahs: List<SurahEntity>) {
+        surahs.forEach { surahDao.updateRevelationType(it.number, it.revelationType) }
+    }
+
+    fun observeCompleteJuzAyahs() = ayahDao.observeCompleteJuzAyahs()
+
     // Ayah
     fun observeAyahsBySurah(
         surahNumber: Int,

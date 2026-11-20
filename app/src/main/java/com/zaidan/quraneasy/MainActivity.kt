@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Scaffold
@@ -36,6 +37,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.zaidan.quraneasy.feature.home.presentation.SanctuaryBottomNavigation
+import com.zaidan.quraneasy.feature.home.presentation.SanctuaryAppHeader
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.zaidan.quraneasy.core.navigation.Screen
 import com.zaidan.quraneasy.core.settings.AppSettings
@@ -94,20 +98,61 @@ class MainActivity : ComponentActivity() {
             val resolvedSettings = appSettings ?: return@setContent
             settingsReady = true
             val navController = rememberNavController()
+            val backStackEntry by navController.currentBackStackEntryAsState()
+            val currentRoute = backStackEntry?.destination?.route ?: Screen.Home.route
+            val mainRoutes = setOf(Screen.Home.route, Screen.Quran.route, Screen.Tasbih.route, Screen.Manzil.route, Screen.Settings.route)
+            val navigateTab: (Screen) -> Unit = { screen ->
+                if (navController.currentDestination?.route != screen.route) {
+                    if (screen == Screen.Home) {
+                        // Home is the root, not a saved tab stack to restore.
+                        navController.popBackStack(Screen.Home.route, inclusive = false, saveState = true)
+                    } else {
+                        navController.navigate(screen.route) {
+                            popUpTo(Screen.Home.route) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                }
+            }
             var showLaunchAnimation by rememberSaveable {
                 mutableStateOf(savedInstanceState == null)
             }
 
-            QuranEasyTheme(settings = resolvedSettings) {
+            QuranEasyTheme(settings = resolvedSettings, route = currentRoute) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
-                        contentWindowInsets = WindowInsets(0)
+                        contentWindowInsets = WindowInsets(0),
+                        topBar = {
+                            if (currentRoute in mainRoutes && currentRoute != Screen.Home.route) {
+                                SanctuaryAppHeader(
+                                    section = when (currentRoute) {
+                                        Screen.Quran.route -> "Read Quran"
+                                        Screen.Tasbih.route -> "Tasbih Counter"
+                                        Screen.Manzil.route -> "Daily Manzil"
+                                        else -> "Settings"
+                                    },
+                                    onBackClick = { onBackPressedDispatcher.onBackPressed() },
+                                    onAboutClick = { navController.navigate(Screen.About.route) { launchSingleTop = true } },
+                                )
+                            }
+                        },
+                        bottomBar = {
+                            if (currentRoute in mainRoutes) SanctuaryBottomNavigation(
+                                onHomeClick = { navigateTab(Screen.Home) },
+                                onReadQuranClick = { navigateTab(Screen.Quran) },
+                                onTasbihClick = { navigateTab(Screen.Tasbih) },
+                                onManzilClick = { navigateTab(Screen.Manzil) },
+                                onSettingsClick = { navigateTab(Screen.Settings) },
+                                selectedRoute = currentRoute,
+                            )
+                        },
                     ) { innerPadding ->
                         NavHost(
                             navController = navController,
                             startDestination = Screen.Home.route,
-                            modifier = Modifier.padding(innerPadding)
+                            modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding)
                         ) {
                             homeGraph(navController)
                             quranGraph(navController)

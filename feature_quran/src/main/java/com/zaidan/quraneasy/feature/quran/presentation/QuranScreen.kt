@@ -1,93 +1,56 @@
 package com.zaidan.quraneasy.feature.quran.presentation
 
-
-import android.util.Log
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.outlined.DateRange
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.KeyboardArrowLeft
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
+import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.BookmarkRemove
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.GridView
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zaidan.quraneasy.core.theme.LocalAppSettings
-import com.zaidan.quraneasy.core.ui.AppCardDefaults
-import com.zaidan.quraneasy.core.ui.HapticIconButton
-import com.zaidan.quraneasy.core.ui.hapticClick
-import com.zaidan.quraneasy.core.ui.AppErrorView
+import com.zaidan.quraneasy.core.theme.QuranFont
+import com.zaidan.quraneasy.core.theme.SanctuaryTypography
 import com.zaidan.quraneasy.core.ui.AppSkeletonBlock
-import com.zaidan.quraneasy.core.ui.AppSkeletonLine
-import com.zaidan.quraneasy.feature.quran.presentation.model.QuranBookmarkUiModel
-import com.zaidan.quraneasy.feature.quran.presentation.model.JuzUiModel
-import com.zaidan.quraneasy.feature.quran.presentation.model.QuranUiState
-import com.zaidan.quraneasy.feature.quran.presentation.model.SurahUiModel
-import com.zaidan.quraneasy.feature.quran.presentation.model.dummyData.juzList
-import com.zaidan.quraneasy.feature.quran.presentation.model.dummyData.surahList
+import com.zaidan.quraneasy.core.ui.HapticIconButton
+import com.zaidan.quraneasy.core.ui.QuranEasyActionSurface
+import com.zaidan.quraneasy.core.ui.QuranEasySurface
+import com.zaidan.quraneasy.feature.quran.presentation.model.*
 import com.zaidan.quraneasy.feature.quran.presentation.viewmodel.QuranViewModel
-import my.nanihadesuka.compose.LazyColumnScrollbar
-
-private val toggleHeight = 60.dp
-private val iconSize = 20.dp
-private val titleFontSize = 18.sp
-
-private val topSectionPadding = 2.dp
-
-@Preview(showBackground = true)
-@Composable
-fun QuranScreenPreview() {
-    QuranScreenContent(
-        QuranUiState(
-            selectedTab = 0,
-            isLoading = false,
-            isReady = true,
-            surahs = surahList,
-            juzs = juzList
-        ),
-        onBackClick = {},
-        onSurahClick = {},
-        onJuzClick = {},
-        selectTab = {}
-    )
-}
+import java.text.DateFormat
+import java.util.Date
 
 @Composable
 fun QuranScreen(
@@ -96,703 +59,339 @@ fun QuranScreen(
     onJuzClick: (Int) -> Unit,
     quranViewModel: QuranViewModel
 ) {
-    val uiState = quranViewModel.uiState.collectAsStateWithLifecycle().value
-    QuranScreenContent(
-        uiState = uiState,
-        selectTab = quranViewModel::selectTab,
-        onBackClick = onBackClick,
-        onSurahClick = onSurahClick,
-        onJuzClick = onJuzClick
-    )
+    val state by quranViewModel.uiState.collectAsStateWithLifecycle()
+    MaterialTheme(typography = SanctuaryTypography) {
+        QuranScreenContent(state, onBackClick, onSurahClick, onJuzClick,
+            quranViewModel::selectTab, quranViewModel::retry, quranViewModel::removeBookmark)
+    }
 }
 
 @Composable
-private fun QuranScreenContent(
-    uiState: QuranUiState,
+internal fun QuranScreenContent(
+    state: QuranUiState,
     onBackClick: () -> Unit,
     onSurahClick: (Int) -> Unit,
     onJuzClick: (Int) -> Unit,
-    selectTab: (Int) -> Unit
+    selectTab: (Int) -> Unit,
+    retry: () -> Unit,
+    removeBookmark: (QuranBookmarkUiModel) -> Unit
 ) {
-    val TAG = "QuranScreenContent"
-    Log.i(TAG, "uiState : $uiState")
-    val surahs = uiState.surahs
-    val juz = uiState.juzs
-    val selectedTab = uiState.selectedTab
-    val surahListState = rememberLazyListState()
-    val juzListState = rememberLazyListState()
+    var query by rememberSaveable { mutableStateOf("") }
+    var filter by rememberSaveable { mutableStateOf(ChapterFilter.ALL) }
     val colors = MaterialTheme.colorScheme
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colors.background)
-    ) {
-        TopSection(
-            selectedTab = selectedTab,
-            onTabSelected = { selectTab(it) },
-            onBackClick = onBackClick
-        )
-
-        if (uiState.isLoading) {
-            when (selectedTab) {
-                ReaderType.JUZ.ordinal -> QuranJuzListSkeleton()
-                else -> QuranSurahListSkeleton()
+    val surahs = state.surahs.filter { matchesSurah(it, query, filter) }
+    val juzs = state.juzs.filter {
+        query.isBlank() || "${it.englishName} ${it.rangeDescription}".contains(query.trim(), true) ||
+            it.juzNum.toString().startsWith(query.trim())
+    }
+    val bookmarks = state.bookmarks.filter { matchesBookmark(it, query) }
+    val surahScroll = rememberLazyListState()
+    val juzScroll = rememberLazyListState()
+    val bookmarkScroll = rememberLazyListState()
+    LaunchedEffect(query, filter) {
+        surahScroll.scrollToItem(0)
+        juzScroll.scrollToItem(0)
+        bookmarkScroll.scrollToItem(0)
+    }
+    Column(Modifier.fillMaxSize().background(colors.background)) {
+        TextField(value = query, onValueChange = { query = it }, singleLine = true,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
+                .border(1.dp, colors.outlineVariant, RoundedCornerShape(12.dp)),
+            placeholder = { Text(when (state.selectedTab) {
+                1 -> "Search Juz by number or chapter"
+                2 -> "Search your bookmarks"
+                else -> "Search Surah by name or number"
+            }, fontSize = 14.sp) },
+            leadingIcon = { Icon(Icons.Outlined.Search, null) },
+            trailingIcon = { if (query.isNotEmpty()) HapticIconButton(onClick = { query = "" }) {
+                Icon(Icons.Outlined.Close, "Clear search")
+            } },
+            shape = RoundedCornerShape(12.dp),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = colors.surfaceContainerLowest,
+                unfocusedContainerColor = colors.surfaceContainerLowest,
+                focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent))
+        Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp).fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp)).background(colors.surfaceContainerLowest)
+            .border(1.dp, colors.outlineVariant, RoundedCornerShape(12.dp)).padding(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            BrowserTab("Surah", state.surahs.size, Icons.AutoMirrored.Outlined.MenuBook,
+                state.selectedTab == 0, { selectTab(0) }, Modifier.weight(1f))
+            BrowserTab("Juz", state.juzs.size, Icons.Outlined.GridView,
+                state.selectedTab == 1, { selectTab(1) }, Modifier.weight(.85f))
+            BrowserTab("Bookmarks", state.bookmarks.size, Icons.Outlined.BookmarkBorder,
+                state.selectedTab == 2, { selectTab(2) }, Modifier.weight(1.45f))
+        }
+        if (state.message.isNotEmpty()) {
+            QuranEasySurface(modifier = Modifier.padding(horizontal = 16.dp), border = null,
+                containerColor = colors.errorContainer, contentColor = colors.onErrorContainer) {
+                Text(state.message, style = MaterialTheme.typography.bodyMedium)
+                TextButton(onClick = retry, enabled = !state.isLoading) { Text("Retry") }
             }
-        } else if (uiState.message.isNotEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                AppErrorView(message = uiState.message)
+        }
+        if (state.isLoading && state.surahs.isNotEmpty()) {
+            LinearProgressIndicator(Modifier.fillMaxWidth())
+        }
+        if (!state.isLoading && state.message.isNotEmpty() && state.surahs.isEmpty()) return@Column
+        if (state.isLoading && state.surahs.isEmpty()) {
+            LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(6) { AppSkeletonBlock(Modifier.fillMaxWidth().height(96.dp).clip(RoundedCornerShape(16.dp))) }
             }
-        } else {
-            when (selectedTab) {
-                ReaderType.SURAH.ordinal -> LazyColumnScrollbar(
-                    state = surahListState,
-                    settings = quranScrollbarSettings()
-                ) {
-                    LazyColumn(
-                        state = surahListState,
-                        contentPadding = PaddingValues(
-                            horizontal = 12.dp,
-                            vertical = 18.dp
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(surahs) { surah ->
-                            SurahCard(
-                                surah = surah,
-                                onClick = { onSurahClick(surah.number) }
-                            )
+        } else when (state.selectedTab) {
+            0 -> {
+                Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ChapterFilter.entries.forEach { choice ->
+                        val count = state.surahs.count { choice.accepts(it) }
+                        FilterChip(shape = RoundedCornerShape(50.dp), selected = filter == choice, onClick = { filter = choice },
+                            enabled = choice == ChapterFilter.ALL || state.surahs.any { it.revelationType.isNotEmpty() },
+                            label = { Text(if (choice == ChapterFilter.ALL) choice.label else "${choice.label} ($count)") },
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = colors.surfaceContainer,
+                                labelColor = colors.onSurface,
+                                selectedContainerColor = if (colors.background.luminance() < .2f) colors.secondary else colors.primary,
+                                selectedLabelColor = if (colors.background.luminance() < .2f) colors.onSecondary else colors.onPrimary,
+                                disabledContainerColor = colors.surfaceContainer.copy(alpha = .45f),
+                                disabledLabelColor = colors.onSurfaceVariant.copy(alpha = .55f),
+                            ),
+                            border = FilterChipDefaults.filterChipBorder(
+                                enabled = true,
+                                selected = filter == choice,
+                                borderColor = colors.outlineVariant,
+                                selectedBorderColor = Color.Transparent,
+                                borderWidth = 1.dp,
+                                selectedBorderWidth = 0.dp,
+                            ))
+                    }
+                }
+                if (state.surahs.isNotEmpty() && state.surahs.any { it.revelationType.isEmpty() }) {
+                    Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("Chapter details unavailable offline", Modifier.weight(1f),
+                            fontSize = 12.sp, color = colors.onSurfaceVariant)
+                        TextButton(onClick = retry, enabled = !state.isLoading) { Text("Retry") }
+                    }
+                }
+                LazyColumn(state = surahScroll, contentPadding = PaddingValues(16.dp, 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)) {
+                    if (surahs.isEmpty()) item {
+                        BrowserEmpty("No chapters found", "Try another name or number, or choose All Chapters.") {
+                            query = ""; filter = ChapterFilter.ALL
                         }
                     }
+                    items(surahs, key = { it.number }) { surah ->
+                        SurahCard(surah, { onSurahClick(surah.number) })
+                    }
                 }
-
-                ReaderType.JUZ.ordinal -> LazyColumnScrollbar(
-                    state = juzListState,
-                    settings = quranScrollbarSettings()
-                ) {
-                    LazyColumn(
-                        state = juzListState,
-                        contentPadding = PaddingValues(
-                            horizontal = 12.dp,
-                            vertical = 18.dp
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(juz) { juz ->
-                            JuzCard(
-                                juz = juz,
-                                onClick = { onJuzClick(juz.juzNum) }
-                            )
+            }
+            1 -> LazyColumn(state = juzScroll, contentPadding = PaddingValues(16.dp, 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)) {
+                item {
+                    QuranEasySurface(border = null, containerColor = colors.surfaceContainer) {
+                        Text("${state.juzs.size} Portions", fontWeight = FontWeight.Bold)
+                        Text("Read one Juz each day to complete the Quran in 30 days.",
+                            style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+                    }
+                }
+                if (juzs.isEmpty()) item { BrowserEmpty("No Juz found", "Try a different number or chapter name.") { query = "" } }
+                items(juzs, key = { it.juzNum }) { juz -> JuzCard(juz, { onJuzClick(juz.juzNum) }) }
+            }
+            else -> LazyColumn(state = bookmarkScroll, contentPadding = PaddingValues(16.dp, 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)) {
+                if (bookmarks.isEmpty()) item {
+                    BrowserEmpty(if (state.bookmarks.isEmpty()) "No Bookmarks Yet" else "No matching bookmarks",
+                        if (state.bookmarks.isEmpty()) "Use the bookmark control while reading a Surah or Juz to save it here."
+                        else "Try another name or number.",
+                        if (state.bookmarks.isEmpty()) "Start Reading Quran" else "Clear search") {
+                        query = ""
+                        if (state.bookmarks.isEmpty()) { filter = ChapterFilter.ALL; selectTab(0) }
+                    }
+                }
+                items(bookmarks, key = { it.id }) { bookmark ->
+                    BookmarkCard(bookmark, modifier = Modifier.animateItem(fadeOutSpec = tween(250), placementSpec = tween(250)), onClick = {
+                        when (bookmark) {
+                            is QuranBookmarkUiModel.SurahBookmark -> onSurahClick(bookmark.surahNumber)
+                            is QuranBookmarkUiModel.JuzBookmark -> onJuzClick(bookmark.juzNumber)
                         }
+                    }, onRemove = { removeBookmark(bookmark) })
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BrowserTab(title: String, count: Int, icon: ImageVector, active: Boolean,
+    onClick: () -> Unit, modifier: Modifier) {
+    val colors = MaterialTheme.colorScheme
+    val background by animateColorAsState(if (active) colors.secondary else Color.Transparent,
+        tween(200), label = "Tab selection")
+    val foreground = if (active) colors.onSecondary else colors.onSurfaceVariant
+    QuranEasyActionSurface(onClick, modifier.heightIn(min = 48.dp).semantics { selected = active; role = Role.Tab },
+        shape = RoundedCornerShape(8.dp), border = null, containerColor = background,
+        contentColor = foreground, contentPadding = PaddingValues(horizontal = 2.dp, vertical = 0.dp)) {
+        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center) {
+            Icon(icon, null, Modifier.size(14.dp))
+            Spacer(Modifier.width(3.dp))
+            Text(title, fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+            Spacer(Modifier.width(3.dp))
+            Text("$count", Modifier.clip(RoundedCornerShape(20.dp))
+                .background(foreground.copy(alpha = .12f)).padding(horizontal = 4.dp),
+                fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+private enum class ChapterEmphasis { DEFAULT, OPENING, HEART, NIGHT }
+
+private fun chapterEmphasis(number: Int) = when (number) {
+    1 -> ChapterEmphasis.OPENING
+    36 -> ChapterEmphasis.HEART
+    67 -> ChapterEmphasis.NIGHT
+    else -> ChapterEmphasis.DEFAULT
+}
+
+@Composable
+private fun NumberBadge(number: Int, emphasis: ChapterEmphasis = ChapterEmphasis.DEFAULT) {
+    val colors = MaterialTheme.colorScheme
+    val background = when (emphasis) {
+        ChapterEmphasis.OPENING -> colors.secondaryContainer
+        ChapterEmphasis.HEART -> colors.secondary
+        ChapterEmphasis.NIGHT -> colors.tertiaryContainer.copy(alpha = .7f)
+        ChapterEmphasis.DEFAULT -> colors.surfaceContainer
+    }
+    val foreground = when (emphasis) {
+        ChapterEmphasis.OPENING -> colors.onSecondaryContainer
+        ChapterEmphasis.HEART -> colors.onSecondary
+        ChapterEmphasis.NIGHT -> colors.onTertiaryContainer
+        ChapterEmphasis.DEFAULT -> colors.onSurface
+    }
+    Box(Modifier.size(48.dp).clip(RoundedCornerShape(12.dp))
+        .background(background),
+        contentAlignment = Alignment.Center) {
+        Text("$number", fontSize = 18.sp, fontWeight = FontWeight.Bold,
+            color = foreground)
+    }
+}
+
+@Composable
+fun SurahCard(surah: SurahUiModel, onClick: () -> Unit = {}) {
+    val colors = MaterialTheme.colorScheme
+    val emphasis = chapterEmphasis(surah.number)
+    val featureLabel = when (emphasis) {
+        ChapterEmphasis.HEART -> "Heart of Quran"
+        ChapterEmphasis.NIGHT -> "Night Protection"
+        else -> null
+    }
+    QuranEasyActionSurface(onClick, Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, colors.outlineVariant),
+        containerColor = if (emphasis == ChapterEmphasis.HEART) colors.surfaceContainerLow else colors.surfaceContainerLowest,
+        elevation = 0.dp,
+        contentPadding = PaddingValues(16.dp)) {
+        Row(Modifier.fillMaxWidth().heightIn(min = 64.dp), verticalAlignment = Alignment.CenterVertically) {
+            NumberBadge(surah.number, emphasis)
+            Spacer(Modifier.width(16.dp))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(displaySurahName(surah.number, surah.englishName), fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold, color = colors.onSurface, maxLines = 1,
+                        overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                    if (featureLabel != null) {
+                        Spacer(Modifier.width(6.dp))
+                        Text(featureLabel,
+                            modifier = Modifier.clip(RoundedCornerShape(50.dp))
+                                .background(if (emphasis == ChapterEmphasis.HEART) colors.secondaryContainer else colors.tertiaryContainer)
+                                .padding(horizontal = 7.dp, vertical = 3.dp),
+                            color = if (emphasis == ChapterEmphasis.HEART) colors.onSecondaryContainer else colors.onTertiaryContainer,
+                            fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1)
                     }
                 }
-
-                else -> Box(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    BookmarkContent(
-                        bookmarks = uiState.bookmarks,
-                        onSurahClick = onSurahClick,
-                        onJuzClick = onJuzClick
-                    )
+                if (LocalAppSettings.current.showTranslatedSurahNames) Text(surah.translation,
+                    fontSize = 12.sp, color = colors.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Text("${surah.verses} Ayahs", Modifier.clip(RoundedCornerShape(6.dp))
+                        .background(colors.surfaceContainer).padding(horizontal = 6.dp, vertical = 2.dp),
+                        fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    val revelation = revelationLabel(surah.revelationType)
+                    if (revelation.isNotEmpty()) Text("• $revelation", fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold, color = colors.secondary)
                 }
             }
+            Text(displayArabicSurahName(surah.arabicName),
+                Modifier.padding(start = 8.dp).widthIn(max = 112.dp),
+                fontFamily = QuranFont, fontSize = 26.sp, color = colors.onSurface,
+                textAlign = TextAlign.End, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, null, Modifier.size(20.dp),
+                tint = if (emphasis == ChapterEmphasis.HEART) colors.secondary else colors.onSurfaceVariant)
         }
     }
 }
 
 @Composable
-private fun BookmarkContent(
-    bookmarks: List<QuranBookmarkUiModel>,
-    onSurahClick: (Int) -> Unit,
-    onJuzClick: (Int) -> Unit
-) {
-    if (bookmarks.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            BookmarkEmptyState()
-        }
-        return
-    }
-
-    LazyColumn(
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxSize()
-    ) {
-        items(bookmarks, key = { it.id }) { bookmark ->
-            BookmarkCard(
-                bookmark = bookmark,
-                onClick = {
-                    when (bookmark) {
-                        is QuranBookmarkUiModel.SurahBookmark -> onSurahClick(bookmark.surahNumber)
-                        is QuranBookmarkUiModel.JuzBookmark -> onJuzClick(bookmark.juzNumber)
-                    }
-                }
-            )
-        }
-    }
-}
-
-@Composable
-private fun QuranSurahListSkeleton() {
-    LazyColumn(
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxSize()
-    ) {
-        items(6) {
-            SurahCardSkeleton()
-        }
-    }
-}
-
-@Composable
-private fun QuranJuzListSkeleton() {
-    LazyColumn(
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxSize()
-    ) {
-        items(7) {
-            JuzCardSkeleton()
-        }
-    }
-}
-
-@Composable
-private fun BookmarkEmptyState() {
+fun JuzCard(juz: JuzUiModel, onClick: () -> Unit = {}) {
     val colors = MaterialTheme.colorScheme
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.padding(horizontal = 28.dp)
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(104.dp)
-                .clip(RoundedCornerShape(34.dp))
-                .background(Color(0xFF1F1F1F))
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.FavoriteBorder,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(42.dp)
-            )
+    QuranEasyActionSurface(onClick, Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, colors.outlineVariant), containerColor = colors.surfaceContainerLowest, elevation = 0.dp,
+        contentPadding = PaddingValues(16.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            NumberBadge(juz.juzNum)
+            Column(Modifier.weight(1f).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(juz.englishName, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(juz.rangeDescription.ifEmpty { "Open to download this Juz" },
+                    fontSize = 12.sp, color = colors.onSurfaceVariant)
+                if (juz.verses > 0) Text("${juz.verses} Ayahs • ${juz.surahCount} ${if (juz.surahCount == 1) "Surah" else "Surahs"}",
+                    fontSize = 10.sp, fontWeight = FontWeight.Bold, color = colors.onSurfaceVariant)
+            }
+            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, null, Modifier.size(20.dp), tint = colors.outlineVariant)
         }
-
-        Text(
-            text = "No bookmarks yet",
-            color = colors.onBackground,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold
-        )
-
-        Text(
-            text = "Save verses here to revisit your favorite ayahs anytime.",
-            color = colors.onSurfaceVariant,
-            fontSize = 14.sp,
-            textAlign = TextAlign.Center,
-            lineHeight = 20.sp
-        )
     }
 }
 
 @Composable
-private fun BookmarkCard(
-    bookmark: QuranBookmarkUiModel,
-    onClick: () -> Unit
-) {
-    val showTranslatedSurahNames = LocalAppSettings.current.showTranslatedSurahNames
+private fun BookmarkCard(bookmark: QuranBookmarkUiModel, modifier: Modifier = Modifier, onClick: () -> Unit, onRemove: () -> Unit) {
     val colors = MaterialTheme.colorScheme
-    Card(
-        onClick = hapticClick(onClick = onClick),
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(26.dp),
-        colors = CardDefaults.cardColors(containerColor = colors.surface),
-        border = BorderStroke(1.dp, colors.outline),
-        elevation = AppCardDefaults.interactiveElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(RoundedCornerShape(22.dp))
-                    .background(Color(0xFF1F1F1F)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Favorite,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
+    QuranEasyActionSurface(onClick, modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, colors.outlineVariant),
+        containerColor = if (colors.background.luminance() < .2f) colors.surfaceContainerHigh else colors.surfaceContainerLowest, elevation = 0.dp,
+        contentPadding = PaddingValues(16.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            NumberBadge(when (bookmark) {
+                is QuranBookmarkUiModel.SurahBookmark -> bookmark.surahNumber
+                is QuranBookmarkUiModel.JuzBookmark -> bookmark.juzNumber
+            })
+            Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                Text(when (bookmark) {
+                    is QuranBookmarkUiModel.SurahBookmark -> displaySurahName(bookmark.surahNumber, bookmark.englishName)
+                    is QuranBookmarkUiModel.JuzBookmark -> "Juz ${bookmark.juzNumber}"
+                }, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                // Legacy seeded bookmarks use timestamps of 1–3 milliseconds, not saved dates.
+                if (bookmark.createdAt > 1_000L) Text("Saved ${DateFormat.getDateInstance(DateFormat.MEDIUM).format(Date(bookmark.createdAt))}",
+                    fontSize = 10.sp, color = colors.onSurfaceVariant)
             }
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                when (bookmark) {
-                    is QuranBookmarkUiModel.SurahBookmark -> {
-                        Text(
-                            text = "Surah ${bookmark.surahNumber} · ${bookmark.englishName}",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = colors.onSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = bookmark.arabicName,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = colors.onSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        if (showTranslatedSurahNames) {
-                            Text(
-                                text = bookmark.translation,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = colors.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-
-                    is QuranBookmarkUiModel.JuzBookmark -> {
-                        Text(
-                            text = "Juz ${bookmark.juzNumber}",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = colors.onSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = "Saved for quick return",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = colors.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
+            HapticIconButton(onClick = onRemove) { Icon(Icons.Outlined.BookmarkRemove, "Remove bookmark") }
+        }
+        if (bookmark is QuranBookmarkUiModel.SurahBookmark) {
+            Column(Modifier.padding(top = 12.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                .background(colors.surfaceContainerLow).padding(12.dp)) {
+                Text(displayArabicSurahName(bookmark.arabicName), Modifier.fillMaxWidth(), fontFamily = QuranFont,
+                    fontSize = 26.sp, textAlign = TextAlign.End, color = colors.onSurface)
+                if (LocalAppSettings.current.showTranslatedSurahNames) Text(bookmark.translation,
+                    fontSize = 12.sp, color = colors.onSurfaceVariant)
             }
         }
     }
 }
 
 @Composable
-fun TopSection(
-    selectedTab: Int,
-    onTabSelected: (Int) -> Unit,
-    onBackClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color(0xFF252525))
-            .statusBarsPadding()
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-        ) {
-            HapticIconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.Outlined.KeyboardArrowLeft,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(iconSize)
-                )
-            }
-
-            Text(
-                text = "Read Quran",
-                color = Color.White,
-                fontSize = titleFontSize,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-
-        Spacer(modifier = Modifier.height(topSectionPadding))
-
-        Row(
-            modifier = Modifier
-                .padding(horizontal = 14.dp)
-                .fillMaxWidth()
-                .height(toggleHeight)
-                .clip(RoundedCornerShape(24.dp))
-                .background(Color(0xFF363636))
-                .padding(6.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            QuranTab(
-                selected = selectedTab == 0,
-                icon = {
-                    Icon(
-                        Icons.Filled.Menu,
-                        contentDescription = null
-                    )
-                },
-                title = "Surah",
-                onClick = {
-                    onTabSelected(ReaderType.SURAH.ordinal)
-                },
-                modifier = Modifier.weight(1f)
-            )
-
-            QuranTab(
-                selected = selectedTab == 1,
-                icon = {
-                    Icon(
-                        Icons.Outlined.DateRange,
-                        contentDescription = null
-                    )
-                },
-                title = "Juz",
-                onClick = {
-                    onTabSelected(ReaderType.JUZ.ordinal)
-                },
-                modifier = Modifier.weight(1f)
-            )
-
-            QuranTab(
-                selected = selectedTab == 2,
-                icon = {
-                    Icon(
-                        Icons.Outlined.FavoriteBorder,
-                        contentDescription = null
-                    )
-                },
-                title = "Bookmarks",
-                onClick = {
-                    onTabSelected(2)
-                },
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(18.dp))
-    }
-}
-
-@Composable
-fun QuranTab(
-    selected: Boolean,
-    icon: @Composable () -> Unit,
-    title: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val colors = MaterialTheme.colorScheme
-    Surface(
-        onClick = hapticClick(onClick = onClick),
-        modifier = modifier.fillMaxHeight(),
-        shape = RoundedCornerShape(18.dp),
-        color = if (selected)
-            colors.surface
-        else
-            Color.Transparent
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = topSectionPadding),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            CompositionLocalProvider(
-                LocalContentColor provides
-                        if (selected) colors.onSurface
-                        else Color.White.copy(alpha = 0.85f)
-            ) {
-                icon()
-
-                Spacer(modifier = Modifier.width(6.dp))
-
-                Text(
-                    text = title,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun SurahCard(
-    surah: SurahUiModel,
-    onClick: () -> Unit = {}
-) {
-    val showTranslatedSurahNames = LocalAppSettings.current.showTranslatedSurahNames
-    val colors = MaterialTheme.colorScheme
-    Card(
-        onClick = hapticClick(onClick = onClick),
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(26.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colors.surface
-        ),
-        border = BorderStroke(1.dp, colors.outline),
-        elevation = AppCardDefaults.interactiveElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 124.dp)
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(74.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color(0xFF1F1F1F)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = surah.number.toString(),
-                    color = Color.White,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Box(
-                modifier = Modifier
-                    .width(1.dp)
-                    .height(82.dp)
-                    .background(colors.outline)
-            )
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = surah.englishName,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colors.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Text(
-                    text = surah.arabicName,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = colors.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                if (showTranslatedSurahNames) {
-                    Text(
-                        text = surah.translation,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = colors.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                Text(
-                    text = "${surah.verses} verses",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colors.primary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun JuzCard(
-    juz: JuzUiModel,
-    onClick: () -> Unit = {}
-) {
-    val colors = MaterialTheme.colorScheme
-    Card(
-        onClick = hapticClick(onClick = onClick),
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(26.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colors.surface
-        ),
-        border = BorderStroke(1.dp, colors.outline),
-        elevation = AppCardDefaults.interactiveElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 104.dp)
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(74.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color(0xFF1F1F1F)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = juz.juzNum.toString(),
-                    color = Color.White,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Box(
-                modifier = Modifier
-                    .width(1.dp)
-                    .height(58.dp)
-                    .background(colors.outline)
-            )
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = juz.englishName,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colors.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun SurahCardSkeleton() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(26.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        elevation = AppCardDefaults.interactiveElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 124.dp)
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AppSkeletonBlock(
-                modifier = Modifier
-                    .size(74.dp)
-                    .clip(RoundedCornerShape(24.dp)),
-                tint = MaterialTheme.colorScheme.surfaceVariant
-            )
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Box(
-                modifier = Modifier
-                    .width(1.dp)
-                    .height(82.dp)
-                    .background(MaterialTheme.colorScheme.outlineVariant)
-            )
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.52f).height(20.dp))
-                AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.38f).height(16.dp))
-                AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.44f).height(15.dp))
-                AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.28f).height(14.dp), tint = MaterialTheme.colorScheme.secondaryContainer)
-            }
-        }
-    }
-}
-
-@Composable
-private fun JuzCardSkeleton() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(26.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        elevation = AppCardDefaults.interactiveElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 104.dp)
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AppSkeletonBlock(
-                modifier = Modifier
-                    .size(74.dp)
-                    .clip(RoundedCornerShape(24.dp)),
-                tint = MaterialTheme.colorScheme.surfaceVariant
-            )
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Box(
-                modifier = Modifier
-                    .width(1.dp)
-                    .height(58.dp)
-                    .background(MaterialTheme.colorScheme.outlineVariant)
-            )
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.5f).height(20.dp))
-                AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.34f).height(15.dp))
-                AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.26f).height(14.dp), tint = MaterialTheme.colorScheme.secondaryContainer)
-            }
+private fun BrowserEmpty(title: String, description: String, action: String = "Clear filters", onAction: () -> Unit) {
+    QuranEasySurface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp), border = null,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest, contentPadding = PaddingValues(24.dp)) {
+        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Icon(Icons.Outlined.BookmarkBorder, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.secondary)
+            Text(title, fontSize = 18.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Text(description, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
+            Button(onClick = onAction) { Text(action) }
         }
     }
 }

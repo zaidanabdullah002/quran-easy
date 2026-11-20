@@ -12,17 +12,18 @@ enum class ThemeMode(val storageValue: String) {
 }
 
 enum class QuranFontChoice(val storageValue: String) {
+    AMIRI("amiri"),
     AL_QALAM("al_qalam");
 
     companion object {
         fun fromStorage(value: String?): QuranFontChoice =
-            entries.firstOrNull { it.storageValue == value } ?: AL_QALAM
+            entries.firstOrNull { it.storageValue == value } ?: AMIRI
     }
 }
 
 data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    val quranFont: QuranFontChoice = QuranFontChoice.AL_QALAM,
+    val quranFont: QuranFontChoice = QuranFontChoice.AMIRI,
     val quranTextScale: Float = DEFAULT_QURAN_TEXT_SCALE,
     val showTranslatedSurahNames: Boolean = true,
     val keepScreenAwakeWhileReading: Boolean = false,

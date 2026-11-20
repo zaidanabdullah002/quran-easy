@@ -7,6 +7,8 @@ import com.zaidan.quraneasy.feature.manzil.domain.ManzilPassage
 import com.zaidan.quraneasy.feature.manzil.domain.manzilPassages
 import com.zaidan.quraneasy.feature.quran.data.translation.AyahTranslationRepository
 import com.zaidan.quraneasy.feature.quran.domain.repository.QuranRepository
+import com.zaidan.quraneasy.feature.quran.presentation.audio.AyahAudioItem
+import com.zaidan.quraneasy.feature.quran.presentation.audio.QuranAyahAudioPlayer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -36,6 +38,7 @@ data class ManzilPassageUi(
 data class ManzilUiState(
     val isLoading: Boolean = true,
     val passage: ManzilPassageUi? = null,
+    val passages: List<ManzilPassageUi> = emptyList(),
     val message: String = "",
 )
 
@@ -44,12 +47,26 @@ class ManzilViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val quranRepository: QuranRepository,
     private val translationRepository: AyahTranslationRepository,
+    private val audioPlayer: QuranAyahAudioPlayer,
 ) : ViewModel() {
 
-    private val passageIndex: Int = savedStateHandle.get<Int>("index") ?: 0
+    private val passageIndex: Int = savedStateHandle.get<Int>("index") ?: ALL_PASSAGES_INDEX
     private val _uiState = MutableStateFlow(ManzilUiState())
     val uiState: StateFlow<ManzilUiState> = _uiState.asStateFlow()
     private var loadJob: Job? = null
+    val audioState = audioPlayer.state
+
+    fun prepareAudio() {
+        val state = _uiState.value
+        val passages = state.passages.ifEmpty { listOfNotNull(state.passage) }
+        audioPlayer.setPlaylist(passages.toAudioPlaylist())
+    }
+
+    fun toggleAudio() { prepareAudio(); audioPlayer.togglePlayback() }
+    fun previousAyah() = audioPlayer.previous()
+    fun nextAyah() = audioPlayer.next()
+    fun stopAudio() = audioPlayer.stop()
+
 
     init {
         load()
@@ -62,7 +79,8 @@ class ManzilViewModel @Inject constructor(
             try {
                 _uiState.value = ManzilUiState(
                     isLoading = false,
-                    passage = loadPassage(passageIndex),
+                    passage = if (passageIndex == ALL_PASSAGES_INDEX) null else loadPassage(passageIndex),
+                    passages = if (passageIndex == ALL_PASSAGES_INDEX) loadAllPassages() else emptyList(),
                 )
             } catch (error: CancellationException) {
                 throw error
@@ -95,6 +113,35 @@ class ManzilViewModel @Inject constructor(
             )
         }
         return passage.toUi(ayahs)
+    }
+
+    private suspend fun loadAllPassages(): List<ManzilPassageUi> {
+        retrying { quranRepository.ensureSurahListDownloaded() }
+        return manzilPassages
+            .groupBy { it.surahNumber }
+            .flatMap { (surahNumber, passages) ->
+                retrying { quranRepository.ensureSurahDownloaded(surahNumber) }
+                val arabic = quranRepository.observeSurah(surahNumber)
+                    .first()
+                    .associate { it.numberInSurah to it.arabicText }
+                val requestedAyahs = passages
+                    .flatMap { it.startAyah..it.endAyah }
+                    .toSet()
+                val english = retrying {
+                    translationRepository.getSurahTranslations(surahNumber, requestedAyahs)
+                }
+                passages.map { passage ->
+                    val ayahs = (passage.startAyah..passage.endAyah).map { number ->
+                        val reference = "$surahNumber:$number"
+                        ManzilAyahUi(
+                            numberInSurah = number,
+                            arabic = arabic[number] ?: error("No Arabic for $reference"),
+                            english = english[number] ?: error("No English for $reference"),
+                        )
+                    }
+                    passage.toUi(ayahs)
+                }
+            }
     }
 
     private fun ManzilPassage.toUi(ayahs: List<ManzilAyahUi>) = ManzilPassageUi(
@@ -134,6 +181,12 @@ class ManzilViewModel @Inject constructor(
     }
 
     private companion object {
+        const val ALL_PASSAGES_INDEX = -1
         const val RETRY_COUNT = 4
     }
+}
+
+/** Flatten actual loaded passages, preserving gaps between the selected Quran ranges. */
+internal fun List<ManzilPassageUi>.toAudioPlaylist(): List<AyahAudioItem> = flatMap { passage ->
+    passage.ayahs.map { AyahAudioItem(passage.surahNumber, it.numberInSurah) }
 }

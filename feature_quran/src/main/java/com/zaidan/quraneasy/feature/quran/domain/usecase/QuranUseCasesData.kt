@@ -3,6 +3,7 @@ package com.zaidan.quraneasy.feature.quran.domain.usecase
 import javax.inject.Inject
 
 data class QuranUseCasesData @Inject constructor(
+    val observeJuzIndex: ObserveJuzIndexUseCase,
     val observeSurahs: ObserveSurahsUseCase,
     val observeSurah: ObserveSurahUseCase,
     val observeJuz: ObserveJuzUseCase,

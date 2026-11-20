@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zaidan.quraneasy.feature.quran.data.local.QuranPreferences
 import com.zaidan.quraneasy.feature.quran.domain.usecase.QuranUseCasesData
-import com.zaidan.quraneasy.feature.quran.presentation.model.JuzUiModel
+import com.zaidan.quraneasy.feature.quran.presentation.model.QuranBookmarkUiModel
 import com.zaidan.quraneasy.feature.quran.presentation.model.QuranUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,15 +34,8 @@ class QuranViewModel @Inject constructor(
     )
     private val _surahs = quranUseCases.observeSurahs()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-    private val _juzs = MutableStateFlow(
-        (1..30).map { juzNumber ->
-            JuzUiModel(
-                juzNum = juzNumber,
-                englishName = "Juz $juzNumber",
-                verses = 0
-            )
-        }
-    )
+    private val _juzs = quranUseCases.observeJuzIndex()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     private val _bookmarks = quranUseCases.observeBookmarks()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val uiState: StateFlow<QuranUiState> = combine(
@@ -65,6 +58,33 @@ class QuranViewModel @Inject constructor(
     init {
         Log.i(TAG,"init")
         loadSurahList()
+    }
+
+    private var retryBookmark: QuranBookmarkUiModel? = null
+
+    fun retry() {
+        val bookmark = retryBookmark
+        if (bookmark != null) removeBookmark(bookmark) else loadSurahList()
+    }
+
+    fun removeBookmark(bookmark: QuranBookmarkUiModel) {
+        viewModelScope.launch {
+            try {
+                when (bookmark) {
+                    is QuranBookmarkUiModel.SurahBookmark ->
+                        quranUseCases.removeSurahBookmark(bookmark.surahNumber)
+                    is QuranBookmarkUiModel.JuzBookmark ->
+                        quranUseCases.removeJuzBookmark(bookmark.juzNumber)
+                }
+                retryBookmark = null
+                _uiState.update { it.copy(message = "") }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                retryBookmark = bookmark
+                _uiState.update { it.copy(message = "Could not remove bookmark. Please try again.") }
+            }
+        }
     }
 
     fun selectTab(tab: Int) {
@@ -93,6 +113,7 @@ class QuranViewModel @Inject constructor(
                     )
                 }
             }.onFailure { throwable ->
+                if (throwable is kotlinx.coroutines.CancellationException) throw throwable
                 Log.i(TAG,"loadSurahList: failed")
                 _uiState.update {
                     it.copy(

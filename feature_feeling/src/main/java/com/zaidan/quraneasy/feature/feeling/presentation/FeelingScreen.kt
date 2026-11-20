@@ -1,307 +1,162 @@
 package com.zaidan.quraneasy.feature.feeling.presentation
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Modifier
+import android.content.Intent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextDirection
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zaidan.quraneasy.feature.quran.presentation.audio.ReaderAudioUiState
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.zaidan.quraneasy.core.ui.AppCardDefaults
-import com.zaidan.quraneasy.core.theme.QuranFont
-import com.zaidan.quraneasy.feature.feeling.presentation.topbar.FeelingTopBar
-import com.zaidan.quraneasy.core.ui.AppSkeletonBlock
-import com.zaidan.quraneasy.core.ui.AppSkeletonLine
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.zaidan.quraneasy.core.theme.LocalQuranTypography
+import com.zaidan.quraneasy.core.settings.ReaderSettingsEffects
 
 @Composable
-fun FeelingDetailScreen(
-    viewModel: FeelingDetailViewModel = hiltViewModel(),
-    onBackClick: () -> Unit
-) {
-    val uiState by viewModel.uiState.collectAsState()
-    FeelingDetailScreen(
-        uiState = uiState,
-        onBackClick = onBackClick
-    )
+fun FeelingDetailScreen(viewModel: FeelingDetailViewModel = hiltViewModel(), onBackClick: () -> Unit) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val audioState by viewModel.audioState.collectAsStateWithLifecycle()
+    DisposableEffect(viewModel) { onDispose(viewModel::stopAudio) }
+    ReaderSettingsEffects()
+    FeelingDetailScreen(uiState, onBackClick, audioState, viewModel::listen, viewModel::loadFeeling)
 }
 
 @Composable
-fun FeelingDetailScreen(
-    uiState: FeelingDetailUiState,
-    onBackClick: () -> Unit
-) {
+fun FeelingDetailScreen(uiState: FeelingDetailUiState, onBackClick: () -> Unit,
+    audioState: ReaderAudioUiState = ReaderAudioUiState(), onListen: (Int) -> Unit = {},
+    onRetry: () -> Unit = {}) {
+    val base = MaterialTheme.colorScheme
+    val colors = if (base.background.luminance() < .2f) base.copy(
+        background = Color(0xFF080C0E), surfaceContainerLowest = Color(0xFF0F171D),
+        surfaceContainerLow = Color(0xFF080C0E), primary = Color(0xFF38BDF8),
+        secondary = Color(0xFF7DD3FC), onSurface = Color(0xFFE2E8F0),
+        onSurfaceVariant = Color(0xFF94A3B8), outlineVariant = Color(0xFF06B6D4).copy(alpha = .2f)
+    ) else base
+    MaterialTheme(colorScheme = colors) {
     val feeling = uiState.feeling
-    val colors = MaterialTheme.colorScheme
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colors.background)
-            .statusBarsPadding()
-    ) {
-        FeelingTopBar(
-            title = feeling?.title ?: "Feeling",
-            subtitle = feeling?.subtitle ?: "A calm space for the heart",
-            rightLabel = feeling?.emoji ?: "❤️",
-            accent = feeling?.accent.toColorOrNull() ?: Color(0xFF667084),
-            onBackClick = onBackClick
-        )
-
-        when {
-            uiState.isLoading -> {
-                FeelingDetailLoadingContent(feeling = feeling)
-            }
-
-            uiState.message != null -> {
-                Text(
-                    text = uiState.message,
-                    modifier = Modifier.padding(24.dp),
-                    color = colors.onSurfaceVariant
-                )
-            }
-
-            else -> {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    item {
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = colors.surface),
-                            modifier = Modifier.fillMaxWidth(),
-                            elevation = AppCardDefaults.staticElevation(defaultElevation = 2.dp)
-                        ) {
-                            Column(Modifier.padding(20.dp)) {
-                                val accent = feeling?.accent.toColorOrNull() ?: Color(0xFF667084)
-                                Text(
-                                    text = feeling?.emoji.orEmpty(),
-                                    style = MaterialTheme.typography.displaySmall
-                                )
-                                Spacer(Modifier.height(12.dp))
-                                Text(
-                                    text = feeling?.title.orEmpty(),
-                                    style = MaterialTheme.typography.titleLarge,
-                                    color = colors.onSurface,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                Spacer(Modifier.height(6.dp))
-                                Text(
-                                    text = feeling?.subtitle.orEmpty(),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = colors.onSurfaceVariant
-                                )
-                                Spacer(Modifier.height(14.dp))
-                                Card(
-                                    colors = CardDefaults.cardColors(containerColor = accent.copy(alpha = 0.12f)),
-                                    modifier = Modifier.fillMaxWidth(),
-                                    elevation = AppCardDefaults.staticElevation(defaultElevation = 0.dp)
-                                ) {
-                                    Text(
-                                        text = feeling?.artworkKey?.replaceFirstChar { it.uppercase() } ?: "Curated Quran reflections",
-                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
-                                        color = accent,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                }
-                            }
-                        }
+    Column(Modifier.fillMaxSize().background(colors.background).statusBarsPadding()) {
+        Row(Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onBackClick) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+            Text("Feeling Detail", fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+        }
+        LazyColumn(Modifier.fillMaxSize().navigationBarsPadding(), contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            item {
+                Surface(color = colors.surfaceContainerLowest, border = BorderStroke(1.dp, colors.outlineVariant), shape = RoundedCornerShape(12.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("SPIRITUAL REFLECTIONS", color = colors.secondary, style = MaterialTheme.typography.labelLarge)
+                        Text("${feeling?.emoji.orEmpty()}  ${feeling?.title ?: "A moment of reflection"}",
+                            fontSize = 26.sp, fontWeight = FontWeight.Bold, color = colors.onSurface)
+                        Text(feeling?.subtitle ?: "A calm space for the heart",
+                            color = colors.secondary, fontSize = 18.sp, lineHeight = 26.sp, fontStyle = FontStyle.Italic)
                     }
+                }
+            }
+            when {
+                uiState.isLoading -> item {
+                    Box(Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                }
+                uiState.message != null -> item {
+                    Text(uiState.message, color = colors.error, modifier = Modifier.padding(16.dp))
+                    TextButton(onClick = onRetry) { Text("Try again") }
+                }
+                else -> itemsIndexed(uiState.verses, key = { _, v -> "${v.surahNumber}:${v.numberInSurah}" }) { index, verse ->
+                    FeelingVerseCard(index + 1, verse, feeling, audioState, onListen = { onListen(index) })
+                }
+            }
+        }
+    }
+    }
+}
 
-                    items(uiState.verses) { verse ->
-                        VerseCard(
-                            verse = verse
-                        )
+@Composable
+private fun FeelingVerseCard(number: Int, verse: FeelingVerseUiModel, feeling: Feeling?,
+    audioState: ReaderAudioUiState, onListen: () -> Unit) {
+    var reflectionExpanded by rememberSaveable(feeling?.id, verse.surahNumber, verse.numberInSurah) { mutableStateOf(false) }
+    val colors = MaterialTheme.colorScheme
+    val typography = LocalQuranTypography.current
+    val context = LocalContext.current
+    Surface(color = colors.surfaceContainerLowest, shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, colors.outlineVariant)) {
+        Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(color = colors.primary.copy(alpha = .15f), shape = CircleShape) {
+                    Text(number.toString(), Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        color = colors.primary, fontWeight = FontWeight.Bold)
+                }
+                Text("Surah ${verse.surahNumber} · Verse ${verse.numberInSurah}",
+                    Modifier.weight(1f).padding(start = 10.dp), style = MaterialTheme.typography.labelLarge)
+                IconButton(onClick = {
+                    context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, "${verse.arabicText}\n\n${verse.translation.orEmpty()}\nQuran ${verse.surahNumber}:${verse.numberInSurah}")
+                    }, "Share verse"))
+                }) { Icon(Icons.Default.Share, "Share verse", tint = colors.onSurfaceVariant) }
+            }
+            SelectionContainer {
+                Text(verse.arabicText, Modifier.fillMaxWidth(), style = TextStyle(textDirection = TextDirection.Rtl), fontFamily = typography.fontFamily,
+                    fontSize = typography.ayahFontSize, lineHeight = typography.ayahLineHeight,
+                    textAlign = TextAlign.End, color = colors.onSurface)
+            }
+            verse.translation?.takeIf { it.isNotBlank() }?.let {
+                Surface(color = colors.surfaceContainerLow, shape = RoundedCornerShape(12.dp)) {
+                    SelectionContainer {
+                        Text(it, Modifier.fillMaxWidth().padding(16.dp), fontSize = 14.sp, lineHeight = 24.sp,
+                            fontStyle = FontStyle.Italic, color = colors.onSurface)
+                    }
+                }
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                val active = audioState.currentIndex == number - 1
+                OutlinedButton(onClick = onListen) {
+                    Text(when {
+                        active && audioState.isPreparing -> "Cancel loading"
+                        active && audioState.isPlaying -> "Pause"
+                        active && audioState.errorMessage != null -> "Retry audio"
+                        else -> "Listen"
+                    })
+                }
+                TextButton(onClick = { reflectionExpanded = !reflectionExpanded }) {
+                    Text(if (reflectionExpanded) "Hide reflection" else "Reflection")
+                }
+            }
+            if (audioState.currentIndex == number - 1) audioState.errorMessage?.let {
+                Text(it, color = colors.error, style = MaterialTheme.typography.bodySmall)
+            }
+            AnimatedVisibility(reflectionExpanded) {
+                Surface(color = colors.surfaceContainerLow, shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, colors.outlineVariant)) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("HEART REFLECTION", color = colors.primary, style = MaterialTheme.typography.labelMedium)
+                        Text(feeling?.subtitle.orEmpty(), fontWeight = FontWeight.SemiBold)
+                        Text("Read this verse slowly. What stands out to you, and what small action could you take today?",
+                            style = MaterialTheme.typography.bodyMedium)
+                        Text("Personal reflection prompt · Not tafsir", style = MaterialTheme.typography.labelSmall,
+                            color = colors.onSurfaceVariant)
                     }
                 }
             }
         }
     }
-}
-
-@Composable
-private fun FeelingDetailLoadingContent(
-    feeling: Feeling?
-) {
-    val colors = MaterialTheme.colorScheme
-    val accent = feeling?.accent.toColorOrNull() ?: Color(0xFF667084)
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        item {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = colors.surface),
-                modifier = Modifier.fillMaxWidth(),
-                elevation = AppCardDefaults.staticElevation(defaultElevation = 2.dp)
-            ) {
-                Column(Modifier.padding(20.dp)) {
-                    if (feeling == null) {
-                        AppSkeletonBlock(
-                            modifier = Modifier.size(44.dp),
-                            tint = Color(0xFFF1E6E6)
-                        )
-                        Spacer(Modifier.height(12.dp))
-                        AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.48f).height(28.dp))
-                        Spacer(Modifier.height(8.dp))
-                        AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.72f).height(16.dp))
-                        Spacer(Modifier.height(14.dp))
-                        AppSkeletonBlock(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(52.dp),
-                            tint = Color(0xFFF7E8E8)
-                        )
-                    } else {
-                        Text(
-                            text = feeling.emoji,
-                            style = MaterialTheme.typography.displaySmall
-                        )
-                        Spacer(Modifier.height(12.dp))
-                        Text(
-                            text = feeling.title,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = colors.onSurface,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            text = feeling.subtitle,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = colors.onSurfaceVariant
-                        )
-                        Spacer(Modifier.height(14.dp))
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = accent.copy(alpha = 0.12f)),
-                            modifier = Modifier.fillMaxWidth(),
-                            elevation = AppCardDefaults.staticElevation(defaultElevation = 0.dp)
-                        ) {
-                            AppSkeletonBlock(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(52.dp),
-                                tint = accent.copy(alpha = 0.18f)
-                            )
-                        }
-                    }
-                }   
-            }
-        }
-
-        items(4) {
-            FeelingVerseCardSkeleton(accent = accent)
-        }
-    }
-}
-
-@Composable
-private fun VerseCard(
-    verse: FeelingVerseUiModel
-) {
-    val colors = MaterialTheme.colorScheme
-    Card(
-        colors = CardDefaults.cardColors(containerColor = colors.surfaceVariant),
-        modifier = Modifier.fillMaxWidth(),
-        elevation = AppCardDefaults.staticElevation(defaultElevation = 1.dp)
-    ) {
-        Column(Modifier.padding(18.dp)) {
-            Text(
-                text = verse.arabicText,
-                style = MaterialTheme.typography.headlineSmall,
-                color = colors.onSurface,
-                fontFamily = QuranFont
-            )
-            Spacer(Modifier.height(10.dp))
-            Text(
-                text = "Surah ${verse.surahNumber}, Ayah ${verse.numberInSurah}",
-                color = colors.onSurfaceVariant,
-                style = MaterialTheme.typography.labelMedium
-            )
-            verse.translation?.takeIf { it.isNotBlank() }?.let {
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    text = it,
-                    color = colors.onSurface,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun FeelingVerseCardSkeleton() {
-    FeelingVerseCardSkeleton(accent = Color(0xFFE8E5DD))
-}
-
-@Composable
-private fun FeelingVerseCardSkeleton(
-    accent: Color
-) {
-    val colors = MaterialTheme.colorScheme
-    Card(
-        colors = CardDefaults.cardColors(containerColor = colors.surfaceVariant),
-        modifier = Modifier.fillMaxWidth(),
-        elevation = AppCardDefaults.staticElevation(defaultElevation = 1.dp)
-    ) {
-        Column(Modifier.padding(18.dp)) {
-            AppSkeletonLine(
-                modifier = Modifier.fillMaxWidth(0.94f).height(32.dp),
-                tint = accent.copy(alpha = 0.24f)
-            )
-            Spacer(Modifier.height(10.dp))
-            AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.34f).height(13.dp))
-            Spacer(Modifier.height(8.dp))
-            AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.88f).height(15.dp))
-            Spacer(Modifier.height(6.dp))
-            AppSkeletonLine(modifier = Modifier.fillMaxWidth(0.76f).height(15.dp))
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun FeelingDetailScreenPreview() {
-    FeelingDetailScreen(
-        uiState = FeelingDetailUiState(
-            isLoading = false,
-            feeling = Feeling(
-                id = "hope",
-                emoji = "❤️",
-                title = "Need Hope",
-                subtitle = "Allah's mercy never ends",
-                verses = emptyList(),
-                accent = "#E45B5B",
-                artworkKey = "Mercy"
-            ),
-            verses = listOf(
-                FeelingVerseUiModel(
-                    surahNumber = 39,
-                    numberInSurah = 53,
-                    arabicText = "قُلْ يَٰعِبَادِيَ ٱلَّذِينَ أَسْرَفُوا۟",
-                    translation = "Say, O My servants who have transgressed..."
-                )
-            )
-        ),
-        onBackClick = {}
-    )
 }
