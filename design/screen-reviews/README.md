@@ -2,17 +2,6 @@
 
 The supplied export contains **8 screens**, plus one shared design-system DESIGN.md. The old Manzil list is removed. Dialogs, tabs, overlays and loading/error states are reviewed within their parent screen, not counted as extra screens.
 
-## Screen documents
-
-1. [Home](01-home.md)
-2. [Quran Browser](02-quran-browser.md)
-3. [Quran Reader](03-quran-reader.md)
-4. [Tasbih Counter](04-tasbih.md)
-5. [Manzil Continuous Reader](05-manzil-reader.md)
-6. [Feeling Detail](06-feeling-detail.md)
-7. [Settings](07-settings.md)
-8. [About](08-about.md)
-
 ## Review loop
 
 Implement → build → install → capture → compare design and behavior → record differences → fix → repeat.
