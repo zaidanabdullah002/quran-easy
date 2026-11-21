@@ -8,9 +8,9 @@
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/full_backup_content"
-        android:icon="@mipmap/quran_app_logo"
+        android:icon="@mipmap/ic_launcher"
         android:label="QuranEasy"
-        android:roundIcon="@mipmap/quran_app_logo"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/Theme.QuranEasy">
         <activity
             android:name=".MainActivity"
