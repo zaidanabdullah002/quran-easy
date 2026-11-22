@@ -51,6 +51,10 @@ class DataStoreSettingsRepository(
         it[KEEP_SCREEN_AWAKE_WHILE_READING] = false
     }
 
+    override suspend fun setTourStatus(status: TourStatus) = update {
+        it[TOUR_STATUS] = status.storageValue
+    }
+
     private suspend fun update(block: (androidx.datastore.preferences.core.MutablePreferences) -> Unit) {
         dataStore.edit(block)
     }
@@ -61,6 +65,7 @@ class DataStoreSettingsRepository(
         quranTextScale = (preferences[QURAN_TEXT_SCALE] ?: DEFAULT_QURAN_TEXT_SCALE).toValidQuranTextScale(),
         showTranslatedSurahNames = preferences[SHOW_TRANSLATED_SURAH_NAMES] ?: true,
         keepScreenAwakeWhileReading = preferences[KEEP_SCREEN_AWAKE_WHILE_READING] ?: false,
+        tourStatus = TourStatus.fromStorage(preferences[TOUR_STATUS]),
     )
 
     private companion object {
@@ -69,5 +74,6 @@ class DataStoreSettingsRepository(
         val QURAN_TEXT_SCALE = floatPreferencesKey("quran_text_scale")
         val SHOW_TRANSLATED_SURAH_NAMES = booleanPreferencesKey("show_translated_surah_names")
         val KEEP_SCREEN_AWAKE_WHILE_READING = booleanPreferencesKey("keep_screen_awake_while_reading")
+        val TOUR_STATUS = stringPreferencesKey("tour_status")
     }
 }

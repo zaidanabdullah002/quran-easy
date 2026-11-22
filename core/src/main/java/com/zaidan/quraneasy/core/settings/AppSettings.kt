@@ -21,12 +21,26 @@ enum class QuranFontChoice(val storageValue: String) {
     }
 }
 
+enum class TourStatus(val storageValue: String) {
+    NOT_STARTED("not_started"),
+    THEME_PENDING("theme_pending"),
+    TOUR_ACTIVE("tour_active"),
+    TOUR_EXITED("tour_exited"),
+    TOUR_COMPLETED("tour_completed");
+
+    companion object {
+        fun fromStorage(value: String?): TourStatus =
+            entries.firstOrNull { it.storageValue == value } ?: NOT_STARTED
+    }
+}
+
 data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val quranFont: QuranFontChoice = QuranFontChoice.AMIRI,
     val quranTextScale: Float = DEFAULT_QURAN_TEXT_SCALE,
     val showTranslatedSurahNames: Boolean = true,
     val keepScreenAwakeWhileReading: Boolean = false,
+    val tourStatus: TourStatus = TourStatus.NOT_STARTED,
 )
 
 const val MIN_QURAN_TEXT_SCALE = 0.8f

@@ -33,13 +33,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.zaidan.quraneasy.core.ui.QuranEasyActionSurface
+import com.zaidan.quraneasy.core.ui.TourCoordinator
+import com.zaidan.quraneasy.core.ui.tourTarget
 
 private val featureCardGap = 10.dp
 
 @Composable
 fun FeatureCardsSection(
     onReadQuranClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    tourCoordinator: TourCoordinator? = null
 ) {
     Column(modifier = modifier) {
         FeatureCard(
@@ -48,7 +51,8 @@ fun FeatureCardsSection(
             icon = Icons.Outlined.AutoStories,
             iconContainer = SanctuaryColors.ForestSoft,
             iconTint = SanctuaryColors.Forest,
-            onClick = onReadQuranClick
+            onClick = onReadQuranClick,
+            modifier = if (tourCoordinator != null) Modifier.tourTarget(tourCoordinator, "read_quran_card") else Modifier
         )
     }
 }
@@ -58,6 +62,7 @@ fun QuickFeatureCardsSection(
     onTasbihClick: () -> Unit,
     onManzilClick: () -> Unit,
     modifier: Modifier = Modifier,
+    tourCoordinator: TourCoordinator? = null
 ) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(featureCardGap)) {
         CompactFeatureCard(
@@ -67,7 +72,9 @@ fun QuickFeatureCardsSection(
             iconContainer = SanctuaryColors.TerracottaSoft,
             iconTint = SanctuaryColors.Terracotta,
             onClick = onTasbihClick,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .then(if (tourCoordinator != null) Modifier.tourTarget(tourCoordinator, "tasbih_card") else Modifier),
         )
         CompactFeatureCard(
             title = "Daily Manzil",
@@ -132,11 +139,12 @@ private fun FeatureCard(
     icon: ImageVector,
     iconContainer: Color,
     iconTint: Color,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     QuranEasyActionSurface(
         onClick = onClick,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(82.dp),
         shape = RoundedCornerShape(22.dp),

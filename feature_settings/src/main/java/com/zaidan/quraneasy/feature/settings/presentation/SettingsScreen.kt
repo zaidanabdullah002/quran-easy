@@ -20,7 +20,6 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -45,19 +44,30 @@ import com.zaidan.quraneasy.core.navigation.Screen
 import com.zaidan.quraneasy.core.settings.*
 import com.zaidan.quraneasy.core.theme.quranTypography
 import com.zaidan.quraneasy.core.ui.SanctuaryBanner
+import com.zaidan.quraneasy.core.ui.TourCoordinator
 import com.zaidan.quraneasy.feature_settings.R
 import kotlin.math.roundToInt
 
-fun NavGraphBuilder.settingsGraph(navController: NavHostController) {
+fun NavGraphBuilder.settingsGraph(
+    navController: NavHostController,
+    tourCoordinator: TourCoordinator
+) {
     composable(Screen.Settings.route) {
         val viewModel: SettingsViewModel = hiltViewModel()
-        SettingsScreen(viewModel, onBack = { navController.popBackStack() })
+        SettingsScreen(viewModel, onBack = { navController.popBackStack() }, onRestartTour = {
+            viewModel.restartTour()
+            navController.popBackStack(Screen.Home.route, inclusive = false)
+        })
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel, onBack: () -> Unit) {
+fun SettingsScreen(
+    viewModel: SettingsViewModel,
+    onBack: () -> Unit,
+    onRestartTour: () -> Unit = {}
+) {
     val layoutDirection = LocalLayoutDirection.current
     val darkTheme = MaterialTheme.colorScheme.background.luminance() < 0.2f
     val sliderAccent = if (darkTheme) Color(0xFF06B6D4) else MaterialTheme.colorScheme.primary
@@ -110,6 +120,17 @@ fun SettingsScreen(viewModel: SettingsViewModel, onBack: () -> Unit) {
                 ) {
                     SanctuaryBanner(com.zaidan.quraneasy.core.R.drawable.sanctuary_reading, "SANCTUARY MODE",
                         "Personalize sacred script readability for dawn and night contemplations.")
+                    
+                    SectionLabel("Application Tour")
+                    SettingsPanel {
+                        Text("Interactive Guide", fontWeight = FontWeight.SemiBold)
+                        Text("Rediscover the key features of Quran Easy with a guided walkthrough.",
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Button(onClick = onRestartTour, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
+                            Text("Restart App Tour")
+                        }
+                    }
+
                     SectionLabel(stringResource(R.string.appearance))
                     SettingsPanel(verticalPadding = 4.dp) {
                         Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(enabled) { themeDialog = true },

@@ -48,6 +48,7 @@ class SettingsViewModel @Inject constructor(private val repository: SettingsRepo
     fun translatedNames(value: Boolean) = save { repository.setShowTranslatedSurahNames(value) }
     fun keepAwake(value: Boolean) = save { repository.setKeepScreenAwakeWhileReading(value) }
     fun reset() = save { repository.resetReadingSettings() }
+    fun restartTour() = save { repository.setTourStatus(TourStatus.TOUR_ACTIVE) }
     fun dismissError() { mutableState.update { it.copy(saveError = false) } }
 
     private fun save(operation: suspend () -> Unit) {
@@ -64,4 +65,3 @@ class SettingsViewModel @Inject constructor(private val repository: SettingsRepo
         }
     }
 }
-

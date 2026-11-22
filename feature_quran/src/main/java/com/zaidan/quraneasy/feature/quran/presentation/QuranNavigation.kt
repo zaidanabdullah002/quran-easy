@@ -7,11 +7,13 @@ import androidx.navigation.compose.composable
 import com.zaidan.quraneasy.core.navigation.Screen
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.zaidan.quraneasy.core.ui.TourCoordinator
 import com.zaidan.quraneasy.feature.quran.presentation.viewmodel.QuranViewModel
 import com.zaidan.quraneasy.feature.quran.presentation.viewmodel.QuranReaderViewModel
 
 fun NavGraphBuilder.quranGraph(
-    navController: NavHostController
+    navController: NavHostController,
+    tourCoordinator: TourCoordinator
 ) {
     composable(Screen.Quran.route) {
         val quranViewModel: QuranViewModel = hiltViewModel()
@@ -19,8 +21,14 @@ fun NavGraphBuilder.quranGraph(
         QuranScreen(
             quranViewModel = quranViewModel,
             onBackClick = { navController.popBackStack() },
-            onSurahClick = { surahNumber -> navController.navigate(QuranRoutes.reader(ReaderType.SURAH.ordinal,surahNumber)) },
-            onJuzClick = { juzNumber -> navController.navigate(QuranRoutes.reader(ReaderType.JUZ.ordinal,juzNumber)) }
+            onSurahClick = { surahNumber -> 
+                if (tourCoordinator.currentStep?.targetId == "surah_card_1" && surahNumber == 1) {
+                    tourCoordinator.nextStep()
+                }
+                navController.navigate(QuranRoutes.reader(ReaderType.SURAH.ordinal,surahNumber)) 
+            },
+            onJuzClick = { juzNumber -> navController.navigate(QuranRoutes.reader(ReaderType.JUZ.ordinal,juzNumber)) },
+            tourCoordinator = tourCoordinator
         )
     }
 

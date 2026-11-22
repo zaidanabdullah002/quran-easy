@@ -30,6 +30,8 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.zaidan.quraneasy.core.ui.TourCoordinator
+import com.zaidan.quraneasy.core.ui.tourTarget
 
 @Composable
 fun SanctuaryBottomNavigation(
@@ -39,20 +41,46 @@ fun SanctuaryBottomNavigation(
     onSettingsClick: () -> Unit,
     onHomeClick: () -> Unit = {},
     selectedRoute: String = Screen.Home.route,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    tourCoordinator: TourCoordinator? = null
 ) {
     if (selectedRoute == Screen.Home.route) {
-        HomeTheme { NavigationContent(onReadQuranClick, onTasbihClick, onManzilClick, onSettingsClick, onHomeClick, selectedRoute, modifier) }
+        HomeTheme {
+            NavigationContent(
+                onReadQuranClick = onReadQuranClick,
+                onTasbihClick = onTasbihClick,
+                onManzilClick = onManzilClick,
+                onSettingsClick = onSettingsClick,
+                onHomeClick = onHomeClick,
+                selectedRoute = selectedRoute,
+                modifier = modifier,
+                tourCoordinator = tourCoordinator
+            )
+        }
     } else {
-        NavigationContent(onReadQuranClick, onTasbihClick, onManzilClick, onSettingsClick, onHomeClick, selectedRoute, modifier)
+        NavigationContent(
+            onReadQuranClick = onReadQuranClick,
+            onTasbihClick = onTasbihClick,
+            onManzilClick = onManzilClick,
+            onSettingsClick = onSettingsClick,
+            onHomeClick = onHomeClick,
+            selectedRoute = selectedRoute,
+            modifier = modifier,
+            tourCoordinator = tourCoordinator
+        )
     }
 }
 
 @Composable
 private fun NavigationContent(
-    onReadQuranClick: () -> Unit, onTasbihClick: () -> Unit,
-    onManzilClick: () -> Unit, onSettingsClick: () -> Unit, onHomeClick: () -> Unit,
-    selectedRoute: String, modifier: Modifier,
+    onReadQuranClick: () -> Unit,
+    onTasbihClick: () -> Unit,
+    onManzilClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onHomeClick: () -> Unit,
+    selectedRoute: String,
+    modifier: Modifier,
+    tourCoordinator: TourCoordinator? = null
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -69,9 +97,26 @@ private fun NavigationContent(
             ) {
                 BottomNavItem(Icons.Default.Home, "Home", selectedRoute == Screen.Home.route, onHomeClick, homePalette = selectedRoute == Screen.Home.route)
                 BottomNavItem(Icons.Outlined.AutoStories, "Read Quran", selectedRoute == Screen.Quran.route, onReadQuranClick, homePalette = selectedRoute == Screen.Home.route)
-                BottomNavItem(Icons.Outlined.Gesture, "Tasbih", selectedRoute == Screen.Tasbih.route, onTasbihClick, homePalette = selectedRoute == Screen.Home.route)
+                
+                BottomNavItem(
+                    icon = Icons.Outlined.Gesture,
+                    label = "Tasbih",
+                    selected = selectedRoute == Screen.Tasbih.route,
+                    onClick = onTasbihClick,
+                    homePalette = selectedRoute == Screen.Home.route,
+                    modifier = if (tourCoordinator != null) Modifier.tourTarget(tourCoordinator, "tasbih_nav") else Modifier
+                )
+                
                 BottomNavItem(Icons.Outlined.CalendarViewWeek, "Manzil", selectedRoute == Screen.Manzil.route, onManzilClick, homePalette = selectedRoute == Screen.Home.route)
-                BottomNavItem(Icons.Outlined.Settings, "Settings", selectedRoute == Screen.Settings.route, onSettingsClick, homePalette = selectedRoute == Screen.Home.route)
+
+                BottomNavItem(
+                    icon = Icons.Outlined.Settings,
+                    label = "Settings",
+                    selected = selectedRoute == Screen.Settings.route,
+                    onClick = onSettingsClick,
+                    homePalette = selectedRoute == Screen.Home.route,
+                    modifier = if (tourCoordinator != null) Modifier.tourTarget(tourCoordinator, "settings_nav") else Modifier
+                )
             }
         }
     }
@@ -84,6 +129,7 @@ private fun androidx.compose.foundation.layout.RowScope.BottomNavItem(
     selected: Boolean,
     onClick: () -> Unit,
     homePalette: Boolean,
+    modifier: Modifier = Modifier
 ) {
     val colors = MaterialTheme.colorScheme
     val dark = colors.background.luminance() < .2f
@@ -91,7 +137,7 @@ private fun androidx.compose.foundation.layout.RowScope.BottomNavItem(
         if (dark && !homePalette) androidx.compose.ui.graphics.Color(0xFF38BDF8) else colors.secondary
     } else colors.onSurfaceVariant
     Column(
-        modifier = Modifier
+        modifier = modifier
             .weight(1f)
             .heightIn(min = 48.dp)
             .selectable(selected = selected, role = Role.Tab, onClick = onClick)

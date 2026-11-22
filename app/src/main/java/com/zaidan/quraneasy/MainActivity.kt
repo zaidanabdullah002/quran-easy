@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,8 +27,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
@@ -40,11 +43,19 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.zaidan.quraneasy.core.navigation.Screen
 import com.zaidan.quraneasy.core.settings.AppSettings
 import com.zaidan.quraneasy.core.settings.SettingsRepository
+import com.zaidan.quraneasy.core.settings.ThemeMode
+import com.zaidan.quraneasy.core.settings.TourStatus
 import com.zaidan.quraneasy.core.theme.QuranEasyTheme
+import com.zaidan.quraneasy.core.ui.ThemeSelectionDialog
+import com.zaidan.quraneasy.core.ui.TourCoordinator
+import com.zaidan.quraneasy.core.ui.TourOverlay
 import com.zaidan.quraneasy.feature.feeling.data.FeelingRepository
 import com.zaidan.quraneasy.feature.feeling.presentation.feelingGraph
 import com.zaidan.quraneasy.feature.home.presentation.homeGraph
+import com.zaidan.quraneasy.feature.manzil.domain.manzilPassages
 import com.zaidan.quraneasy.feature.manzil.presentation.manzilGraph
+import com.zaidan.quraneasy.feature.quran.data.translation.AyahTranslationRepository
+import com.zaidan.quraneasy.feature.quran.domain.repository.QuranRepository
 import com.zaidan.quraneasy.feature.quran.presentation.quranGraph
 import com.zaidan.quraneasy.feature.tasbih.presentation.tasbihGraph
 import dagger.hilt.android.AndroidEntryPoint
@@ -68,10 +79,20 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var settingsRepository: SettingsRepository
 
+    @Inject
+    lateinit var quranRepository: QuranRepository
+
+    @Inject
+    lateinit var translationRepository: AyahTranslationRepository
+
+    @Inject
+    lateinit var tourCoordinator: TourCoordinator
+
     private var settingsReady = false
+    private var dataPreloaded = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen().setKeepOnScreenCondition { !settingsReady }
+        installSplashScreen().setKeepOnScreenCondition { !settingsReady || !dataPreloaded }
         super.onCreate(savedInstanceState)
 
         preloadHomeData()
@@ -93,6 +114,11 @@ class MainActivity : ComponentActivity() {
             val appSettings by settingsFlow.collectAsStateWithLifecycle(initialValue = null)
             val resolvedSettings = appSettings ?: return@setContent
             settingsReady = true
+
+            LaunchedEffect(resolvedSettings.tourStatus) {
+                tourCoordinator.initialize(resolvedSettings.tourStatus)
+            }
+
             val navController = rememberNavController()
             val backStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = backStackEntry?.destination?.route ?: Screen.Home.route
@@ -115,6 +141,8 @@ class MainActivity : ComponentActivity() {
                 mutableStateOf(savedInstanceState == null)
             }
 
+            val tourActive = tourCoordinator.currentStep != null
+
             QuranEasyTheme(settings = resolvedSettings, route = currentRoute) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     Scaffold(
@@ -129,19 +157,39 @@ class MainActivity : ComponentActivity() {
                                         Screen.Manzil.route -> "Daily Manzil"
                                         else -> "Settings"
                                     },
-                                    onBackClick = { onBackPressedDispatcher.onBackPressed() },
+                                    onBackClick = {
+                                        if (tourCoordinator.currentStep?.targetId == "back_button") {
+                                            tourCoordinator.nextStep()
+                                        }
+                                        onBackPressedDispatcher.onBackPressed()
+                                    },
                                     onAboutClick = { navController.navigate(Screen.About.route) { launchSingleTop = true } },
+                                    tourCoordinator = tourCoordinator
                                 )
                             }
                         },
                         bottomBar = {
                             if (currentRoute in mainRoutes) SanctuaryBottomNavigation(
                                 onHomeClick = { navigateTab(Screen.Home) },
-                                onReadQuranClick = { navigateTab(Screen.Quran) },
+                                onReadQuranClick = {
+                                    if (tourCoordinator.currentStep?.targetId == "read_quran_card") {
+                                        tourCoordinator.nextStep()
+                                    }
+                                    navigateTab(Screen.Quran)
+                                },
                                 onTasbihClick = { navigateTab(Screen.Tasbih) },
                                 onManzilClick = { navigateTab(Screen.Manzil) },
-                                onSettingsClick = { navigateTab(Screen.Settings) },
+                                onSettingsClick = {
+                                    if (tourCoordinator.currentStep?.targetId == "settings_nav") {
+                                        tourCoordinator.nextStep()
+                                        lifecycleScope.launch {
+                                            settingsRepository.setTourStatus(TourStatus.TOUR_COMPLETED)
+                                        }
+                                    }
+                                    navigateTab(Screen.Settings)
+                                },
                                 selectedRoute = currentRoute,
+                                tourCoordinator = tourCoordinator
                             )
                         },
                     ) { innerPadding ->
@@ -150,14 +198,37 @@ class MainActivity : ComponentActivity() {
                             startDestination = Screen.Home.route,
                             modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding)
                         ) {
-                            homeGraph(navController)
-                            quranGraph(navController)
+                            homeGraph(navController, tourCoordinator)
+                            quranGraph(navController, tourCoordinator)
                             tasbihGraph(navController)
                             manzilGraph(navController)
                             feelingGraph(navController)
-                            settingsGraph(navController)
+                            settingsGraph(navController, tourCoordinator)
                         }
                     }
+
+                    if (resolvedSettings.tourStatus == TourStatus.NOT_STARTED || resolvedSettings.tourStatus == TourStatus.THEME_PENDING) {
+                        ThemeSelectionDialog(
+                            onThemeSelected = { mode ->
+                                lifecycleScope.launch {
+                                    settingsRepository.setThemeMode(mode)
+                                    settingsRepository.setTourStatus(TourStatus.TOUR_ACTIVE)
+                                    tourCoordinator.startTour()
+                                }
+                            }
+                        )
+                    } else if (tourActive) {
+                        TourOverlay(
+                            coordinator = tourCoordinator,
+                            onExitTour = {
+                                tourCoordinator.exitTour()
+                                lifecycleScope.launch {
+                                    settingsRepository.setTourStatus(TourStatus.TOUR_EXITED)
+                                }
+                            }
+                        )
+                    }
+
                     if (showLaunchAnimation) {
                         QuranEasyLaunchAnimation(
                             onFinished = { showLaunchAnimation = false }
@@ -171,11 +242,36 @@ class MainActivity : ComponentActivity() {
     private fun preloadHomeData() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                feelingRepository.getHomeFeelings()
+                coroutineScope {
+                    // 1. Download all feeling first verse
+                    val feelings = feelingRepository.getHomeFeelings()
+                    feelings.forEach { feeling ->
+                        launch {
+                            feeling.verses.firstOrNull()?.let { verse ->
+                                quranRepository.ensureSurahDownloaded(verse.surah)
+                                translationRepository.getTranslation(verse.surah, verse.ayah)
+                            }
+                        }
+                    }
+
+                    // 2. Download all manzil
+                    quranRepository.ensureSurahListDownloaded()
+                    manzilPassages
+                        .groupBy { it.surahNumber }
+                        .forEach { (surahNumber, passages) ->
+                            launch {
+                                quranRepository.ensureSurahDownloaded(surahNumber)
+                                val requestedAyahs = passages.flatMap { it.startAyah..it.endAyah }.toSet()
+                                translationRepository.getSurahTranslations(surahNumber, requestedAyahs)
+                            }
+                        }
+                }
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
-                // Home remains usable and owns its visible fallback state.
+                // Allow the app to open even if preloading fails
+            } finally {
+                dataPreloaded = true
             }
         }
     }
@@ -235,7 +331,7 @@ private fun QuranEasyLaunchAnimation(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(androidx.compose.material3.MaterialTheme.colorScheme.background),
+            .background(colorResource(R.color.quran_easy_launch_background)),
         contentAlignment = Alignment.Center
     ) {
         Image(
@@ -247,10 +343,11 @@ private fun QuranEasyLaunchAnimation(
                     this.alpha = alpha.value
                 }
                 .size(156.dp)
+                .clip(CircleShape)
         )
     }
 }
 
-private const val ENTER_DURATION_MILLIS = 550
-private const val CENTER_HOLD_MILLIS = 400
-private const val EXIT_DURATION_MILLIS = 550
+private const val ENTER_DURATION_MILLIS = 800
+private const val CENTER_HOLD_MILLIS = 700
+private const val EXIT_DURATION_MILLIS = 700

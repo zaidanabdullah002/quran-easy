@@ -11,4 +11,5 @@ interface SettingsRepository {
     suspend fun setShowTranslatedSurahNames(show: Boolean)
     suspend fun setKeepScreenAwakeWhileReading(keepAwake: Boolean)
     suspend fun resetReadingSettings()
+    suspend fun setTourStatus(status: TourStatus)
 }

@@ -13,7 +13,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.BookmarkBorder
@@ -47,6 +46,8 @@ import com.zaidan.quraneasy.core.ui.AppSkeletonBlock
 import com.zaidan.quraneasy.core.ui.HapticIconButton
 import com.zaidan.quraneasy.core.ui.QuranEasyActionSurface
 import com.zaidan.quraneasy.core.ui.QuranEasySurface
+import com.zaidan.quraneasy.core.ui.TourCoordinator
+import com.zaidan.quraneasy.core.ui.tourTarget
 import com.zaidan.quraneasy.feature.quran.presentation.model.*
 import com.zaidan.quraneasy.feature.quran.presentation.viewmodel.QuranViewModel
 import java.text.DateFormat
@@ -57,12 +58,13 @@ fun QuranScreen(
     onBackClick: () -> Unit,
     onSurahClick: (Int) -> Unit,
     onJuzClick: (Int) -> Unit,
-    quranViewModel: QuranViewModel
+    quranViewModel: QuranViewModel,
+    tourCoordinator: TourCoordinator? = null
 ) {
     val state by quranViewModel.uiState.collectAsStateWithLifecycle()
     MaterialTheme(typography = SanctuaryTypography) {
         QuranScreenContent(state, onBackClick, onSurahClick, onJuzClick,
-            quranViewModel::selectTab, quranViewModel::retry, quranViewModel::removeBookmark)
+            quranViewModel::selectTab, quranViewModel::retry, quranViewModel::removeBookmark, tourCoordinator)
     }
 }
 
@@ -74,7 +76,8 @@ internal fun QuranScreenContent(
     onJuzClick: (Int) -> Unit,
     selectTab: (Int) -> Unit,
     retry: () -> Unit,
-    removeBookmark: (QuranBookmarkUiModel) -> Unit
+    removeBookmark: (QuranBookmarkUiModel) -> Unit,
+    tourCoordinator: TourCoordinator? = null
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf(ChapterFilter.ALL) }
@@ -179,7 +182,13 @@ internal fun QuranScreenContent(
                         }
                     }
                     items(surahs, key = { it.number }) { surah ->
-                        SurahCard(surah, { onSurahClick(surah.number) })
+                        SurahCard(
+                            surah = surah,
+                            onClick = { onSurahClick(surah.number) },
+                            modifier = if (tourCoordinator != null && surah.number == 1) 
+                                Modifier.tourTarget(tourCoordinator, "surah_card_1") 
+                                else Modifier
+                        )
                     }
                 }
             }
@@ -275,7 +284,7 @@ private fun NumberBadge(number: Int, emphasis: ChapterEmphasis = ChapterEmphasis
 }
 
 @Composable
-fun SurahCard(surah: SurahUiModel, onClick: () -> Unit = {}) {
+fun SurahCard(surah: SurahUiModel, onClick: () -> Unit = {}, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val emphasis = chapterEmphasis(surah.number)
     val featureLabel = when (emphasis) {
@@ -283,7 +292,7 @@ fun SurahCard(surah: SurahUiModel, onClick: () -> Unit = {}) {
         ChapterEmphasis.NIGHT -> "Night Protection"
         else -> null
     }
-    QuranEasyActionSurface(onClick, Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
+    QuranEasyActionSurface(onClick, modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, colors.outlineVariant),
         containerColor = if (emphasis == ChapterEmphasis.HEART) colors.surfaceContainerLow else colors.surfaceContainerLowest,
         elevation = 0.dp,
