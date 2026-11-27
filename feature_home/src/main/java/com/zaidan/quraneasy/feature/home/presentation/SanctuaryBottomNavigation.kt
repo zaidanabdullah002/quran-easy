@@ -13,7 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import com.zaidan.quraneasy.core.navigation.Screen
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.outlined.AutoStories
+import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.CalendarViewWeek
 import androidx.compose.material.icons.outlined.Gesture
 import androidx.compose.material.icons.outlined.Settings
@@ -35,7 +35,7 @@ import com.zaidan.quraneasy.core.ui.tourTarget
 
 @Composable
 fun SanctuaryBottomNavigation(
-    onReadQuranClick: () -> Unit,
+    onQiblaClick: () -> Unit,
     onTasbihClick: () -> Unit,
     onManzilClick: () -> Unit,
     onSettingsClick: () -> Unit,
@@ -47,7 +47,7 @@ fun SanctuaryBottomNavigation(
     if (selectedRoute == Screen.Home.route) {
         HomeTheme {
             NavigationContent(
-                onReadQuranClick = onReadQuranClick,
+                onQiblaClick = onQiblaClick,
                 onTasbihClick = onTasbihClick,
                 onManzilClick = onManzilClick,
                 onSettingsClick = onSettingsClick,
@@ -59,7 +59,7 @@ fun SanctuaryBottomNavigation(
         }
     } else {
         NavigationContent(
-            onReadQuranClick = onReadQuranClick,
+            onQiblaClick = onQiblaClick,
             onTasbihClick = onTasbihClick,
             onManzilClick = onManzilClick,
             onSettingsClick = onSettingsClick,
@@ -73,7 +73,7 @@ fun SanctuaryBottomNavigation(
 
 @Composable
 private fun NavigationContent(
-    onReadQuranClick: () -> Unit,
+    onQiblaClick: () -> Unit,
     onTasbihClick: () -> Unit,
     onManzilClick: () -> Unit,
     onSettingsClick: () -> Unit,
@@ -96,7 +96,6 @@ private fun NavigationContent(
                     .padding(top = 8.dp, bottom = 7.dp)
             ) {
                 BottomNavItem(Icons.Default.Home, "Home", selectedRoute == Screen.Home.route, onHomeClick, homePalette = selectedRoute == Screen.Home.route)
-                BottomNavItem(Icons.Outlined.AutoStories, "Read Quran", selectedRoute == Screen.Quran.route, onReadQuranClick, homePalette = selectedRoute == Screen.Home.route)
                 
                 BottomNavItem(
                     icon = Icons.Outlined.Gesture,
@@ -107,6 +106,8 @@ private fun NavigationContent(
                     modifier = if (tourCoordinator != null) Modifier.tourTarget(tourCoordinator, "tasbih_nav") else Modifier
                 )
                 
+                BottomNavItem(Icons.Outlined.Explore, "Qibla", selectedRoute == Screen.Qibla.route, onQiblaClick, homePalette = selectedRoute == Screen.Home.route)
+
                 BottomNavItem(Icons.Outlined.CalendarViewWeek, "Manzil", selectedRoute == Screen.Manzil.route, onManzilClick, homePalette = selectedRoute == Screen.Home.route)
 
                 BottomNavItem(

@@ -4,6 +4,7 @@ sealed class Screen(val route: String) {
     object Home : Screen("home")
     object About : Screen("about")
     object Settings : Screen("settings")
+    object Qibla : Screen("qibla")
     object Quran : Screen("quran")
     object Tasbih : Screen("tasbih")
     object Manzil : Screen("manzil")

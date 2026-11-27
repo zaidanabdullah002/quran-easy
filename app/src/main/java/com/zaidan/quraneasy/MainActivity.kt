@@ -34,6 +34,8 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.compose.composable
+import com.zaidan.quraneasy.qibla.QiblaScreen
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -122,7 +124,7 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val backStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = backStackEntry?.destination?.route ?: Screen.Home.route
-            val mainRoutes = setOf(Screen.Home.route, Screen.Quran.route, Screen.Tasbih.route, Screen.Manzil.route, Screen.Settings.route)
+            val mainRoutes = setOf(Screen.Qibla.route, Screen.Home.route, Screen.Quran.route, Screen.Tasbih.route, Screen.Manzil.route, Screen.Settings.route)
             val navigateTab: (Screen) -> Unit = { screen ->
                 if (navController.currentDestination?.route != screen.route) {
                     if (screen == Screen.Home) {
@@ -152,6 +154,7 @@ class MainActivity : ComponentActivity() {
                             if (currentRoute in mainRoutes && currentRoute != Screen.Home.route) {
                                 SanctuaryAppHeader(
                                     section = when (currentRoute) {
+                                        Screen.Qibla.route -> "Qibla"
                                         Screen.Quran.route -> "Read Quran"
                                         Screen.Tasbih.route -> "Tasbih Counter"
                                         Screen.Manzil.route -> "Daily Manzil"
@@ -171,12 +174,7 @@ class MainActivity : ComponentActivity() {
                         bottomBar = {
                             if (currentRoute in mainRoutes) SanctuaryBottomNavigation(
                                 onHomeClick = { navigateTab(Screen.Home) },
-                                onReadQuranClick = {
-                                    if (tourCoordinator.currentStep?.targetId == "read_quran_card") {
-                                        tourCoordinator.nextStep()
-                                    }
-                                    navigateTab(Screen.Quran)
-                                },
+                                onQiblaClick = { navigateTab(Screen.Qibla) },
                                 onTasbihClick = { navigateTab(Screen.Tasbih) },
                                 onManzilClick = { navigateTab(Screen.Manzil) },
                                 onSettingsClick = {
@@ -198,6 +196,7 @@ class MainActivity : ComponentActivity() {
                             startDestination = Screen.Home.route,
                             modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding)
                         ) {
+                            composable(Screen.Qibla.route) { QiblaScreen() }
                             homeGraph(navController, tourCoordinator)
                             quranGraph(navController, tourCoordinator)
                             tasbihGraph(navController)

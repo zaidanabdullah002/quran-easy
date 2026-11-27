@@ -54,6 +54,9 @@ android {
 }
 
 dependencies {
+    implementation("org.maplibre.gl:android-sdk:11.8.0")
+    implementation(libs.androidx.compose.foundation)
+    testImplementation(libs.junit)
     implementation(project(":core"))
     implementation(project(":feature_settings"))
     implementation(libs.androidx.lifecycle.runtime.compose)
