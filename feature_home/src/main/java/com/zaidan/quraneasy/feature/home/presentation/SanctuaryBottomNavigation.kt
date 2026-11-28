@@ -106,7 +106,14 @@ private fun NavigationContent(
                     modifier = if (tourCoordinator != null) Modifier.tourTarget(tourCoordinator, "tasbih_nav") else Modifier
                 )
                 
-                BottomNavItem(Icons.Outlined.Explore, "Qibla", selectedRoute == Screen.Qibla.route, onQiblaClick, homePalette = selectedRoute == Screen.Home.route)
+                BottomNavItem(
+                    icon = Icons.Outlined.Explore,
+                    label = "Qibla",
+                    selected = selectedRoute == Screen.Qibla.route,
+                    onClick = onQiblaClick,
+                    homePalette = selectedRoute == Screen.Home.route,
+                    modifier = if (tourCoordinator != null) Modifier.tourTarget(tourCoordinator, "qibla_nav") else Modifier
+                )
 
                 BottomNavItem(Icons.Outlined.CalendarViewWeek, "Manzil", selectedRoute == Screen.Manzil.route, onManzilClick, homePalette = selectedRoute == Screen.Home.route)
 

@@ -27,10 +27,15 @@ internal fun rememberHeading(context: Context, location: QiblaLocation?): Headin
         heading = Heading(available = sensor != null)
         var accuracy = SensorManager.SENSOR_STATUS_UNRELIABLE
         var filtered: Double? = null
+        val matrix = FloatArray(9)
+        val rotated = FloatArray(9)
+        val orientation = FloatArray(3)
+        var declination = 0.0
+        var declinationLatitude = Double.NaN
+        var declinationLongitude = Double.NaN
         val listener = object : SensorEventListener {
             override fun onAccuracyChanged(sensor: Sensor?, value: Int) { accuracy = value }
             override fun onSensorChanged(event: SensorEvent) {
-                val matrix = FloatArray(9); val rotated = FloatArray(9)
                 SensorManager.getRotationMatrixFromVector(matrix, event.values)
                 @Suppress("DEPRECATION")
                 val rotation = (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.rotation
@@ -41,16 +46,26 @@ internal fun rememberHeading(context: Context, location: QiblaLocation?): Headin
                     else -> SensorManager.AXIS_X to SensorManager.AXIS_Y
                 }
                 SensorManager.remapCoordinateSystem(matrix, axes.first, axes.second, rotated)
-                val orientation = SensorManager.getOrientation(rotated, FloatArray(3))
+                SensorManager.getOrientation(rotated, orientation)
                 val p = currentLocation
-                val declination = if (p == null) 0.0 else GeomagneticField(p.latitude.toFloat(), p.longitude.toFloat(), 0f, System.currentTimeMillis()).declination.toDouble()
+                if (p == null) {
+                    declination = 0.0
+                    declinationLatitude = Double.NaN
+                    declinationLongitude = Double.NaN
+                } else if (p.latitude != declinationLatitude || p.longitude != declinationLongitude) {
+                    declination = GeomagneticField(
+                        p.latitude.toFloat(), p.longitude.toFloat(), 0f, System.currentTimeMillis()
+                    ).declination.toDouble()
+                    declinationLatitude = p.latitude
+                    declinationLongitude = p.longitude
+                }
                 val raw = QiblaMath.normalize(Math.toDegrees(orientation[0].toDouble()) + declination)
-                filtered = filtered?.let { QiblaMath.normalize(it + QiblaMath.turn(it, raw) * .18) } ?: raw
+                filtered = QiblaMath.filterHeading(filtered, raw)
                 heading = Heading(filtered, accuracy >= SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM, sensor != null)
             }
         }
         var listening = false
-        fun start() { if (!listening && sensor != null) { filtered = null; accuracy = 0; listening = manager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_UI) } }
+        fun start() { if (!listening && sensor != null) { filtered = null; accuracy = 0; listening = manager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_GAME) } }
         fun stop() { manager.unregisterListener(listener); listening = false; heading = heading.copy(degrees = null, reliable = false) }
         val observer = LifecycleEventObserver { _, event ->
             when (event) { Lifecycle.Event.ON_RESUME -> start(); Lifecycle.Event.ON_PAUSE -> stop(); else -> Unit }

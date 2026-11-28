@@ -8,6 +8,26 @@ object QiblaMath {
     val kaaba = QiblaLocation(21.422487, 39.826206, "Kaaba · Makkah")
     fun normalize(angle: Double) = (angle % 360 + 360) % 360
     fun turn(heading: Double, target: Double) = (target - heading + 540) % 360 - 180
+
+    /**
+     * Suppresses stationary compass noise while following intentional movement
+     * almost immediately. UI components render this value directly and must not
+     * apply another easing animation on top of it.
+     */
+    fun filterHeading(previous: Double?, raw: Double): Double {
+        val normalizedRaw = normalize(raw)
+        if (previous == null) return normalizedRaw
+        val delta = turn(previous, normalizedRaw)
+        val magnitude = abs(delta)
+        if (magnitude < 1.0) return normalize(previous)
+        val alpha = when {
+            magnitude >= 20.0 -> .95
+            magnitude >= 5.0 -> .85
+            else -> .65
+        }
+        return normalize(previous + delta * alpha)
+    }
+
     fun bearing(from: QiblaLocation): Double {
         val lat = Math.toRadians(from.latitude)
         val target = Math.toRadians(kaaba.latitude)

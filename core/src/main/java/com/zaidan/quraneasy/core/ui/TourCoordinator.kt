@@ -41,7 +41,8 @@ class TourCoordinator @Inject constructor() {
             TourStep.READ_QURAN_HOME -> TourStep.SURAH_LIST
             TourStep.SURAH_LIST -> TourStep.BACK_TO_HOME
             TourStep.BACK_TO_HOME -> TourStep.DIGITAL_TASBIH
-            TourStep.DIGITAL_TASBIH -> TourStep.SETTINGS_TAB
+            TourStep.DIGITAL_TASBIH -> TourStep.QIBLA_FINDER
+            TourStep.QIBLA_FINDER -> TourStep.SETTINGS_TAB
             TourStep.SETTINGS_TAB -> {
                 completeTour()
                 null
@@ -77,5 +78,6 @@ enum class TourStep(
     SURAH_LIST("surah_card_1", "Browse through Surahs, Juz, and your Bookmarks."),
     BACK_TO_HOME("back_button", "Tap here to return to the main dashboard."),
     DIGITAL_TASBIH("tasbih_nav", "Keep track of your daily Dhikr with the Digital Tasbih."),
+    QIBLA_FINDER("qibla_nav", "Find the direction of the Kaaba with the Qibla Finder."),
     SETTINGS_TAB("settings_nav", "Personalize your experience in the Settings menu.")
 }

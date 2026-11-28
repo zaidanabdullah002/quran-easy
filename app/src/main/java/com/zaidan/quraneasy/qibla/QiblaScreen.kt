@@ -13,8 +13,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -90,6 +88,10 @@ fun QiblaScreen() {
     val atKaaba = distance != null && distance < .05
     val aligned = !atKaaba && turn != null && abs(turn) <= 5 && heading.reliable
     val canGuide = location != null && !atKaaba && heading.available && heading.reliable && turn != null
+    QiblaRotationHaptics(
+        heading = heading.degrees,
+        enabled = canGuide && !aligned && !showCity
+    )
     val guidanceColor = when {
         !canGuide -> colors.onSurfaceVariant
         aligned -> if (dark) Color(0xFF4ADE80) else Color(0xFF15803D)
@@ -240,7 +242,6 @@ fun QiblaScreen() {
 @Composable
 private fun QiblaDirectionArrow(turn: Double, active: Boolean, aligned: Boolean, color: Color, description: String) {
     val indicatorColor by animateColorAsState(color, tween(320), label = "Qibla alignment color")
-    val rotation = remember { Animatable(turn.toFloat()) }
     val alignmentRipple = remember { Animatable(1f) }
     val dark = MaterialTheme.colorScheme.background.luminance() < .2f
     val discBase = if (dark) Color(0xFF0C1C1D) else Color.White
@@ -250,13 +251,6 @@ private fun QiblaDirectionArrow(turn: Double, active: Boolean, aligned: Boolean,
     val discBottom by animateColorAsState(
         if (dark && aligned) Color(0xFF0C2619) else lerp(discBase, color, .06f),
         tween(450), label = "Arrow disc bottom")
-    LaunchedEffect(turn, active) {
-        if (active) {
-            // Follow the shortest arc across -180/180 instead of spinning a full circle.
-            val delta = QiblaMath.turn(QiblaMath.normalize(rotation.value.toDouble()), turn).toFloat()
-            rotation.animateTo(rotation.value + delta, spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMediumLow))
-        } else rotation.snapTo(turn.toFloat())
-    }
     LaunchedEffect(aligned, active) {
         if (aligned && active) {
             alignmentRipple.snapTo(0f)
@@ -286,7 +280,9 @@ private fun QiblaDirectionArrow(turn: Double, active: Boolean, aligned: Boolean,
             }
         }
         if (active) {
-            Canvas(Modifier.size(28.dp).rotate(rotation.value)) {
+            // Heading is already filtered at the sensor boundary. Rendering it
+            // directly avoids a second animation that would constantly lag.
+            Canvas(Modifier.size(28.dp).rotate(turn.toFloat())) {
                 drawPath(Path().apply {
                     moveTo(size.width * .5f, size.height * .08f)
                     lineTo(size.width * .18f, size.height * .42f)
@@ -313,13 +309,7 @@ private fun Compass(heading: Double?) {
     val dark = colors.background.luminance() < .2f
     val gold = if (dark) Color(0xFFDCA148) else Color(0xFF916315)
     val blue = if (dark) Color(0xFF7DD3FC) else Color(0xFF0284C7)
-    val rotation = remember { Animatable(0f) }
-    LaunchedEffect(heading) {
-        if (heading != null) {
-            val delta = QiblaMath.turn(QiblaMath.normalize(rotation.value.toDouble()), -heading)
-            rotation.animateTo(rotation.value + delta.toFloat(), tween(180))
-        }
-    }
+    val rotation = heading?.let { -it.toFloat() } ?: 0f
     Box(Modifier.size(76.dp).clearAndSetSemantics {
         contentDescription = if (heading == null) "Compass waiting for a reliable heading"
             else "North compass. The blue needle points north. Use the direction card to face Qibla."
@@ -330,7 +320,7 @@ private fun Compass(heading: Double?) {
             drawCircle(gold.copy(alpha = .4f), r - 1.dp.toPx(), style = Stroke(.8.dp.toPx()))
             drawCircle(Brush.linearGradient(listOf(Color(0xFFF5D796), gold, Color(0xFF8B5E23), gold)), r * .83f, style = Stroke(1.dp.toPx()))
             drawCircle(gold.copy(alpha = .3f), r * .75f, style = Stroke(.5.dp.toPx()))
-            if (heading != null) rotate(rotation.value) {
+            if (heading != null) rotate(rotation) {
                 repeat(60) { tick -> rotate(tick * 6f) {
                     drawLine(gold.copy(alpha = .35f), Offset(center.x, center.y - r * .71f),
                         Offset(center.x, center.y - r * (if (tick % 5 == 0) .66f else .69f)), .5.dp.toPx())
@@ -351,10 +341,10 @@ private fun Compass(heading: Double?) {
                 drawCircle(Color(0xFF0A0F12), r * .032f)
             }
         }
-        if (heading != null) Box(Modifier.size(59.dp).rotate(rotation.value)) {
+        if (heading != null) Box(Modifier.size(59.dp).rotate(rotation)) {
             listOf("N" to Alignment.TopCenter, "E" to Alignment.CenterEnd,
                 "S" to Alignment.BottomCenter, "W" to Alignment.CenterStart).forEach { (label, alignment) ->
-                Text(label, Modifier.align(alignment).rotate(-rotation.value), fontSize = 7.sp,
+                Text(label, Modifier.align(alignment).rotate(-rotation), fontSize = 7.sp,
                     lineHeight = 8.sp, fontWeight = FontWeight.Bold, color = when (label) {
                         "N" -> blue
                         "W" -> Color(0xFFEF4444).copy(alpha = westAlpha)

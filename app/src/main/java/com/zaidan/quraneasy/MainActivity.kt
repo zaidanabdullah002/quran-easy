@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,6 +67,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.retryWhen
 import java.io.IOException
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -90,11 +92,10 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var tourCoordinator: TourCoordinator
 
-    private var settingsReady = false
-    private var dataPreloaded = false
-
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen().setKeepOnScreenCondition { !settingsReady || !dataPreloaded }
+        // Hand off as soon as Compose can draw. Network preloading must never
+        // keep the platform splash over the custom launch animation.
+        installSplashScreen().setOnExitAnimationListener { it.remove() }
         super.onCreate(savedInstanceState)
 
         preloadHomeData()
@@ -114,8 +115,15 @@ class MainActivity : ComponentActivity() {
                     }
             }
             val appSettings by settingsFlow.collectAsStateWithLifecycle(initialValue = null)
+            var showLaunchAnimation by rememberSaveable { mutableStateOf(true) }
+            if (showLaunchAnimation || appSettings == null) {
+                QuranEasyLaunchAnimation(
+                    readyToExit = appSettings != null,
+                    onFinished = { showLaunchAnimation = false }
+                )
+                return@setContent
+            }
             val resolvedSettings = appSettings ?: return@setContent
-            settingsReady = true
 
             LaunchedEffect(resolvedSettings.tourStatus) {
                 tourCoordinator.initialize(resolvedSettings.tourStatus)
@@ -139,10 +147,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-            var showLaunchAnimation by rememberSaveable {
-                mutableStateOf(savedInstanceState == null)
-            }
-
             val tourActive = tourCoordinator.currentStep != null
 
             QuranEasyTheme(settings = resolvedSettings, route = currentRoute) {
@@ -174,8 +178,18 @@ class MainActivity : ComponentActivity() {
                         bottomBar = {
                             if (currentRoute in mainRoutes) SanctuaryBottomNavigation(
                                 onHomeClick = { navigateTab(Screen.Home) },
-                                onQiblaClick = { navigateTab(Screen.Qibla) },
-                                onTasbihClick = { navigateTab(Screen.Tasbih) },
+                                onQiblaClick = {
+                                    if (tourCoordinator.currentStep?.targetId == "qibla_nav") {
+                                        tourCoordinator.nextStep()
+                                    }
+                                    navigateTab(Screen.Qibla)
+                                },
+                                onTasbihClick = {
+                                    if (tourCoordinator.currentStep?.targetId == "tasbih_nav") {
+                                        tourCoordinator.nextStep()
+                                    }
+                                    navigateTab(Screen.Tasbih)
+                                },
                                 onManzilClick = { navigateTab(Screen.Manzil) },
                                 onSettingsClick = {
                                     if (tourCoordinator.currentStep?.targetId == "settings_nav") {
@@ -228,11 +242,6 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    if (showLaunchAnimation) {
-                        QuranEasyLaunchAnimation(
-                            onFinished = { showLaunchAnimation = false }
-                        )
-                    }
                 }
             }
         }
@@ -269,8 +278,6 @@ class MainActivity : ComponentActivity() {
                 throw error
             } catch (_: Exception) {
                 // Allow the app to open even if preloading fails
-            } finally {
-                dataPreloaded = true
             }
         }
     }
@@ -278,12 +285,14 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun QuranEasyLaunchAnimation(
+    readyToExit: Boolean,
     onFinished: () -> Unit
 ) {
     val travelDistance = with(LocalDensity.current) { 44.dp.toPx() }
     val verticalOffset = remember { Animatable(travelDistance) }
     val alpha = remember { Animatable(0f) }
     val currentOnFinished by rememberUpdatedState(onFinished)
+    val currentReadyToExit by rememberUpdatedState(readyToExit)
 
     LaunchedEffect(Unit) {
         coroutineScope {
@@ -305,6 +314,8 @@ private fun QuranEasyLaunchAnimation(
         }
 
         delay(CENTER_HOLD_MILLIS.toLong())
+        // Keep the logo visible if local preferences take longer than usual.
+        snapshotFlow { currentReadyToExit }.first { it }
 
         coroutineScope {
             launch {

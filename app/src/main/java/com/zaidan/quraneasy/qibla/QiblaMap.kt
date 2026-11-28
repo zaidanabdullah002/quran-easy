@@ -2,7 +2,6 @@ package com.zaidan.quraneasy.qibla
 
 import androidx.compose.runtime.*
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
@@ -164,18 +163,6 @@ internal fun QiblaMap(location: QiblaLocation?, dark: Boolean, accent: Color, re
             view.removeOnLayoutChangeListener(layoutListener)
         }
     }
-    val rotation = remember { Animatable((heading ?: 0.0).toFloat()) }
-    var hadHeading by remember { mutableStateOf(false) }
-    LaunchedEffect(heading) {
-        if (heading == null) hadHeading = false
-        else if (!hadHeading) {
-            rotation.snapTo(heading.toFloat())
-            hadHeading = true
-        } else {
-            val delta = QiblaMath.turn(QiblaMath.normalize(rotation.value.toDouble()), heading)
-            rotation.animateTo(rotation.value + delta.toFloat(), tween(180))
-        }
-    }
     val color by animateColorAsState(arrowColor, tween(320), label = "Map heading alignment")
     Box(modifier) {
         AndroidView(factory = { view }, modifier = Modifier.matchParentSize())
@@ -189,7 +176,9 @@ internal fun QiblaMap(location: QiblaLocation?, dark: Boolean, accent: Color, re
                 val dotRadius = 11f * density
                 val headLength = 12f * density
                 val halfWidth = 6f * density
-                rotate(rotation.value, start) {
+                // The sensor value is already smoothed; drawing it directly
+                // keeps this marker synchronized with the compass and card.
+                rotate(heading.toFloat(), start) {
                     val tip = Offset(start.x, start.y - length)
                     drawLine(color.copy(alpha = .15f), Offset(start.x, start.y - dotRadius),
                         Offset(start.x, tip.y + headLength), 7f * density, StrokeCap.Round)
